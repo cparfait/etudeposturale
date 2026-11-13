@@ -1,0 +1,13 @@
+{
+  "name": "A3",
+  "dictionary": "DICT_5X5_100",
+  "dpi": 300,
+  "paper": [
+    420,
+    297
+  ],
+  "cols": 7,
+  "rows": 5,
+  "square_mm": 50.0,
+  "marker_mm": 37.5
+}

@@ -10,6 +10,7 @@ captures/
 *.jpeg
 *.png
 !docs/**/*.png
+!calibration/*.png
 *.sqlite
 *.db
 
