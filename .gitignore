@@ -1,0 +1,36 @@
+# Données personnelles : vidéos, photos, captures et exports (ne jamais publier)
+data/
+captures/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.fit
+*.jpg
+*.jpeg
+*.png
+!docs/**/*.png
+*.sqlite
+*.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+
+# Modèles téléchargés
+models/
+*.onnx
+*.pth
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
