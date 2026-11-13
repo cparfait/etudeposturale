@@ -99,6 +99,12 @@ Constat important des revues : la plupart des plages d'angles « recommandées �
 | **Assioma Duo** en ANT+ → **Edge 1050** | Équilibre G/D, efficacité du couple, fluidité, phases de puissance ; **PCO (position du pied) peut‑être réservé à l'Assioma PRO** **[à vérifier]** | Import du fichier **.FIT** | À vérifier sur un vrai .FIT de ton Edge. |
 | **Wahoo TRACKR** | Fréquence cardiaque | Web Bluetooth (Heart Rate Service) | Suivi de l'intensité/fatigue. |
 
+#### Vérification sur un vrai .FIT (sortie route du 18/10/2026, Edge 1050, 90 km, 5 h 19, NP 166 W)
+- Capteurs vus par l'Edge : Assioma (Favero, firmware 6.24, ANT+), Wahoo TRACKR (ANT+), un appareil Shimano en ANT privé (probablement Di2).
+- **Présents et exploitables** : puissance, cadence, **équilibre G/D** (seconde par seconde), **phases de puissance et pics de phase G/D**, fréquence cardiaque, fréquence respiratoire.
+- **Présents mais toujours vides** : **PCO = 0 partout** → confirmé, la position du pied sur la pédale n'est pas fournie par l'Assioma Duo ; **efficacité du couple et fluidité = vides** → probablement un réglage (Edge ou appli Assioma) **[à vérifier]**.
+- Décodage : l'équilibre est codé « bit 7 = côté droit, 7 bits bas = % droite » ; quelques valeurs isolées sans pourcentage sont à ignorer.
+
 > **Corrections par rapport au prompt initial** : (1) le Neo se pilote plutôt en FE‑C via Bluetooth (FTMS à tester) ; (2) la position du pied sur la pédale (PCO) n'est peut‑être pas disponible sur l'Assioma Duo — on vérifiera sur ton fichier .FIT.
 
 ---

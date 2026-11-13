@@ -53,9 +53,10 @@
 |---|---|---|---|
 | C1 | Puissance (W), cadence (tr/min) | Assioma (Bluetooth) / Neo | Conditions de la capture ; consigne ERG |
 | C2 | **Équilibre de puissance G/D** (%) | Assioma (Bluetooth) | Asymétrie, à croiser avec F3/D2/D3 ; normal ~48–52 % **[pratique]** |
-| C3 | Efficacité du couple, fluidité de pédalage (G/D) | Assioma → Edge 1050 (.FIT) | Qualité du pédalage, comparaison avant/après |
-| C4 | Phases de puissance (début/fin, pic) G/D | Assioma → .FIT | Comparaison G/D, effet des réglages |
-| C5 | Position du pied sur la pédale (PCO) | Assioma → .FIT | **Peut‑être indisponible sur la Duo [à vérifier]** ; sinon mesure par la vidéo de face |
+| C3 | Efficacité du couple, fluidité de pédalage (G/D) | Assioma → Edge 1050 (.FIT) | **Champs vides dans le .FIT du 18/10/2026** → réglage à activer [à vérifier] |
+| C4 | Phases de puissance (début/fin, pic) G/D | Assioma → .FIT | **Disponible** ; comparaison G/D, effet des réglages |
+| C5 | Position du pied sur la pédale (PCO) | Assioma → .FIT | **Indisponible sur la Duo (toujours 0)** → mesure par la vidéo de face / photo des cales |
+| C7 | Dérive de l'équilibre G/D avec la fatigue | .FIT (par heure de sortie) | Référence actuelle : 49,7/50,3 % la 1re heure → 47,4/52,6 % la dernière heure (G/D) |
 | C6 | Fréquence cardiaque | Wahoo TRACKR | Intensité, fatigue |
 
 ---
