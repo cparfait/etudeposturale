@@ -251,3 +251,8 @@ Architecture retenue (détails et justification en section 9, à challenger en p
 - **Douleur avant du genou gauche** : apparue après une sortie de **90 km, une première** (.FIT du 18/10/2026) → pic de volume à prendre en compte en priorité, capture en fin d'effort.
 - **Webcam Logitech** : 30 fps → pas de mesure dynamique ; guidage, vue de dos en complément, auto‑tests.
 - **Phase 1 livrée** : [docs/03_specification.md](docs/03_specification.md), [config/metrics.yaml](config/metrics.yaml), [docs/04_benchmark_pose.md](docs/04_benchmark_pose.md) + `tools/benchmark_pose.py`.
+
+### Avancement (14/11/2026, soir)
+
+Phases 2 à 5 développées d'une traite : chaîne vidéo complète (RTMW sur GPU + pastilles + ChArUco), vues de face/dos en 2D, import .FIT, santé (douleurs, auto-tests, ressentis), moteur de recommandations, rapport, cadrage en direct, capteurs Bluetooth.
+Détail, vérifications et ce qui reste à valider sur le réel : [docs/05_etat_et_validation.md](docs/05_etat_et_validation.md). Non fait : 3D multi-caméra (Pose2Sim).

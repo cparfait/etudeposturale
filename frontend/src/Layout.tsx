@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Bike, ClipboardList, FileText, Gauge, Home, Monitor, Moon, ShieldCheck, Sun, User, Video } from "lucide-react";
+import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, ShieldCheck, Sun, User, Video } from "lucide-react";
 import { useTheme, type ThemeChoice } from "./theme";
 
 export function LogoMark({ size = 36 }: { size?: number }) {
@@ -27,15 +27,17 @@ function Logo() {
 }
 
 const MAIN = [
-  { to: "/", label: "Accueil", short: "Accueil", icon: Home, end: true },
+  { to: "/", label: "Accueil", short: "Accueil", icon: Home, end: true, tab: true },
   { to: "/profil", label: "Mon profil", short: "Profil", icon: User },
-  { to: "/velo", label: "Mon vélo", short: "Vélo", icon: Bike },
+  { to: "/velo", label: "Mon vélo", short: "Vélo", icon: Bike, tab: true },
+  { to: "/seance", label: "Séances de capture", short: "Séances", icon: Video, tab: true },
+  { to: "/sante", label: "Santé et ressentis", short: "Santé", icon: HeartPulse, tab: true },
+  { to: "/conseils", label: "Recommandations", short: "Conseils", icon: Lightbulb, tab: true },
 ];
-const SOON = [
-  { label: "Séance de capture", icon: Video },
-  { label: "Analyse", icon: Gauge },
-  { label: "Ressentis", icon: ClipboardList },
-  { label: "Rapport", icon: FileText },
+const TOOLS = [
+  { to: "/cadrage", label: "Cadrage en direct", icon: Crosshair },
+  { to: "/capteurs", label: "Capteurs et ERG", icon: Bluetooth },
+  { to: "/rapport", label: "Rapport", icon: FileText },
 ];
 
 function ThemeToggle() {
@@ -66,11 +68,11 @@ export default function Layout() {
             <Icon size={18} /> {label}
           </NavLink>
         ))}
-        <div className="nav-label">Bientôt</div>
-        {SOON.map(({ label, icon: Icon }) => (
-          <span key={label} className="nav-item disabled" aria-disabled="true">
+        <div className="nav-label">Outils</div>
+        {TOOLS.map(({ to, label, icon: Icon }) => (
+          <NavLink key={to} to={to} className="nav-item">
             <Icon size={18} /> {label}
-          </span>
+          </NavLink>
         ))}
         <div className="sidebar-foot">
           <div className="privacy">
@@ -90,7 +92,7 @@ export default function Layout() {
       </div>
 
       <nav className="tabbar" aria-label="Navigation principale">
-        {MAIN.map(({ to, short, icon: Icon, end }) => (
+        {MAIN.filter((m) => m.tab).map(({ to, short, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end}>
             <Icon size={20} /> {short}
           </NavLink>

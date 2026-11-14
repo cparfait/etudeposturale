@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Bike, Check, Gauge, Info, Lock, User, Video } from "lucide-react";
-import { api, type BikeConfig, type Values } from "../api";
+import { ArrowRight, Bike, Check, Gauge, HeartPulse, Info, Lock, User, Video } from "lucide-react";
+import { api, http, type Any, type BikeConfig, type Values } from "../api";
 import PedalingRider from "../components/PedalingRider";
 import { KNEE_RANGE } from "../components/bikeGeometry";
 
@@ -19,12 +19,16 @@ export default function Home() {
   const [config, setConfig] = useState<BikeConfig | null>(null);
   const [bike, setBike] = useState<Values | null>(null);
   const [offline, setOffline] = useState(false);
+  const [sessions, setSessions] = useState<Any[]>([]);
+  const [pains, setPains] = useState<Any[]>([]);
   const hud = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     Promise.all([api.getProfile(), api.listConfigs(), api.getBike()])
       .then(([p, c, b]) => { setProfile(p); setConfig(c[0] ?? null); setBike(b); })
       .catch(() => setOffline(true));
+    http.get("/sessions").then(setSessions).catch(() => {});
+    http.get("/pains").then(setPains).catch(() => {});
   }, []);
 
   // Mise à jour directe du HUD (60 fois par seconde) sans re-rendre la page
@@ -35,11 +39,12 @@ export default function Home() {
   const profileDone = !!(profile?.taille_cm && profile?.entrejambe_mm);
   const bikeDone = !!config?.hauteur_selle_mm;
 
+  const analyses = sessions.flatMap((s) => s.captures.flatMap((c: Any) => c.analyses)).filter((a: Any) => a.status === "terminee");
   const steps = [
     { n: 1, to: "/profil", icon: User, title: "Mon profil", text: "Taille, entrejambe, poids et objectif.", done: profileDone },
     { n: 2, to: "/velo", icon: Bike, title: "Mon vélo", text: "Géométrie, cotes actuelles et cales.", done: bikeDone, bike: true },
-    { n: 3, icon: Video, title: "Séance de capture", text: "Pastilles, mire, cadrage guidé, vidéo de profil." },
-    { n: 4, icon: Gauge, title: "Analyse", text: "Angle du genou, verdict et correction en mm." },
+    { n: 3, to: "/sante", icon: HeartPulse, title: "Santé", text: "Carte des douleurs, auto-tests hors vélo.", done: pains.length > 0 },
+    { n: 4, to: "/seance", icon: Video, title: "Capture et analyse", text: "Pastilles, cadrage guidé, vidéos ; angle du genou et correction en mm.", done: analyses.length > 0, bike: true },
   ];
   const next = steps.find((s) => s.to && !s.done);
 
@@ -47,7 +52,7 @@ export default function Home() {
     <div className="page">
       <section className="hero">
         <div>
-          <div className="eyebrow">Phase 2 · Hauteur de selle</div>
+          <div className="eyebrow">Étude posturale complète · 100 % locale</div>
           <h1>Ta position,<br /><em>mesurée</em> au degré près.</h1>
           <p className="hero-lead">
             Un téléphone, quelques pastilles et ton home trainer : l'outil mesure l'angle de ton genou à chaque coup de pédale et te dit,
@@ -57,9 +62,9 @@ export default function Home() {
             {next ? (
               <Link to={next.to!} className="btn btn-primary">{next.n === 1 ? "Commencer" : "Continuer"} : {next.title} <ArrowRight size={17} /></Link>
             ) : (
-              <span className="btn btn-primary" aria-disabled="true">Profil et vélo prêts <Check size={17} /></span>
+              <Link to="/conseils" className="btn btn-primary">Voir mes recommandations <ArrowRight size={17} /></Link>
             )}
-            <Link to="/velo" className="btn btn-ghost">Voir mes cotes</Link>
+            <Link to="/cadrage" className="btn btn-ghost"><Gauge size={16} /> Cadrage en direct</Link>
           </div>
           <div className="legend" aria-hidden="true">
             <span><i className="dot body" /> Pastilles sur le corps</span>

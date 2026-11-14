@@ -22,6 +22,12 @@ from posturale.storage.models import (
 
 app = FastAPI(title="Étude posturale vélo", version=__version__)
 
+from posturale.api.routes_capture import router as capture_router  # noqa: E402
+from posturale.api.routes_health import router as health_router  # noqa: E402
+
+app.include_router(capture_router)
+app.include_router(health_router)
+
 SINGLETON = 1
 
 

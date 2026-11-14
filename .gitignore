@@ -40,3 +40,7 @@ Thumbs.db
 *.egg-info/
 *.tsbuildinfo
 .pytest_cache/
+
+# Fichiers générés / locaux
+frontend/public/mediapipe/wasm/
+frontend/certs/

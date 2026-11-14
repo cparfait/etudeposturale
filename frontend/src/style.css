@@ -197,7 +197,7 @@ a { color: inherit; }
   }
   .mobile-top .logo { padding: 0; }
   .tabbar {
-    display: grid; grid-template-columns: repeat(3, 1fr);
+    display: grid; grid-template-columns: repeat(5, 1fr);
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--line);

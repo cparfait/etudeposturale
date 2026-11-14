@@ -88,3 +88,99 @@ class BikeConfigRead(BikeConfigBase):
     id: int
     bike_id: int
     created_at: datetime
+
+
+# ============================================================ séances, vidéos, analyses
+from typing import Any  # noqa: E402
+
+from sqlalchemy import JSON, Column  # noqa: E402
+
+
+class Session(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    bike_config_id: Optional[int] = Field(default=None, foreign_key="bikeconfig.id")
+    etat: str = "repose"                 # repose | fin_effort
+    puissance_cible_w: Optional[float] = None
+    notes: Optional[str] = None
+
+
+class CameraCalib(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    camera: str
+    width: int
+    height: int
+    rms_px: float
+    n_views: int
+    data: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class Capture(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    session_id: int = Field(foreign_key="session.id")
+    vue: str = "profil"                  # profil | face | dos
+    appareil: Optional[str] = None
+    calib_id: Optional[int] = Field(default=None, foreign_key="cameracalib.id")
+    filename: str
+    path: str
+    meta: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class Analysis(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    finished_at: Optional[datetime] = None
+    capture_id: int = Field(foreign_key="capture.id")
+    status: str = "en_attente"           # en_attente | en_cours | terminee | erreur
+    progress: float = 0.0
+    message: Optional[str] = None
+    error: Optional[str] = None
+    result_path: Optional[str] = None
+    summary: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class FitFile(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    session_id: Optional[int] = Field(default=None, foreign_key="session.id")
+    filename: str
+    summary: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+# ============================================================ santé : douleurs, auto-tests, ressentis
+class PainEntry(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    zone: str
+    cote: str = "D"                      # G | D | centre
+    intensite: int = Field(default=3, ge=0, le=10)
+    moment: Optional[str] = None         # ex. « après 3 h », « en montée », « au repos »
+    depuis: Optional[str] = None
+    active: bool = True
+    notes: Optional[str] = None
+
+
+class SelfTest(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    test_id: str
+    cote: Optional[str] = None
+    valeur: Optional[float] = None
+    resultat: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class Feedback(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=now)
+    bike_config_id: Optional[int] = Field(default=None, foreign_key="bikeconfig.id")
+    duree_min: Optional[float] = Field(default=None, ge=0, le=1440)
+    distance_km: Optional[float] = Field(default=None, ge=0, le=1000)
+    rpe: Optional[int] = Field(default=None, ge=1, le=10)
+    confort_selle: Optional[int] = Field(default=None, ge=0, le=10)
+    puissance_ressentie: Optional[int] = Field(default=None, ge=0, le=10)
+    engourdissements: Optional[str] = None
+    douleurs: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))  # {"genou_avant_G": 4, ...}
+    notes: Optional[str] = None

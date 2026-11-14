@@ -50,6 +50,35 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return res.json() as Promise<T>;
 }
 
+async function upload<T>(path: string, form: FormData): Promise<T> {
+  const res = await fetch(`/api${path}`, { method: "POST", body: form });
+  if (!res.ok) {
+    let detail = `${res.status} ${res.statusText}`;
+    try {
+      const data = await res.json();
+      if (data.detail) detail = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
+    } catch {
+      /* réponse non JSON */
+    }
+    throw new Error(detail);
+  }
+  return res.json() as Promise<T>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Any = any;
+
+export const http = {
+  get: <T = Any>(p: string) => request<T>("GET", p),
+  post: <T = Any>(p: string, body?: unknown) => request<T>("POST", p, body ?? {}),
+  put: <T = Any>(p: string, body: unknown) => request<T>("PUT", p, body),
+  del: async (p: string) => {
+    const res = await fetch(`/api${p}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  },
+  upload: <T = Any>(p: string, form: FormData) => upload<T>(p, form),
+};
+
 export const api = {
   health: () => request<{ status: string; version: string }>("GET", "/health"),
   getProfile: () => request<Values>("GET", "/profile"),
