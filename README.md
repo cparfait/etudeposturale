@@ -18,6 +18,7 @@ Tout est traité sur le PC (RTX 4090) : aucune vidéo n'est envoyée en ligne.
 | Analyse | Verdict hauteur de selle + correction en mm, squelette superposé à la vidéo, courbe du genou, toutes les mesures sourcées |
 | Recommandations | Hypothèses ordonnées comme chez un fitter (santé → charge → asymétrie → cales → selle → recul → manivelle) |
 | Rapport | Synthèse imprimable / PDF, comparaison G/D et avant/après |
+| Contrôle des pastilles | Sur une photo ou une image de la vidéo : pastilles trouvées, pipette, réglage des couleurs utilisé par les analyses |
 | Cadrage en direct | MediaPipe dans le navigateur du téléphone : feu vert quand le cadrage est bon |
 | Capteurs et ERG | Web Bluetooth : puissance et équilibre (Assioma), cardio, puissance imposée au Tacx Neo 2T |
 
@@ -25,7 +26,15 @@ Tout est traité sur le PC (RTX 4090) : aucune vidéo n'est envoyée en ligne.
 
 Prérequis : Python 3.10+, Node.js 20+, ffmpeg dans le PATH, pilote NVIDIA récent.
 
-### Backend
+### En un clic (Windows)
+
+Double-cliquer `scripts\installer.bat` (une fois), puis `scripts\lancer.bat` à chaque utilisation :
+le backend et l'interface s'ouvrent dans deux fenêtres et le navigateur s'ouvre sur l'application.
+Le script d'installation applique lui-même le correctif ONNX Runtime GPU décrit ci-dessous.
+
+### À la main
+
+#### Backend
 
 ```bash
 cd backend && python -m venv .venv
@@ -53,7 +62,7 @@ backend/.venv/Scripts/python -c "from posturale.pose.engines import available_en
 
 Les modèles RTMW (~250 Mo) sont téléchargés depuis OpenMMLab à la première analyse.
 
-### Interface
+#### Interface
 
 ```bash
 npm --prefix frontend install
@@ -95,5 +104,5 @@ cd frontend && mkdir -p certs && mkcert -cert-file certs/cert.pem -key-file cert
 cd backend && .venv/Scripts/python -m pytest
 ```
 
-34 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
-calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API.
+36 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
+calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles.

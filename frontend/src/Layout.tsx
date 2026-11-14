@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, ShieldCheck, Sun, User, Video } from "lucide-react";
+import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sun, User, Video } from "lucide-react";
 import { useTheme, type ThemeChoice } from "./theme";
 
 export function LogoMark({ size = 36 }: { size?: number }) {
@@ -36,6 +36,7 @@ const MAIN = [
 ];
 const TOOLS = [
   { to: "/cadrage", label: "Cadrage en direct", icon: Crosshair },
+  { to: "/pastilles", label: "Contrôle des pastilles", icon: Pipette },
   { to: "/capteurs", label: "Capteurs et ERG", icon: Bluetooth },
   { to: "/rapport", label: "Rapport", icon: FileText },
 ];

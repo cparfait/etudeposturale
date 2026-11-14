@@ -1,6 +1,6 @@
 # Phases 2 à 5 — État d'avancement et validation
 
-> Mis à jour le 14/11/2026. Ce qui est fait, comment c'est vérifié, et ce qui reste à valider avec tes vraies vidéos et ton matériel.
+> Mis à jour le 15/11/2026. Ce qui est fait, comment c'est vérifié, et ce qui reste à valider avec tes vraies vidéos et ton matériel.
 
 ## 1. Fait et vérifié
 
@@ -15,14 +15,16 @@
 | .FIT | Puissance, cadence, FC, équilibre G/D décodé, phases, dérive heure par heure, fenêtres des prises | Décodage de l'équilibre testé ; champs conformes au fichier réel du 18/10 |
 | Santé | Carte des douleurs (17 zones × côté), 9 auto-tests, ressentis | API + interface testées |
 | Recommandations | Règles §7 de 01_metriques + charge, asymétrie, signaux d'alerte | Scénario « selle haute + douleur arrière + ischios raides » → bonne hypothèse en priorité ; alerte médicale en tête si douleur ≥ 7 |
-| Interface | 11 écrans, thèmes clair/sombre, mobile 375 px sans débordement | Vérifiée dans le navigateur sur données de démonstration |
+| Réglage des pastilles | Plages HSV réglables dans l'app (pipette, curseurs, teinte qui passe par le rouge), enregistrées dans `data/marker_colors.json` et utilisées par les analyses | Tests API + détection ; écran vérifié sur une image de la vidéo de démonstration |
+| Installation | `scripts/installer.bat` (avec le correctif ONNX Runtime GPU) et `scripts/lancer.bat` | Installation rejouée sur le PC : moteur en « GPU (CUDA) » |
+| Interface | 12 écrans, thèmes clair/sombre, mobile 375 px sans débordement | Vérifiée dans le navigateur sur données de démonstration |
 
 ## 2. Écrit mais non validé sur le réel
 
 | Élément | Pourquoi | Comment le valider |
 |---|---|---|
 | **Précision sur tes vraies vidéos** | Aucune vidéo réelle encore | Protocole [04_benchmark_pose.md](04_benchmark_pose.md) : pointage Kinovea de 40 images + goniomètre ; cible ≤ 2–3° sur P1 |
-| Détection des pastilles en conditions réelles | Couleurs, reflets, flou dépendent de l'éclairage | Ajuster les plages HSV (`pose/markers.py`) sur la première vidéo |
+| Détection des pastilles en conditions réelles | Couleurs, reflets, flou dépendent de l'éclairage | Écran « Contrôle des pastilles » sur une image de la première vidéo : compte attendu, pipette, enregistrer |
 | Pilotage du Tacx Neo 2T (FE-C sur BLE, repli FTMS) | Pas de matériel ici | Page Capteurs : connecter, imposer 150 W, vérifier sur le compteur |
 | Équilibre G/D en Bluetooth (Assioma) | Champ optionnel du Cycling Power Service | Comparer à l'Edge 1050 |
 | Cadrage en direct sur le Pixel | Nécessite HTTPS (mkcert) et la caméra du téléphone | README, section « Utiliser le téléphone » |
@@ -37,7 +39,8 @@
 ## 4. Première séance réelle conseillée
 
 1. Remplir « Mon profil », « Mon vélo » (angle du tube de selle sur la fiche Specialized), « Santé ».
-2. Calibrer le Pixel 10 Pro (vidéo de la mire bougée 30 s), une seule fois.
-3. Séance « reposé » : profil droit puis gauche, 60 s chacun, 85–95 tr/min, ERG en endurance.
-4. Contrôler le squelette dans la page d'analyse ; faire le pointage Kinovea (§ 1 de 04_benchmark_pose.md).
-5. Appliquer au plus une recommandation, rouler 2–3 sorties, remplir « Ressentis », refaire une séance → comparaison dans le rapport.
+2. Coller les pastilles, prendre une photo dans l'éclairage de la séance et la passer dans « Contrôle des pastilles ».
+3. Calibrer le Pixel 10 Pro (vidéo de la mire bougée 30 s), une seule fois.
+4. Séance « reposé » : profil droit puis gauche, 60 s chacun, 85–95 tr/min, ERG en endurance.
+5. Contrôler le squelette dans la page d'analyse ; faire le pointage Kinovea (§ 1 de 04_benchmark_pose.md).
+6. Appliquer au plus une recommandation, rouler 2–3 sorties, remplir « Ressentis », refaire une séance → comparaison dans le rapport.

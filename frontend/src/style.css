@@ -296,6 +296,7 @@ a { color: inherit; }
 }
 .alert svg { flex: none; margin-top: 1px; }
 .alert.warn { background: var(--warn-soft); color: var(--warn); }
+.alert.ok { background: var(--ok-soft); color: var(--ok); }
 .alert.danger { background: var(--danger-soft); color: var(--danger); }
 .alert.info { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); }
 

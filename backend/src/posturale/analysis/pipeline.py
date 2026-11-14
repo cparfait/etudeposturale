@@ -15,7 +15,7 @@ from posturale.metrics.frontal import front_metrics, rear_metrics
 from posturale.metrics.profile_view import analyze_profile
 from posturale.pose.engines import FRONTAL, PROFILE_LANDMARKS, PoseEngine
 from posturale.pose.fusion import Fuser, assign_markers
-from posturale.pose.markers import GREEN, ORANGE, detect_blobs, fit_circle, locate_bb, pedal_track
+from posturale.pose.markers import current_ranges, detect_blobs, fit_circle, locate_bb, pedal_track
 from posturale.rules.saddle import saddle_verdict
 
 Progress = Callable[[float, str], None]
@@ -90,13 +90,15 @@ def analyze_profile_video(
     fuser = Fuser(PROFILE_LANDMARKS, n_est)
     orange, times = [], []
     radius = max(12.0, meta.width * 0.025)
+    colors = current_ranges()
+    vert, orange_rng = colors["vert"], colors["orange"]
     i = 0
     for idx, t, frame in iter_frames(path, start, stop, stride):
         if i >= n_est:
             break
         pose = engine(frame, side_guess)
-        green = detect_blobs(frame, GREEN)
-        orange.append(detect_blobs(frame, ORANGE))
+        green = detect_blobs(frame, vert)
+        orange.append(detect_blobs(frame, orange_rng))
         fuser.add(i, pose, assign_markers(pose, green, radius))
         times.append(t)
         i += 1
@@ -201,12 +203,13 @@ def analyze_frontal_video(path: str, engine, view: str, mm_per_px: float | None 
     marked = ["genou_G", "genou_D"] if view == "face" else ["hanche_G", "hanche_D"]
     fuser = Fuser(names, n_est)
     radius = max(12.0, meta.width * 0.03)
+    vert = current_ranges()["vert"]
     times, i = [], 0
     for _idx, t, frame in iter_frames(path, start, stop, stride):
         if i >= n_est:
             break
         pose = engine.frontal(frame)
-        green = detect_blobs(frame, GREEN)
+        green = detect_blobs(frame, vert)
         fuser.add(i, pose, assign_markers({k: v for k, v in pose.items() if k in marked}, green, radius))
         times.append(t)
         i += 1

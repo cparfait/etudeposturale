@@ -15,6 +15,7 @@ import Recommendations from "./pages/Recommendations";
 import Report from "./pages/Report";
 import Framing from "./pages/Framing";
 import Sensors from "./pages/Sensors";
+import Markers from "./pages/Markers";
 import { ToastProvider } from "./toast";
 import "./style.css";
 import "./pages.css";
@@ -36,6 +37,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/rapport" element={<Report />} />
             <Route path="/cadrage" element={<Framing />} />
             <Route path="/capteurs" element={<Sensors />} />
+            <Route path="/pastilles" element={<Markers />} />
           </Route>
         </Routes>
       </BrowserRouter>
