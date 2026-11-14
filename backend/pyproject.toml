@@ -1,0 +1,29 @@
+[project]
+name = "posturale"
+version = "0.1.0"
+description = "Étude posturale vélo : analyse vidéo locale, métriques et recommandations"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlmodel>=0.0.22",
+    "pyyaml>=6.0",
+    "numpy>=1.26",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27"]
+# Moteurs de pose et vidéo (lots 3–4)
+video = ["opencv-contrib-python>=4.10", "rtmlib>=0.0.15", "onnxruntime-gpu>=1.19", "fitdecode>=0.10"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]

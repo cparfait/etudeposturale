@@ -182,7 +182,9 @@ qualite:
   Q6_ecart_pastille_modele_max_deg: 3
 
 traitement:
-  butterworth: {ordre: 4, coupure_hz: 6, phase_nulle: true}
+  # 10 Hz : à 6 Hz, le filtre arrondit l'extension max du genou (+0,35° à 32°, +0,8° jambe presque tendue,
+  # mesuré sur cycliste simulé à 90 tr/min) ; à 10 Hz le biais est < 0,05°. À revoir sur vraies vidéos.
+  butterworth: {ordre: 4, coupure_hz: 10, phase_nulle: true}
   trou_max_interpole_ms: 50
   rejet_cycle_cadence_pct: 10
   rejet_cycle_points_manquants_pct: 5

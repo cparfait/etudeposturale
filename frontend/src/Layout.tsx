@@ -1,0 +1,101 @@
+import { NavLink, Outlet } from "react-router-dom";
+import { Bike, ClipboardList, FileText, Gauge, Home, Monitor, Moon, ShieldCheck, Sun, User, Video } from "lucide-react";
+import { useTheme, type ThemeChoice } from "./theme";
+
+export function LogoMark({ size = 36 }: { size?: number }) {
+  // Hanche – genou – cheville avec l'arc de flexion : l'idée de l'outil en un coup d'œil.
+  return (
+    <span className="logo-mark" style={{ width: size, height: size }} aria-hidden="true">
+      <svg width={size * 0.62} height={size * 0.62} viewBox="0 0 24 24" fill="none">
+        <path d="M6 3.5 L13.5 12 L9 20.5" stroke="#eef6e4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10.2 8.2 A5 5 0 0 0 11.1 15.4" stroke="#b8f34a" strokeWidth="1.8" strokeLinecap="round" />
+        <circle cx="6" cy="3.5" r="2" fill="#b8f34a" />
+        <circle cx="13.5" cy="12" r="2" fill="#b8f34a" />
+        <circle cx="9" cy="20.5" r="2" fill="#fb923c" />
+      </svg>
+    </span>
+  );
+}
+
+function Logo() {
+  return (
+    <NavLink to="/" className="logo" aria-label="Accueil — Étude posturale">
+      <LogoMark />
+      <span className="logo-text">Étude posturale<small>Bike fit à la maison</small></span>
+    </NavLink>
+  );
+}
+
+const MAIN = [
+  { to: "/", label: "Accueil", short: "Accueil", icon: Home, end: true },
+  { to: "/profil", label: "Mon profil", short: "Profil", icon: User },
+  { to: "/velo", label: "Mon vélo", short: "Vélo", icon: Bike },
+];
+const SOON = [
+  { label: "Séance de capture", icon: Video },
+  { label: "Analyse", icon: Gauge },
+  { label: "Ressentis", icon: ClipboardList },
+  { label: "Rapport", icon: FileText },
+];
+
+function ThemeToggle() {
+  const [theme, setTheme] = useTheme();
+  const opts: { v: ThemeChoice; icon: typeof Sun; label: string }[] = [
+    { v: "light", icon: Sun, label: "Thème clair" },
+    { v: "system", icon: Monitor, label: "Thème du système" },
+    { v: "dark", icon: Moon, label: "Thème sombre" },
+  ];
+  return (
+    <div className="theme-toggle" role="group" aria-label="Thème">
+      {opts.map(({ v, icon: Icon, label }) => (
+        <button key={v} type="button" aria-pressed={theme === v} title={label} aria-label={label} onClick={() => setTheme(v)}>
+          <Icon size={15} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function Layout() {
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <Logo />
+        {MAIN.map(({ to, label, icon: Icon, end }) => (
+          <NavLink key={to} to={to} end={end} className="nav-item">
+            <Icon size={18} /> {label}
+          </NavLink>
+        ))}
+        <div className="nav-label">Bientôt</div>
+        {SOON.map(({ label, icon: Icon }) => (
+          <span key={label} className="nav-item disabled" aria-disabled="true">
+            <Icon size={18} /> {label}
+          </span>
+        ))}
+        <div className="sidebar-foot">
+          <div className="privacy">
+            <ShieldCheck size={16} />
+            <span>100 % local : vidéos et mesures restent sur ce PC.</span>
+          </div>
+          <ThemeToggle />
+        </div>
+      </aside>
+
+      <div className="content">
+        <header className="mobile-top">
+          <Logo />
+          <ThemeToggle />
+        </header>
+        <Outlet />
+      </div>
+
+      <nav className="tabbar" aria-label="Navigation principale">
+        {MAIN.map(({ to, short, icon: Icon, end }) => (
+          <NavLink key={to} to={to} end={end}>
+            <Icon size={20} /> {short}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  );
+}

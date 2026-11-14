@@ -186,7 +186,7 @@ vidéo ─► 1. métadonnées ─► 2. découpe ─► 3. distorsion ─► 4.
 | 6 | Fusion | Pastille prioritaire quand elle est vue ; sinon point RTMW **recalé** (décalage moyen pastille ↔ point RTMW appris sur les images où les deux existent) ; marquage des trous | trajectoires fusionnées + origine de chaque point |
 | 7 | Manivelle | Angle de manivelle = direction (axe de pédalier → pastille d'axe de pédale), 0° en haut, sens du pédalage ; repli : cercle ajusté sur la trajectoire de la malléole | angle de manivelle θ(t) |
 | 8 | Cycles | Un cycle = passage de θ par 0° ; rejet des cycles de durée anormale (cadence ± 10 %) ou avec > 5 % de points manquants | liste de cycles |
-| 9 | Angles | Projection dans le plan du vélo (homographie), interpolation des trous courts (< 50 ms), **filtre Butterworth passe‑bas** d'ordre 4 à phase nulle (fréquence de coupure ~6 Hz, à ajuster sur les données), calcul des angles en **flexion** | séries d'angles par cycle |
+| 9 | Angles | Projection dans le plan du vélo (homographie), interpolation des trous courts (< 50 ms), **filtre Butterworth passe‑bas** d'ordre 4 à phase nulle (fréquence de coupure 10 Hz : à 6 Hz le filtre sous-estime l'extension max du genou de 0,3 à 0,8°, mesuré sur données simulées ; à revoir sur vraies vidéos), calcul des angles en **flexion** | séries d'angles par cycle |
 | 10 | Stats | Pour chaque métrique : valeur par cycle (extrême du cycle ou valeur à un angle de manivelle), puis moyenne ± écart‑type sur ≥ 20 cycles ; rejet des cycles aberrants (> 3 écarts médians absolus) | `MetricResult` par jambe |
 | 11 | Verdict | Comparaison aux plages de `metrics.yaml` → statut, **correction en mm** (§ 6), qualité de mesure (Q1–Q7) | `Verdict` |
 
