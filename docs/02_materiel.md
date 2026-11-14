@@ -32,9 +32,10 @@
 
 **Total complet : ~150–250 €.** Inutile : autre caméra, centrales inertielles, système pro.
 
-## 4. Point à vérifier
+## 4. Webcam Logitech : 30 fps (confirmé le 14/11/2026)
 
-- **Modèle de la webcam Logitech** : si elle ne filme qu'en 1080p à 30 fps (C920/C922…), la réserver au guidage ou à la vue de dos ; sinon prévoir une webcam 60 fps ou un téléphone d'occasion pour la 3D.
+- Trop lente pour mesurer des angles en pédalant (20 images par tour à 90 tr/min) → **réservée au guidage, à la vue de dos en complément et aux photos d'auto‑tests**.
+- Pour la 3D à 3 caméras (phase 3/5) : prévoir un **3e appareil filmant en 1080p à 60 fps minimum**, par exemple un smartphone Android d'occasion récent (~100–150 €) ou une webcam 60 fps (~80–120 €). À acheter seulement si la 3D est confirmée après validation du 2D.
 
 ## 5. Mire ChArUco : mode d'emploi
 

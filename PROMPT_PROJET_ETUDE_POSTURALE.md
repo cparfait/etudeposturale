@@ -244,3 +244,10 @@ Architecture retenue (détails et justification en section 9, à challenger en p
 - Cotes actuelles : hauteur de selle, recul, drop selle‑cintre (ou photo de profil avec mètre).
 - Type de pédales/cales (Look Kéo ? couleur de la cale = degré de liberté), chaussures, semelles.
 - Changement récent (matériel, position, volume d'entraînement) avant l'apparition de la douleur avant gauche ? Durée typique d'une « grosse sortie » avant que l'arrière du genou fasse mal ?
+
+### Compléments (14/11/2026)
+
+- **Profil, vélo, cotes, cales** : à saisir et modifier **dans l'application** (écrans « Mon profil » et « Mon vélo », historique des configurations).
+- **Douleur avant du genou gauche** : apparue après une sortie de **90 km, une première** (.FIT du 18/10/2026) → pic de volume à prendre en compte en priorité, capture en fin d'effort.
+- **Webcam Logitech** : 30 fps → pas de mesure dynamique ; guidage, vue de dos en complément, auto‑tests.
+- **Phase 1 livrée** : [docs/03_specification.md](docs/03_specification.md), [config/metrics.yaml](config/metrics.yaml), [docs/04_benchmark_pose.md](docs/04_benchmark_pose.md) + `tools/benchmark_pose.py`.

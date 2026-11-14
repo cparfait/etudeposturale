@@ -1,0 +1,195 @@
+# Référentiel des métriques — source unique des plages affichées par l'outil.
+# Détail et discussion : docs/01_metriques.md. Toutes les plages sont INDICATIVES.
+# fiabilite : etude | revue | pratique | descriptif | a_definir
+# Convention : angles en FLEXION (0° = segment aligné). Manivelle : 0° = haut (PMH), 90° = avant, 180° = bas (PMB).
+
+version: 1
+date: 2026-11-14
+
+sources:
+  holmes1994:
+    ref: "Holmes JC, Pruitt AL, Whalen NJ (1994). Lower extremity overuse in bicycling. Clin Sports Med 13(1)."
+    fiabilite: etude
+  ferrer_roca2012:
+    ref: "Ferrer-Roca V et al. (2012). A comparison of static and dynamic methods for saddle height. J Strength Cond Res 26(11)."
+    fiabilite: etude
+  bike_fitting_review:
+    ref: "Bike fitting: a review"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9219349"
+    fiabilite: revue
+  swart_holliday:
+    ref: "Swart J, Holliday W — anthropométrie et configuration de vélo"
+    url: "https://pubmed.ncbi.nlm.nih.gov/35782160/"
+    fiabilite: descriptif
+  fitters:
+    ref: "Consensus de fitters (Retül, Hogg, Burke, guides professionnels) — non confirmé par des essais contrôlés"
+    fiabilite: pratique
+
+objectif_par_defaut: performance_confort   # performance | performance_confort | confort
+discipline_par_defaut: route
+
+metrics:
+  P1:
+    nom: "Flexion du genou à l'extension max (≈ PMB)"
+    vue: profil
+    cote: [G, D]
+    unite: deg
+    reperes: [trochanter, epicondyle_femoral, malleole]
+    calcul: {type: extreme_cycle, sens: min}
+    plage:
+      dynamique: {min: 30, max: 40, source: [ferrer_roca2012, bike_fitting_review], fiabilite: etude}
+      dynamique_faible_intensite: {min: 33, max: 43, source: [ferrer_roca2012], fiabilite: etude}
+      statique: {min: 25, max: 35, source: [holmes1994], fiabilite: etude}
+    reglage_lie: hauteur_selle
+    interpretation:
+      sous_min: "Genou très tendu en bas du coup de pédale : selle possiblement trop haute (douleur arrière du genou ?)"
+      sur_max: "Genou très plié en bas du coup de pédale : selle possiblement trop basse (douleur avant du genou ?)"
+
+  P2:
+    nom: "Flexion du genou max (≈ PMH)"
+    vue: profil
+    cote: [G, D]
+    unite: deg
+    reperes: [trochanter, epicondyle_femoral, malleole]
+    calcul: {type: extreme_cycle, sens: max}
+    plage:
+      dynamique: {min: 105, max: 115, source: [fitters], fiabilite: pratique, note: "Chiffres Retül non confirmés par une source primaire"}
+    reglage_lie: [hauteur_selle, longueur_manivelle]
+
+  P3:
+    nom: "Amplitude du genou"
+    vue: profil
+    cote: [G, D]
+    unite: deg
+    calcul: {type: difference, de: P2, moins: P1}
+    plage:
+      dynamique: {min: 70, max: 80, fiabilite: a_definir}
+
+  P4:
+    nom: "Angle de hanche fermé (≈ PMH)"
+    vue: profil
+    cote: [G, D]
+    unite: deg
+    reperes: [acromion, trochanter, epicondyle_femoral]
+    calcul: {type: extreme_cycle, sens: min, convention: angle_interieur_tronc_cuisse}
+    plage:
+      descriptif: {moyenne: 77, ecart_type: 5, source: [swart_holliday], fiabilite: descriptif, note: "Moyenne observée, pas une cible"}
+    reglage_lie: [hauteur_selle, recul_selle, hauteur_cintre, longueur_manivelle]
+
+  P5:
+    nom: "Plage de cheville (ankling)"
+    vue: profil
+    cote: [G, D]
+    unite: deg
+    reperes: [epicondyle_femoral, malleole, talon, metatarse5]
+    calcul: {type: amplitude_cycle}
+    plage:
+      dynamique: {min: 15, max: 25, source: [fitters], fiabilite: pratique}
+    reglage_lie: [hauteur_selle, cales]
+
+  P6:
+    nom: "Genou vs axe de pédale à 3 h (KOPS)"
+    vue: profil
+    cote: [G, D]
+    unite: mm
+    reperes: [epicondyle_femoral, axe_pedale]
+    calcul: {type: valeur_a_angle_manivelle, angle: 90, mesure: ecart_horizontal}
+    plage:
+      dynamique: {min: -20, max: 20, source: [fitters, bike_fitting_review], fiabilite: pratique, note: "Point de départ empirique, pas une règle"}
+    reglage_lie: recul_selle
+
+  P7:
+    nom: "Angle du tronc"
+    vue: profil
+    unite: deg
+    reperes: [acromion, trochanter]
+    calcul: {type: moyenne_cycle, mesure: angle_vs_horizontale}
+    plage:
+      endurance: {min: 40, max: 50, source: [fitters], fiabilite: pratique}
+      performance: {min: 30, max: 40, source: [fitters], fiabilite: pratique}
+    interprete_au_mvp: false
+
+  P8:
+    nom: "Angle d'épaule (bras / tronc)"
+    vue: profil
+    unite: deg
+    reperes: [trochanter, acromion, epicondyle_humeral]
+    calcul: {type: moyenne_cycle}
+    plage:
+      descriptif: {moyenne: 112, ecart_type: 7, source: [swart_holliday], fiabilite: descriptif}
+    interprete_au_mvp: false
+
+  P9:
+    nom: "Flexion du coude"
+    vue: profil
+    unite: deg
+    reperes: [acromion, epicondyle_humeral, styloide_ulnaire]
+    calcul: {type: moyenne_cycle}
+    plage:
+      descriptif: {moyenne: 19, ecart_type: 8, source: [swart_holliday], fiabilite: descriptif}
+    interprete_au_mvp: false
+
+  P10:
+    nom: "Mouvement vertical de la hanche"
+    vue: profil
+    cote: [G, D]
+    unite: mm
+    reperes: [trochanter]
+    calcul: {type: amplitude_cycle, axe: vertical}
+    plage:
+      dynamique: {fiabilite: a_definir, note: "Comparer G/D et avant/après ; élevé = signe possible de selle haute"}
+    reglage_lie: hauteur_selle
+
+  D1:
+    nom: "Bascule du bassin (roulis)"
+    vue: dos
+    unite: deg
+    reperes: [eips_g, eips_d]
+    calcul: {type: amplitude_cycle}
+    plage:
+      dynamique: {fiabilite: pratique, note: "Quelques degrés ; bascule nette = selle trop haute"}
+    phase: 3
+
+  F1:
+    nom: "Trajectoire médio-latérale du genou"
+    vue: face
+    cote: [G, D]
+    unite: mm
+    reperes: [rotule]
+    calcul: {type: amplitude_cycle, axe: horizontal}
+    plage:
+      dynamique: {max: 20, source: [fitters], fiabilite: pratique}
+    phase: 3
+
+asymetrie:
+  # Écart |G - D| au-delà duquel l'asymétrie est signalée
+  P1: 5
+  P2: 5
+  P5: 8
+  equilibre_puissance_pct: 3   # au-delà de 48–52 %
+
+correction_selle:
+  pas_max_mm: 5                      # garde-fou : un seul petit changement à la fois
+  angle_tube_selle_defaut_deg: 73.5  # remplacé par la valeur saisie dans « Mon vélo »
+  cible: milieu_plage                # milieu_plage | bord_le_plus_proche
+
+qualite:
+  Q1_fps_min: 60
+  Q2_visibilite_min_pct: 95
+  Q3_perpendicularite_max_deg: 5
+  Q4_cycles_min: 20
+  Q5_ecart_type_P1_max_deg: 3
+  Q6_ecart_pastille_modele_max_deg: 3
+
+traitement:
+  butterworth: {ordre: 4, coupure_hz: 6, phase_nulle: true}
+  trou_max_interpole_ms: 50
+  rejet_cycle_cadence_pct: 10
+  rejet_cycle_points_manquants_pct: 5
+  rejet_aberrant_mad: 3
+  secondes_ignorees_debut: 5
+
+avertissement: >-
+  Outil d'aide à la décision : les plages sont indicatives et les recommandations sont des hypothèses à tester.
+  Il ne remplace pas un avis médical ni un bike fitter. En cas de douleur aiguë, de gonflement, de blocage,
+  de douleur au repos ou qui persiste, consultez un professionnel de santé.
