@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Bike as BikeIcon, Footprints, History, Info, Ruler, Save } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertTriangle, ArrowRight, Bike as BikeIcon, Footprints, History, Info, Ruler, Save } from "lucide-react";
 import { api, type BikeConfig, type Values } from "../api";
 import { Fields, type FieldSpec } from "../fields";
 import { useToast } from "../toast";
@@ -163,7 +164,12 @@ export default function Bike() {
           <h1>Mon vélo</h1>
           <p>Chaque enregistrement des cotes crée une <strong>nouvelle configuration datée</strong> : l'historique sert aux comparaisons avant/après.</p>
         </div>
-        {current && <span className="chip brand">En cours : {current.libelle ?? `n° ${current.id}`}</span>}
+        <div className="row" style={{ gap: 8, alignSelf: "flex-start" }}>
+          {current && <span className="chip brand">En cours : {current.libelle ?? `n° ${current.id}`}</span>}
+          {current?.hauteur_selle_mm && changed.size === 0 && (
+            <Link to="/seance-guidee" className="btn btn-primary">Continuer : séance guidée <ArrowRight size={17} /></Link>
+          )}
+        </div>
       </header>
 
       <div className="bike-layout">

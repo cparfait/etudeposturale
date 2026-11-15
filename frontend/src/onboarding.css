@@ -94,11 +94,13 @@
 .ob-foot { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 10px; padding: 14px max(16px, calc((100% - 760px) / 2));
   background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
 
-/* Écran d'accueil : le clic active le son */
+/* Écran d'accueil : vidéo d'intro, présentation de l'app, « Commencer » (ce clic autorise aussi le son) */
 .ob-splash { align-items: center; justify-content: center; padding: 24px 16px; }
-.ob-splash-card { width: min(520px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; }
-.ob-splash-card h1 { font-family: var(--font-display); font-size: clamp(2.2rem, 6vw, 3rem); margin: 0; }
-.ob-splash-go { font-size: 1.08rem; padding: 16px 28px; border-radius: 16px; gap: 10px; }
+.ob-splash-card { width: min(760px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 26px; }
+.ob-intro { width: 100%; aspect-ratio: 16 / 9; border-radius: 22px; background: #0f150e; box-shadow: var(--shadow-lg); display: block; object-fit: cover; }
+.ob-splash-card .ob-lead { max-width: 620px; color: var(--text-2); }
+.ob-splash-go { font-size: 1.1rem; padding: 16px 36px; border-radius: 16px; gap: 10px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* Rappel sur l'accueil */
 .home-eq { display: flex; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }

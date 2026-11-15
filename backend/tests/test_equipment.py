@@ -62,7 +62,7 @@ def test_equipment_in_ai_context(client):
     client.put("/api/equipment", json={"items": {"pastilles_orange": False, "micro": True}})
     with Session(get_engine()) as db:
         data = context.build(db)
-    assert data["equipement"]["obligatoires_manquants"] == ["2 pastilles orange"]
+    assert data["equipement"]["obligatoires_manquants"] == ["Pastilles orange (2 par côté filmé)"]
 
 
 def test_cartesia_key_and_tts(client, monkeypatch, tmp_path):

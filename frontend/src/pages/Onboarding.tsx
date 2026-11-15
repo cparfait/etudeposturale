@@ -22,6 +22,16 @@ const AUTO = "posturale.onboarding.voix";
 
 function readAuto() { try { return localStorage.getItem(AUTO) !== "0"; } catch { return true; } }
 
+/** Première étape du parcours pas encore faite (profil → vélo → séance guidée). */
+async function nextStep(): Promise<string> {
+  try {
+    const [p, c] = await Promise.all([api.getProfile(), api.listConfigs()]);
+    if (!(p?.taille_cm && p?.entrejambe_mm)) return "/profil";
+    if (!c[0]?.hauteur_selle_mm) return "/velo";
+    return "/seance-guidee";
+  } catch { return "/profil"; }
+}
+
 export default function Onboarding() {
   const nav = useNavigate();
   const [params] = useSearchParams();
@@ -59,20 +69,23 @@ export default function Onboarding() {
   const go = (n: number) => { setI(Math.max(0, Math.min(STEPS.length - 1, n))); window.scrollTo({ top: 0 }); };
   async function finish(to: string) {
     await saveEquipment({ onboarding_fait: true }).catch(() => {});
-    nav(to);
+    nav(to === "suite" ? await nextStep() : to);
   }
 
   if (!started) {
+    const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     return (
       <div className="ob ob-splash">
         <div className="ob-splash-card">
-          <LogoMark size={64} />
-          <h1>Bienvenue</h1>
-          <p className="ob-lead">En 6 écrans courts, je t'explique comment fonctionne l'outil et ce dont tu as besoin. Une voix te guide : monte le son.</p>
-          <button className="btn btn-primary ob-splash-go" onClick={() => { setAutoPref(true); setStarted(true); }}>
-            <Volume2 size={20} /> Commencer avec le son
-          </button>
-          <button className="ob-skip" onClick={() => { setAutoPref(false); setStarted(true); }}>Commencer sans le son</button>
+          <h1 className="sr-only">Étude posturale</h1>
+          <video className="ob-intro" src="/intro/intro.mp4" poster="/intro/intro-poster.jpg" autoPlay={!reduced} muted playsInline
+            aria-label="Présentation : un cycliste pédale, l'application pose les pastilles et mesure l'angle du genou." />
+          <p className="ob-lead">
+            Filme-toi en pédalant sur ton home trainer : l'application mesure les angles de tes articulations à chaque tour
+            et te dit, au millimètre près, quoi régler sur ton vélo. Une modification à la fois, et tout reste sur ton ordinateur.
+          </p>
+          {/* Ce clic autorise aussi le navigateur à jouer la voix qui accompagne les écrans suivants */}
+          <button className="btn btn-primary ob-splash-go" onClick={() => setStarted(true)}>Commencer <ArrowRight size={20} /></button>
         </div>
       </div>
     );
@@ -117,7 +130,7 @@ export default function Onboarding() {
         <button className="btn btn-ghost" onClick={() => go(i - 1)} disabled={i === 0}><ArrowLeft size={16} /> Précédent</button>
         {i < STEPS.length - 1
           ? <button className="btn btn-primary" onClick={() => go(i + 1)}>{i === 0 ? "C'est parti" : "Suivant"} <ArrowRight size={16} /></button>
-          : <button className="btn btn-primary" onClick={() => finish("/profil")}>Remplir mon profil <ArrowRight size={16} /></button>}
+          : <button className="btn btn-primary" onClick={() => finish("suite")}>Continuer <ArrowRight size={16} /></button>}
       </footer>
     </div>
   );
@@ -235,7 +248,7 @@ function Ready({ eq, onGo }: { eq: Equipment | null; onGo: (to: string) => void 
       {eq && !eq.pret ? <AlertTriangle size={52} className="ob-warn-icon" /> : <CheckCircle2 size={56} />}
       <p className="ob-lead">{eq && !eq.pret ? "Procure-toi le matériel obligatoire manquant, puis :" : "Tu as tout ce qu'il faut."} commence par ton <strong>profil</strong>, puis ton <strong>vélo</strong>, et lance la <strong>séance guidée</strong>.</p>
       <div className="ob-ready-actions">
-        <button className="btn btn-primary" onClick={() => onGo("/profil")}><User size={16} /> Remplir mon profil</button>
+        <button className="btn btn-primary" onClick={() => onGo("suite")}><ArrowRight size={16} /> Continuer mon parcours</button>
         <button className="btn btn-ghost" onClick={() => onGo("/")}>Aller à l'accueil</button>
       </div>
       <p className="ob-note">Ce guide reste accessible dans le menu : <Link className="link" to="/bienvenue">Guide de démarrage</Link> · <Link className="link" to="/equipement">Mon équipement</Link></p>

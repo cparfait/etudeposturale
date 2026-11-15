@@ -44,3 +44,8 @@ Thumbs.db
 # Fichiers générés / locaux
 frontend/public/mediapipe/wasm/
 frontend/certs/
+
+# HyperFrames : artefacts de prévisualisation et rendus
+media/*/.hyperframes/
+media/*/renders/
+!frontend/public/intro/*.mp4

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, NotebookPen, Ruler, Save } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Activity, ArrowRight, NotebookPen, Ruler, Save } from "lucide-react";
 import { api, type Values } from "../api";
 import { Fields, type FieldSpec } from "../fields";
 import { useToast } from "../toast";
@@ -48,6 +49,7 @@ export default function Profile() {
 
   const dirty = useMemo(() => Object.keys({ ...values, ...saved }).some((k) => (values[k] ?? null) !== (saved[k] ?? null)), [values, saved]);
   const set = (n: string, v: string | number | null) => setValues((s) => ({ ...s, [n]: v }));
+  const complete = !!(saved.taille_cm && saved.entrejambe_mm);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -72,9 +74,13 @@ export default function Profile() {
           <h1>Mon profil</h1>
           <p>Ces mesures servent de point de départ et de contrôle de vraisemblance pour la hauteur de selle. Tout reste modifiable à tout moment.</p>
         </div>
-        <button className="btn btn-primary" type="submit" disabled={!dirty || busy}>
-          <Save size={17} /> {busy ? "Enregistrement…" : dirty ? "Enregistrer" : "Enregistré"}
-        </button>
+        {complete && !dirty ? (
+          <Link to="/velo" className="btn btn-primary">Continuer : mon vélo <ArrowRight size={17} /></Link>
+        ) : (
+          <button className="btn btn-primary" type="submit" disabled={!dirty || busy}>
+            <Save size={17} /> {busy ? "Enregistrement…" : dirty ? "Enregistrer" : "Enregistré"}
+          </button>
+        )}
       </header>
 
       <div className="stack">
@@ -101,8 +107,10 @@ export default function Profile() {
           </div>
           <Fields specs={NOTES} values={values} onChange={set} />
           <div className="form-foot">
-            <span className="subtle">{dirty ? "Modifications non enregistrées" : "Tout est enregistré"}</span>
-            <button className="btn btn-primary" type="submit" disabled={!dirty || busy}><Save size={17} /> Enregistrer</button>
+            <span className="subtle">{dirty ? "Modifications non enregistrées" : complete ? "Tout est enregistré : passe à ton vélo." : "Taille et entrejambe sont nécessaires."}</span>
+            {complete && !dirty
+              ? <Link to="/velo" className="btn btn-primary">Continuer : mon vélo <ArrowRight size={17} /></Link>
+              : <button className="btn btn-primary" type="submit" disabled={!dirty || busy}><Save size={17} /> Enregistrer</button>}
           </div>
         </section>
       </div>
