@@ -171,17 +171,15 @@
   .ob-foot .btn { flex: 1; justify-content: center; }
 }
 
-/* Mon équipement (page) : mêmes listes compactes que le guide, en colonnes */
-@media (min-width: 1200px) {
-  .eq-compact .eq-page { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
-  .eq-compact .eq-list { gap: 8px; }
-  .eq-compact .eq-item { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; padding: 9px 12px; gap: 10px; }
-  .eq-compact .eq-why { display: none; }  /* explication au survol (déjà vue dans le guide) */
-  .eq-compact .eq-without { grid-column: 1 / -1; }
+/* Mon équipement (page) : une seule liste, comme dans le guide (une ligne par élément, boutons à droite) */
+.eq-compact .eq-page { grid-template-columns: minmax(0, 1fr); max-width: 1100px; gap: 18px; }
+@media (min-width: 1000px) {
+  .eq-compact .eq-list { gap: 6px; }
+  .eq-compact .eq-item { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; padding: 9px 16px; gap: 14px; }
   .eq-compact .eq-icon { width: 32px; height: 32px; border-radius: 9px; }
-  .eq-compact .eq-why { font-size: 0.82rem; margin-top: 2px; }
-  .eq-compact .eq-without { margin-top: 8px; padding: 7px 10px; font-size: 0.8rem; }
-  .eq-compact .eq-choice button { padding: 5px 10px; font-size: 0.78rem; }
+  .eq-compact .eq-why { font-size: 0.84rem; margin-top: 2px; }
+  .eq-compact .eq-without { margin-top: 6px; padding: 6px 10px; font-size: 0.82rem; }
+  .eq-compact .eq-choice button { padding: 6px 11px; font-size: 0.8rem; }
   .eq-compact .eq-section { margin-bottom: 8px; }
 }
 
