@@ -201,7 +201,7 @@ export default function AISettings() {
           <div className="card stack" style={{ gap: 14 }}>
             <div className="card-head" style={{ marginBottom: 0 }}><span className="icon-tile"><Volume2 size={18} /></span><div><h3 style={{ margin: 0 }}>Le coach te parle</h3><p>Synthèse vocale</p></div></div>
             <div className="segmented">
-              {([["piper", "Piper (PC)"], ["openai", "OpenAI"], ["navigateur", "Navigateur"], ["aucune", "Muet"]] as [TtsEngine, string][]).map(([id, label]) => (
+              {([["piper", "Piper (PC)"], ["cartesia", "Cartesia"], ["openai", "OpenAI"], ["navigateur", "Navigateur"], ["aucune", "Muet"]] as [TtsEngine, string][]).map(([id, label]) => (
                 <button key={id} aria-pressed={v.tts === id} onClick={() => setVoice({ tts: id })}>{label}</button>
               ))}
             </div>
@@ -227,6 +227,8 @@ export default function AISettings() {
                 )
               )
             )}
+            {v.tts === "cartesia" && <CartesiaPanel hasKey={!!s.cles?.cartesia} voice={v.cartesia_voix} onVoice={(id) => setVoice({ cartesia_voix: id })}
+              onKey={async (cle) => { await http.put("/voice/keys/cartesia", { cle }); setS(await http.get("/ai/settings")); }} />}
             {v.tts === "openai" && (
               <label className="field"><span className="field-label">Voix OpenAI</span>
                 <select className="select" value={v.openai_voix} onChange={(e) => setVoice({ openai_voix: e.target.value })}>
@@ -289,6 +291,39 @@ export default function AISettings() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+/** Cartesia : clé (chiffrée, jamais réaffichée) et choix d'une voix française. */
+function CartesiaPanel({ hasKey, voice, onVoice, onKey }: { hasKey: boolean; voice: string; onVoice: (id: string) => void; onKey: (cle: string | null) => Promise<void> }) {
+  const [key, setKey] = useState("");
+  const [voices, setVoices] = useState<{ id: string; nom: string; description: string }[]>([]);
+  const [err, setErr] = useState("");
+  useEffect(() => {
+    if (!hasKey) return;
+    http.get("/voice/cartesia/voices").then((r) => { setVoices(r.voix); setErr(""); }).catch((e) => setErr(e.message));
+  }, [hasKey]);
+  const current = voices.find((x) => x.id === voice);
+  return (
+    <div className="stack" style={{ gap: 12 }}>
+      <label className="field"><span className="field-label">Clé Cartesia {hasKey && <span className="chip ok" style={{ marginLeft: 6 }}>enregistrée</span>}</span>
+        <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
+          <input className="input" type="password" autoComplete="off" placeholder={hasKey ? "•••••••• (remplacer)" : "sk_car_…"} value={key} onChange={(e) => setKey(e.target.value)} style={{ flex: 1 }} />
+          <button className="btn btn-primary btn-sm" disabled={!key.trim()} onClick={async () => { await onKey(key.trim()); setKey(""); }}>Enregistrer</button>
+          {hasKey && <button className="btn btn-ghost btn-sm" onClick={() => onKey(null)}>Supprimer</button>}
+        </div>
+        <span className="field-help">Chiffrée par Windows sur ce PC, jamais réaffichée. <a className="link" href="https://play.cartesia.ai/keys" target="_blank" rel="noreferrer">Obtenir une clé</a></span>
+      </label>
+      {hasKey && (
+        <label className="field"><span className="field-label">Voix</span>
+          <select className="select" value={voice} onChange={(e) => onVoice(e.target.value)}>
+            {!current && <option value={voice}>Henri (par défaut)</option>}
+            {voices.map((x) => <option key={x.id} value={x.id}>{x.nom}</option>)}
+          </select>
+          <span className="field-help">{err || current?.description || "Voix française."} En ligne : le texte lu part chez Cartesia.</span>
+        </label>
+      )}
     </div>
   );
 }

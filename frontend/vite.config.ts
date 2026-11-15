@@ -14,6 +14,6 @@ export default defineConfig({
     port: 5173,
     host: https ? true : "localhost",
     https,
-    proxy: { "/api": "http://127.0.0.1:8000" },
+    proxy: { "/api": process.env.POSTURALE_API ?? "http://127.0.0.1:8000" },
   },
 });

@@ -19,17 +19,21 @@ import Markers from "./pages/Markers";
 import Coach from "./pages/Coach";
 import AISettings from "./pages/AISettings";
 import Guided from "./pages/Guided";
+import Onboarding from "./pages/Onboarding";
+import Equipment from "./pages/Equipment";
 import { ToastProvider } from "./toast";
 import "./style.css";
 import "./pages.css";
 import "./coach.css";
 import "./guided.css";
+import "./onboarding.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ToastProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/bienvenue" element={<Onboarding />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/profil" element={<Profile />} />
@@ -46,6 +50,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/coach" element={<Coach />} />
             <Route path="/reglages-ia" element={<AISettings />} />
             <Route path="/seance-guidee" element={<Guided />} />
+            <Route path="/equipement" element={<Equipment />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -4,6 +4,7 @@ import { Activity, Camera, Check, ClipboardCheck, FileUp, Gauge, Play, Upload, V
 import { http, type Any } from "../api";
 import { useToast } from "../toast";
 import { fmtDate } from "./Sessions";
+import { has, useEquipment } from "../equipment";
 
 const CHECKS = [
   { t: "Pastilles vertes sur le corps (côté caméra)", d: "Grand trochanter, épicondyle du genou, malléole, talon et 5e métatarse (sur la chaussure), acromion, coude, poignet. Repérer cycliste assis, manivelle en bas." },
@@ -48,6 +49,7 @@ export default function SessionDetail() {
   const [busy, setBusy] = useState<string | null>(null);
   const [engines, setEngines] = useState<Record<string, string>>({});
   const toast = useToast();
+  const eq = useEquipment();
 
   const load = useCallback(() => http.get(`/sessions/${id}`).then(setS).catch((e) => toast(e.message, "error")), [id, toast]);
   useEffect(() => {
@@ -112,6 +114,10 @@ export default function SessionDetail() {
   }
 
   if (!s) return <div className="page"><p className="subtle">Chargement…</p></div>;
+  // Adapté à l'équipement : sans pastilles vertes, sans home trainer connecté
+  const checks = CHECKS.map((c, i) => ({ ...c, i, d: c.t.startsWith("Échauffement") && !has(eq, "trainer_connecte")
+    ? "Résistance fixe sur le home trainer (la même à chaque séance), cadence 85–95 tr/min, mains sur les cocottes." : c.d }))
+    .filter((c) => !(c.i === 0 && !has(eq, "pastilles_vertes")));
   const fit = s.fits[0];
 
   return (
@@ -129,22 +135,22 @@ export default function SessionDetail() {
         <section className="card">
           <div className="card-head">
             <span className="icon-tile"><ClipboardCheck size={19} /></span>
-            <div><h2>Préparation</h2><p>{done.filter(Boolean).length} / {CHECKS.length} — coche au fur et à mesure.</p></div>
+            <div><h2>Préparation</h2><p>{checks.filter((c) => done[c.i]).length} / {checks.length} — coche au fur et à mesure.</p></div>
           </div>
           <ul className="checklist">
-            {CHECKS.map((c, i) => (
+            {checks.map((c) => { const i = c.i; return (
               <li key={i} className={done[i] ? "done" : ""}>
                 <button type="button" aria-pressed={done[i]} onClick={() => setDone((d) => d.map((v, j) => (j === i ? !v : v)))}>
                   <span className="ck-box">{done[i] && <Check size={14} />}</span>
                   <span><span className="ck-title">{c.t}</span><span className="ck-text">{c.d}</span></span>
                 </button>
               </li>
-            ))}
+            ); })}
           </ul>
         </section>
 
         <div className="stack">
-          <section className="card">
+          {has(eq, "mire") && <section className="card">
             <div className="card-head">
               <span className="icon-tile bike"><Camera size={19} /></span>
               <div><h2>Calibration de l'objectif <span className="chip">optionnelle</span></h2><p>Une fois par téléphone et par mode vidéo : filme la mire 20–30 s en la bougeant.</p></div>
@@ -159,9 +165,9 @@ export default function SessionDetail() {
                 <input type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCalib(f); e.target.value = ""; }} />
               </label>
             </div>
-          </section>
+          </section>}
 
-          <section className="card">
+          {has(eq, "compteur_fit") && <section className="card">
             <div className="card-head">
               <span className="icon-tile"><Activity size={19} /></span>
               <div><h2>Fichier .FIT du compteur <span className="chip">optionnel</span></h2><p>Puissance, cadence, équilibre G/D et phases pendant chaque prise.</p></div>
@@ -174,7 +180,7 @@ export default function SessionDetail() {
             ) : (
               <Drop label="Déposer le .FIT" text="Garmin Edge : dossier Garmin/Activity" accept=".fit" onFile={uploadFit} busy={busy === "fit"} icon={FileUp} />
             )}
-          </section>
+          </section>}
         </div>
       </div>
 

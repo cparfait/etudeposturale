@@ -32,7 +32,9 @@ def say(data: SayIn) -> Response:
     if not text:
         raise HTTPException(400, "Texte vide")
     try:
-        if v["tts"] == "openai":
+        if v["tts"] == "cartesia":
+            audio, mime = tts.cartesia(text, settings.get_key("cartesia", s), v["cartesia_voix"], v["cartesia_modele"], v["vitesse"])
+        elif v["tts"] == "openai":
             audio, mime = tts.openai(text, settings.get_key("openai", s), v["openai_voix"], v["openai_tts_modele"], v["vitesse"])
         elif v["tts"] == "piper":
             exe, voice = v["piper_exe"], v["piper_voix"]
@@ -46,6 +48,25 @@ def say(data: SayIn) -> Response:
     except tts.TTSError as exc:
         raise HTTPException(502, str(exc)) from exc
     return Response(audio, media_type=mime)
+
+
+class KeyIn(BaseModel):
+    cle: str | None = None
+
+
+@router.put("/keys/cartesia")
+def cartesia_key(data: KeyIn) -> dict:
+    """Clé Cartesia, chiffrée par Windows comme celles des fournisseurs d'IA ; jamais renvoyée."""
+    settings.set_key("cartesia", data.cle)
+    return {"cle_enregistree": bool(data.cle)}
+
+
+@router.get("/cartesia/voices")
+def cartesia_voices() -> dict:
+    try:
+        return {"voix": tts.cartesia_voices(settings.get_key("cartesia"))}
+    except tts.TTSError as exc:
+        raise HTTPException(502, str(exc)) from exc
 
 
 @router.post("/stt/prepare")

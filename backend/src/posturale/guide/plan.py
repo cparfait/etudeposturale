@@ -14,6 +14,8 @@ from typing import Any
 
 from sqlmodel import Session as DB, select
 
+from posturale import equipment
+
 from posturale.storage.models import Analysis, BikeConfig, Capture, FitFile, PainEntry, Profile, Session as Seance
 
 VIEWS: dict[str, dict[str, str]] = {
@@ -154,22 +156,31 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
     profiles = [v for v in views if v.startswith("profil")]
     both = len(profiles) == 2
     change_txt = ", ".join(_fmt_change(c) for c in f["changements"])
+    eq = equipment.load()
+    green, trainer = equipment.has(eq, "pastilles_vertes"), equipment.has(eq, "trainer_connecte")
+    meter, micro = equipment.has(eq, "capteur_puissance"), equipment.has(eq, "micro")
+    chart_only = eq["items"].get("pastilles_orange") is False and bool(eq["items"].get("mire"))
+    effort = f"à {power} watts" if trainer else "à résistance constante"
+    if not green:
+        reasons.append("Sans pastilles vertes : l'IA de pose repère les articulations seule (précision un peu réduite).")
+    if not trainer:
+        reasons.append("Home trainer non connecté : tu règles toi-même une résistance fixe, la même à chaque séance.")
 
     if kind == "verification":
         titre = "Séance de vérification"
         intro = (f"Séance de vérification après ton réglage : {change_txt}. On refait les mêmes prises, à la même puissance, "
-                 f"{power} watts, pour comparer avec la dernière séance. Je te guide étape par étape : dis « c'est fait » ou "
+                 f"{effort.removeprefix('à ')}, pour comparer avec la dernière séance. Je te guide étape par étape : dis « c'est fait » ou "
                  "« suivant » pour avancer, « répète » pour réécouter, et pose-moi une question quand tu veux.")
     elif kind == "premiere":
         titre = "Première séance guidée"
         intro = ("Bienvenue pour ta première séance guidée. On va poser les pastilles, installer le téléphone, t'échauffer, "
-                 f"puis filmer {len(views)} prise{'s' if len(views) > 1 else ''} d'une minute à {power} watts. Compte une "
+                 f"puis filmer {len(views)} prise{'s' if len(views) > 1 else ''} d'une minute {effort}. Compte une "
                  "quarantaine de minutes. Dis « c'est fait » ou « suivant » pour avancer, « répète » pour réécouter, et "
                  "pose-moi une question quand tu veux.")
     else:
         titre = "Séance de suivi"
         intro = (f"Séance de suivi : ta configuration n'a pas changé depuis la dernière fois. On refait {len(views)} prise"
-                 f"{'s' if len(views) > 1 else ''} à {power} watts pour confirmer les mesures. Dis « c'est fait » ou « suivant » "
+                 f"{'s' if len(views) > 1 else ''} {effort} pour confirmer les mesures. Dis « c'est fait » ou « suivant » "
                  "pour avancer, et pose-moi une question quand tu veux.")
 
     steps = [_step("accueil", "info", titre, intro)]
@@ -182,18 +193,24 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
                 "Assieds-toi sur le vélo, manivelle en bas, pour repérer la hanche et le genou.")
         if kind == "verification":
             dire = f"Vérifie que les pastilles vertes sont toujours au même endroit, {side_txt}. Remets celles qui ont bougé."
-        steps.append(_step("pastilles_corps", "checklist", "Pastilles sur le corps", dire, items=body_items))
+        if green:
+            steps.append(_step("pastilles_corps", "checklist", "Pastilles sur le corps", dire, items=body_items))
         bike_items = [{"t": "Axe de pédalier", "d": "Pastille orange au centre du plateau (ou du boîtier côté gauche)."},
                       {"t": "Axe de pédale", "d": "Pastille orange au bout de l'axe de pédale, côté caméra" + (" (les deux pédales)." if both else ".")}]
-        steps.append(_step("pastilles_velo", "checklist", "Pastilles sur le vélo",
-                           "Deux pastilles orange sur le vélo : elles donnent l'angle de manivelle et l'échelle en millimètres.",
-                           items=bike_items))
+        if chart_only:
+            steps.append(_step("mire", "checklist", "Mire contre le cadre",
+                               "Sans pastilles orange, c'est la mire qui donne l'échelle : pose-la à plat contre le cadre, dans le plan du vélo.",
+                               items=[{"t": "Mire contre le cadre", "d": "Bien à plat, côté caméra, entièrement visible sur l'image."}]))
+        else:
+            steps.append(_step("pastilles_velo", "checklist", "Pastilles sur le vélo",
+                               "Deux pastilles orange sur le vélo : elles donnent l'angle de manivelle et l'échelle en millimètres.",
+                               items=bike_items))
     extra = []
     if "face" in views:
         extra.append({"t": "Rotules", "d": "Une pastille verte au centre de chaque rotule (vue de face)."})
     if "dos" in views:
         extra.append({"t": "Bas du dos", "d": "Une pastille verte sur chacune des deux fossettes au-dessus des fesses (vue de dos)."})
-    if extra:
+    if extra and green:
         steps.append(_step("pastilles_face_dos", "checklist", "Pastilles face et dos",
                            "Pastilles supplémentaires pour " + (" et ".join(VIEWS[v]["titre"].lower() for v in views if v in ("face", "dos"))) + ".",
                            items=extra))
@@ -213,14 +230,24 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
                        "On installe le téléphone. Même chose : dis « c'est fait » après chaque point.", items=cam_items, lien="/cadrage"))
 
     # ---- home trainer + échauffement
-    steps.append(_step("home_trainer", "ble", "Home trainer en mode ERG",
-                       f"Connecte le home trainer pour imposer {power} watts, et les pédales si tu veux que je surveille ta cadence. "
-                       "Le Bluetooth demande un clic sur l'écran. Si tu utilises ton compteur à la place, règle-le en ERG puis dis « suivant ».",
-                       puissance_w=power))
+    devices = (["trainer"] if trainer else []) + (["puissance"] if meter else [])
+    if trainer:
+        steps.append(_step("home_trainer", "ble", "Home trainer en mode ERG",
+                           f"Connecte le home trainer pour imposer {power} watts"
+                           + (", et les pédales si tu veux que je surveille ta cadence" if meter else "")
+                           + ". Le Bluetooth demande un clic sur l'écran. Si tu utilises ton compteur à la place, règle-le en ERG puis dis « suivant ».",
+                           puissance_w=power, appareils=devices))
+    else:
+        steps.append(_step("home_trainer", "ble" if meter else "info", "Résistance du home trainer",
+                           "Règle une résistance fixe (ou un braquet) assez facile pour tenir 85 à 95 tours par minute sans forcer, "
+                           "et garde exactement la même pendant toute la séance, et aux séances suivantes."
+                           + (" Connecte tes pédales si tu veux que je surveille ta cadence." if meter else ""),
+                           appareils=devices))
     steps.append(_step("echauffement", "timer", "Échauffement",
-                       f"Échauffement de {warmup} minutes, en souplesse au début, puis à {power} watts sur la fin. Cadence entre 85 et 95. "
-                       "Dis « c'est parti » quand tu pédales ; « pause » si tu dois t'arrêter.",
-                       duree_s=warmup * 60, puissance_w=power))
+                       f"Échauffement de {warmup} minutes, en souplesse au début, puis "
+                       + (f"à {power} watts sur la fin." if trainer else "à ta résistance de mesure sur la fin.")
+                       + " Cadence entre 85 et 95. Dis « c'est parti » quand tu pédales ; « pause » si tu dois t'arrêter.",
+                       duree_s=warmup * 60, puissance_w=power if trainer else None))
 
     # ---- prises
     for i, v in enumerate(views):
@@ -237,7 +264,7 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
         dire = (f"{before}Prise : {info['titre'].lower()}. Lance l'enregistrement sur le téléphone, fais un clap face à la caméra, "
                 f"puis pédale régulièrement, mains sur les cocottes. Dis « c'est parti » quand tu es en place : je compte une minute.")
         steps.append(_step(f"prise_{v}", "prise", info["titre"], dire, vue=info["vue"], cote=info["cote"], cle=v,
-                           duree_s=60, puissance_w=power))
+                           duree_s=60, puissance_w=power if trainer else None))
 
     steps.append(_step("import", "import", "Importer les vidéos",
                        "C'est filmé. Tu peux arrêter de pédaler. Transfère les vidéos du téléphone vers le PC, puis dépose-les ici : "
@@ -248,12 +275,20 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
                        "Séance terminée. Roule deux ou trois sorties avec ce réglage, note tes ressentis dans « Santé et ressentis », "
                        "puis lance une séance de vérification."))
 
+    if not micro:  # sans micro : on avance aux boutons ou à la barre d'espace
+        for st in steps:
+            for a, b in NO_MIC:
+                st["dire"] = st["dire"].replace(a, b)
     return {
         "type": kind, "titre": titre, "raisons": reasons, "vues": views, "puissance_w": power, "cadence": "85–95 tr/min",
         "echauffement_min": warmup, "changements": f["changements"],
         "derniere_seance_id": f["derniere_seance"].id if f["derniere_seance"] else None,
         "etapes": steps, "ia": None,
+        "equipement": {"pastilles_vertes": green, "trainer": trainer, "capteur_puissance": meter, "micro": micro, "mire_seule": chart_only},
     }
+
+
+NO_MIC = [("Dis « c'est fait » ou « suivant » pour avancer, « répète » pour réécouter, et pose-moi une question quand tu veux.", "Appuie sur « Suivant » ou sur la barre d'espace pour avancer."), ("Dis « c'est fait » ou « suivant » pour avancer, et pose-moi une question quand tu veux.", "Appuie sur « Suivant » ou sur la barre d'espace pour avancer."), ('Je te guide étape par étape : ', 'Je te guide étape par étape. '), ("dis « c'est fait »", "appuie sur la barre d'espace"), ("Dis « c'est fait »", "Appuie sur la barre d'espace"), ("Dis « c'est parti »", "Appuie sur « C'est parti »"), (" ; « pause » si tu dois t'arrêter", ''), (', puis dis « suivant »', ', puis passe à la suite'), ('Sinon, dis « suivant ».', 'Sinon, passe à la suite.')]
 
 
 # ----------------------------------------------------------------- adaptation par l'IA

@@ -16,12 +16,14 @@ DEFAULTS: dict[str, Any] = {
     "cles": {},             # fournisseur → clé chiffrée
     "images": False,        # autoriser l'envoi d'images de l'analyse au modèle
     "voix": {
-        "tts": "piper",               # piper | openai | navigateur | aucune
+        "tts": "piper",               # piper | cartesia | openai | navigateur | aucune
         "piper_exe": "",
         "piper_voix": "",
         "vitesse": 1.0,
         "openai_voix": "coral",
         "openai_tts_modele": "gpt-4o-mini-tts",
+        "cartesia_voix": "d9f4af15-c402-4f50-bbda-d8823d028d6a",  # Henri (français)
+        "cartesia_modele": "sonic-3",
         "stt": "whisper",             # whisper | openai
         "whisper_modele": "large-v3-turbo",
         "openai_stt_modele": "gpt-4o-mini-transcribe",

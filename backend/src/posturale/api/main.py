@@ -28,6 +28,7 @@ from posturale.api.routes_markers import router as markers_router  # noqa: E402
 from posturale.api.routes_ai import router as ai_router  # noqa: E402
 from posturale.api.routes_voice import router as voice_router  # noqa: E402
 from posturale.api.routes_guide import router as guide_router  # noqa: E402
+from posturale.api.routes_equipment import router as equipment_router  # noqa: E402
 
 app.include_router(capture_router)
 app.include_router(health_router)
@@ -35,6 +36,7 @@ app.include_router(markers_router)
 app.include_router(ai_router)
 app.include_router(voice_router)
 app.include_router(guide_router)
+app.include_router(equipment_router)
 
 SINGLETON = 1
 

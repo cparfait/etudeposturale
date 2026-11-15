@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, ArrowRight, Bluetooth, Check, CheckCircle2, ChevronRight, Cloud, Ear, ExternalLink, FileUp, Gauge, Loader2, Lock, Mic,
+  AlertTriangle, ArrowLeft, ArrowRight, Bluetooth, Check, CheckCircle2, ChevronRight, Cloud, Ear, ExternalLink, FileUp, Gauge, Loader2, Lock, Mic,
   Pause, Play, RotateCcw, Settings2, Sparkles, Square, Stethoscope, Timer, Volume2, VolumeX, Wand2, Wrench, Zap,
 } from "lucide-react";
 import { http, type Any } from "../api";
@@ -9,15 +9,17 @@ import { useToast } from "../toast";
 import { bluetoothAvailable, connectPower, connectTrainer, type PowerSample, type Trainer } from "../ble";
 import { command, handsFree, isSpeaking, micAvailable, onSpeaking, pushToTalk, speak, stopSpeaking, transcribe, type TtsEngine } from "../voice";
 import { streamChat, type ChatMsg } from "../ai";
+import { useEquipment } from "../equipment";
 
 type StepType = "info" | "checklist" | "ble" | "timer" | "prise" | "import" | "debrief" | "fin";
 interface Step {
   id: string; type: StepType; titre: string; dire: string; items?: { t: string; d: string }[]; lien?: string;
-  duree_s?: number; puissance_w?: number; vue?: string; cote?: string; cle?: string; conseil_ia?: string;
+  duree_s?: number; puissance_w?: number | null; vue?: string; cote?: string; cle?: string; conseil_ia?: string; appareils?: string[];
 }
 interface Plan {
   type: "premiere" | "verification" | "suivi"; titre: string; raisons: string[]; vues: string[]; puissance_w: number; cadence: string;
   echauffement_min: number; changements: Any[]; etapes: Step[]; ia: Any;
+  equipement?: { pastilles_vertes: boolean; trainer: boolean; capteur_puissance: boolean; micro: boolean; mire_seule: boolean };
 }
 interface Run {
   plan: Plan; sid: number; idx: number; started: string;
@@ -48,6 +50,7 @@ function estimate(p: Plan) {
 export default function Guided() {
   const toast = useToast();
   const nav = useNavigate();
+  const eqState = useEquipment();
   const [cfg, setCfg] = useState<Any | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [adapting, setAdapting] = useState(false);
@@ -499,6 +502,13 @@ export default function Guided() {
           </div>
         )}
 
+        {eqState && eqState.manquants.length > 0 && (
+          <div className="alert danger" style={{ marginBottom: 18 }}>
+            <AlertTriangle size={17} />
+            <span className="grow">Matériel obligatoire manquant : {eqState.catalogue.filter((c) => eqState.manquants.includes(c.id)).map((c) => c.nom.toLowerCase()).join(", ")}. La mesure ne sera pas possible sans.</span>
+            <Link to="/equipement" className="btn btn-ghost btn-sm">Mon équipement</Link>
+          </div>
+        )}
         {!plan ? <p className="subtle">Préparation du plan…</p> : (
           <div className="gd-prep">
             <section className="card gd-plan">
@@ -522,14 +532,16 @@ export default function Guided() {
               <div className="gd-facts">
                 <div><span>Prises</span><strong>{plan.vues.map((v) => VIEW_LABEL[v]).join(" · ")}</strong></div>
                 <div><span>Échauffement</span><strong>{plan.echauffement_min} min</strong></div>
-                <div>
+                {plan.equipement?.trainer === false ? (
+                  <div><span>Effort</span><strong>Résistance fixe</strong></div>
+                ) : <div>
                   <span>Puissance (ERG)</span>
                   <strong className="gd-power">
                     <button className="icon-btn sm" aria-label="−10 W" onClick={() => setTarget((t) => Math.max(80, t - 10))}>−</button>
                     {target} W
                     <button className="icon-btn sm" aria-label="+10 W" onClick={() => setTarget((t) => Math.min(400, t + 10))}>+</button>
                   </strong>
-                </div>
+                </div>}
                 <div><span>Cadence</span><strong>{plan.cadence}</strong></div>
               </div>
               {plan.type === "verification" && target !== plan.puissance_w && (
@@ -667,26 +679,26 @@ export default function Guided() {
                   <p className="alert warn"><Bluetooth size={16} /> Bluetooth indisponible dans ce navigateur (Chrome ou Edge) : règle l'ERG sur ton compteur.</p>
                 ) : (
                   <>
-                    <div className="tile">
+                    {(!st.appareils || st.appareils.includes("trainer")) && <div className="tile">
                       <div className="tile-label"><span className={`status-dot${trainerName ? " on" : ""}`} /> <Gauge size={15} /> Home trainer (ERG)</div>
                       <div className="subtle">{trainerName ?? "Non connecté"}</div>
                       <button className="btn btn-primary btn-sm" onClick={linkTrainer}><Bluetooth size={14} /> {trainerName ? "Reconnecter" : "Connecter"}</button>
-                    </div>
-                    <div className="tile">
+                    </div>}
+                    {(!st.appareils || st.appareils.includes("puissance")) && <div className="tile">
                       <div className="tile-label"><span className={`status-dot${powerName ? " on" : ""}`} /> <Zap size={15} /> Pédales (cadence)</div>
                       <div className="subtle">{powerName ?? "Optionnel"}</div>
                       <button className="btn btn-ghost btn-sm" onClick={linkPower}><Bluetooth size={14} /> {powerName ? "Reconnecter" : "Connecter"}</button>
-                    </div>
+                    </div>}
                   </>
                 )}
-                <div className="tile">
+                {run.plan.equipement?.trainer !== false && <div className="tile">
                   <div className="tile-label"><Gauge size={15} /> Puissance des prises</div>
                   <div className="row" style={{ gap: 10 }}>
                     <button className="icon-btn" aria-label="−10 W" onClick={() => changeTarget(target - 10)}>−</button>
                     <div className="tile-value" style={{ margin: 0 }}>{target}<small>W</small></div>
                     <button className="icon-btn" aria-label="+10 W" onClick={() => changeTarget(target + 10)}>+</button>
                   </div>
-                </div>
+                </div>}
               </div>
             )}
 
@@ -707,7 +719,7 @@ export default function Guided() {
                     </ol>
                   )}
                   <div className="gd-live">
-                    <div><span>Cible</span><strong>{st.puissance_w ?? target} W</strong></div>
+                    <div><span>Cible</span><strong>{st.puissance_w ? `${st.puissance_w} W` : "Résist. fixe"}</strong></div>
                     <div><span>Puissance</span><strong>{live?.power ?? "—"}{live ? " W" : ""}</strong></div>
                     <div className={live?.cadence != null && (live.cadence < 82 || live.cadence > 98) ? "warn" : ""}><span>Cadence</span><strong>{live?.cadence ?? "—"}</strong></div>
                   </div>
@@ -833,7 +845,7 @@ export default function Guided() {
 
           <section className={`gd-voice ${listening === "libre" ? vadState : ""}`} aria-label="Voix">
             <div className="gd-voice-row">
-              {micAvailable() && (
+              {micAvailable() && run.plan.equipement?.micro !== false && (
                 <>
                   <button className={`tool ${listening === "libre" ? "on" : ""}`} aria-pressed={listening === "libre"} onClick={toggleFree}><Ear size={15} /> Mains libres</button>
                   <button className={`tool ${listening === "ptt" ? "rec" : ""}`} onClick={togglePtt}>{listening === "ptt" ? <Square size={15} /> : <Mic size={15} />} {listening === "ptt" ? "Envoyer" : "Parler"}</button>
@@ -841,7 +853,7 @@ export default function Guided() {
               )}
               <button className={`tool ${muted ? "" : "on"}`} aria-pressed={!muted} onClick={() => { if (!muted) stopSpeaking(); setMuted(!muted); }}>{muted ? <VolumeX size={15} /> : <Volume2 size={15} />} Voix du coach</button>
               <span className="grow gd-voice-state">
-                {thinking ? "Le coach réfléchit…" : speakingNow ? "Le coach parle — « stop » pour couper" : listening === "libre" ? (vadState === "parole" ? "Je t'écoute…" : "Parle quand tu veux") : "Micro coupé"}
+                {run.plan.equipement?.micro === false ? (speakingNow ? "Le coach parle" : "Sans micro : barre d'espace = action suivante, flèches = étapes") : thinking ? "Le coach réfléchit…" : speakingNow ? "Le coach parle — « stop » pour couper" : listening === "libre" ? (vadState === "parole" ? "Je t'écoute…" : "Parle quand tu veux") : "Micro coupé"}
               </span>
               {listening === "libre" && <span className="vad-meter"><span style={{ width: `${Math.round(level * 100)}%` }} /></span>}
             </div>

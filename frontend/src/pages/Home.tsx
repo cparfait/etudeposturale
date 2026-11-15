@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Bike, Check, Gauge, HeartPulse, Info, Lock, User, Video } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bike, Check, Gauge, GraduationCap, HeartPulse, Info, Lock, Package, User, Video } from "lucide-react";
+import { useEquipment } from "../equipment";
 import { api, http, type Any, type BikeConfig, type Values } from "../api";
 import PedalingRider from "../components/PedalingRider";
 import { KNEE_RANGE } from "../components/bikeGeometry";
@@ -22,6 +23,7 @@ export default function Home() {
   const [sessions, setSessions] = useState<Any[]>([]);
   const [pains, setPains] = useState<Any[]>([]);
   const hud = useRef<HTMLSpanElement>(null);
+  const eq = useEquipment();
 
   useEffect(() => {
     Promise.all([api.getProfile(), api.listConfigs(), api.getBike()])
@@ -85,6 +87,21 @@ export default function Home() {
         <div className="alert danger" style={{ marginTop: 20 }} role="alert">
           <Info size={18} />
           <span>Le moteur d'analyse ne répond pas. Lancez-le avec <code>uvicorn posturale.api.main:app</code> dans le dossier <code>backend</code>.</span>
+        </div>
+      )}
+
+      {eq && eq.manquants.length > 0 && (
+        <div className="alert danger home-eq" role="status">
+          <AlertTriangle size={18} />
+          <span className="grow">Avant ta première séance, il te manque du matériel <strong>obligatoire</strong> : {eq.catalogue.filter((c) => eq.manquants.includes(c.id)).map((c) => c.nom.toLowerCase()).join(", ")}.</span>
+          <Link to="/equipement" className="btn btn-ghost btn-sm"><Package size={14} /> Mon équipement</Link>
+        </div>
+      )}
+      {eq && eq.manquants.length === 0 && eq.repondu === 0 && (
+        <div className="alert info home-eq">
+          <GraduationCap size={18} />
+          <span className="grow">Première fois ? Le guide explique en 6 écrans comment fonctionne l'outil et ce qu'il te faut.</span>
+          <Link to="/bienvenue" className="btn btn-primary btn-sm">Ouvrir le guide</Link>
         </div>
       )}
 

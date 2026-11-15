@@ -113,9 +113,18 @@ ollama pull gemma4:12b
   La clé se saisit dans « Réglages IA et voix » ; elle est chiffrée par Windows (DPAPI) et n'est jamais renvoyée à l'interface.
 - **Ce qui est envoyé** : un résumé texte (profil, vélo, mesures, douleurs, hypothèses du moteur), visible dans « Ce que voit le coach ».
   Jamais la vidéo. Les images clés (squelette dessiné, 1024 px) seulement si tu l'autorises dans les réglages et le demandes.
-- **Voix** : Piper sur le PC (les voix françaises de LMU Stats Viewer sont reprises automatiquement, sinon copier `piper.exe` et une voix
+- **Voix** : Cartesia en ligne (clé dans les réglages, chiffrée), Piper sur le PC (les voix françaises de LMU Stats Viewer sont reprises automatiquement, sinon copier `piper.exe` et une voix
   `.onnx` + `.onnx.json` dans `data/voice/`), Whisper `large-v3-turbo` sur la carte (≈ 1,6 Go téléchargés au premier usage dans `models/`),
   ou OpenAI. Commandes comprises sans IA : « répète », « stop », « efface ».
+
+## Premier lancement
+
+Au premier lancement, un **guide de démarrage** (6 écrans, voix off) explique le fonctionnement et demande ton matériel :
+**obligatoire** (vélo sur home trainer, smartphone, trépied, 2 pastilles orange ou mire ChArUco, mètre ruban),
+**recommandé** (pastilles vertes, éclairage) ou **optionnel** (home trainer connecté, capteur de puissance, micro, compteur .FIT,
+mire, cardio, coach IA). L'outil s'adapte à tes réponses : séance guidée sans ERG (résistance fixe), sans pastilles vertes,
+sans micro (barre d'espace), cases .FIT et calibration masquées… Le guide et « Mon équipement » restent dans le menu.
+Les voix off sont générées une fois avec Cartesia (`scripts/generer_audio_onboarding.py`, clé dans `CARTESIA_API_KEY`).
 
 ## Séance guidée
 
@@ -140,5 +149,5 @@ ou **suivi** ; vue de face ou de dos ajoutée si une douleur le justifie.
 cd backend && .venv/Scripts/python -m pytest
 ```
 
-54 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
+59 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
 calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles, coach IA (fournisseurs, clés, flux), voix Piper et séance guidée (plan, adaptation par l'IA, débrief, modification unique).

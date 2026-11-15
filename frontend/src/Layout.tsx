@@ -1,6 +1,8 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sliders, Sparkles, Sun, User, Video, Wand2 } from "lucide-react";
+import { useEffect } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sliders, Sparkles, Sun, User, Video, Wand2, Package, GraduationCap } from "lucide-react";
 import { useTheme, type ThemeChoice } from "./theme";
+import { loadEquipment, useEquipment } from "./equipment";
 
 export function LogoMark({ size = 36 }: { size?: number }) {
   // Hanche – genou – cheville avec l'arc de flexion : l'idée de l'outil en un coup d'œil.
@@ -37,6 +39,8 @@ const MAIN = [
   { to: "/coach", label: "Coach IA", short: "Coach", icon: Sparkles, tab: true },
 ];
 const TOOLS = [
+  { to: "/bienvenue", label: "Guide de démarrage", icon: GraduationCap },
+  { to: "/equipement", label: "Mon équipement", icon: Package },
   { to: "/cadrage", label: "Cadrage en direct", icon: Crosshair },
   { to: "/pastilles", label: "Contrôle des pastilles", icon: Pipette },
   { to: "/capteurs", label: "Capteurs et ERG", icon: Bluetooth },
@@ -63,6 +67,17 @@ function ThemeToggle() {
 }
 
 export default function Layout() {
+  const eq = useEquipment();
+  const nav = useNavigate();
+  const loc = useLocation();
+  // Premier lancement : le guide de démarrage s'ouvre tout seul depuis l'accueil
+  useEffect(() => {
+    if (loc.pathname !== "/") return;
+    loadEquipment().then((e) => { if (!e.onboarding_fait) nav("/bienvenue", { replace: true }); }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Sans aucun capteur Bluetooth, la page Capteurs ne sert à rien
+  const noSensors = !!eq && ["trainer_connecte", "capteur_puissance", "cardio"].every((k) => eq.items[k] === false);
+  const tools = TOOLS.filter((t) => !(noSensors && t.to === "/capteurs"));
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -73,7 +88,7 @@ export default function Layout() {
           </NavLink>
         ))}
         <div className="nav-label">Outils</div>
-        {TOOLS.map(({ to, label, icon: Icon }) => (
+        {tools.map(({ to, label, icon: Icon }) => (
           <NavLink key={to} to={to} className="nav-item">
             <Icon size={18} /> {label}
           </NavLink>

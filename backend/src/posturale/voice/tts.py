@@ -108,6 +108,48 @@ def piper(text: str, exe: str, voice: str, speed: float = 1.0) -> tuple[bytes, s
     return out.read_bytes(), "audio/wav"
 
 
+CARTESIA = "https://api.cartesia.ai"
+CARTESIA_HEADERS = {"Cartesia-Version": "2025-04-16", "Content-Type": "application/json"}
+
+
+def cartesia(text: str, key: str, voice: str, model: str = "sonic-3", speed: float = 1.0) -> tuple[bytes, str]:
+    if not key:
+        raise TTSError("Clé Cartesia à saisir dans les réglages de la voix.")
+    speed = min(max(speed, 0.6), 1.5)
+    ck = hashlib.sha1(f"{model}|{voice}|{speed:.2f}|{text}".encode()).hexdigest() + ".mp3"
+    out = _cache("cartesia", ck)
+    if out.exists():
+        return out.read_bytes(), "audio/mpeg"
+    body = {"model_id": model, "transcript": text, "language": "fr", "voice": {"mode": "id", "id": voice},
+            "output_format": {"container": "mp3", "sample_rate": 44100, "bit_rate": 128000}}
+    if abs(speed - 1) > 0.01:
+        body["generation_config"] = {"speed": round(speed, 2)}
+    try:
+        r = httpx.post(f"{CARTESIA}/tts/bytes", headers={**CARTESIA_HEADERS, "X-API-Key": key}, json=body, timeout=60)
+    except httpx.HTTPError as exc:
+        raise TTSError("Cartesia injoignable.") from exc
+    if r.status_code >= 400:
+        raise TTSError(f"Cartesia — erreur {r.status_code} : {r.text[:200]}")
+    out.write_bytes(r.content)
+    return r.content, "audio/mpeg"
+
+
+def cartesia_voices(key: str) -> list[dict]:
+    if not key:
+        raise TTSError("Clé Cartesia à saisir dans les réglages de la voix.")
+    try:
+        r = httpx.get(f"{CARTESIA}/voices", params={"language": "fr", "limit": 100},
+                      headers={**CARTESIA_HEADERS, "X-API-Key": key}, timeout=20)
+    except httpx.HTTPError as exc:
+        raise TTSError("Cartesia injoignable.") from exc
+    if r.status_code >= 400:
+        raise TTSError(f"Cartesia — erreur {r.status_code} : {r.text[:200]}")
+    data = r.json()
+    items = data.get("data", data) if isinstance(data, dict) else data
+    return [{"id": v["id"], "nom": v.get("name", v["id"]), "description": v.get("description") or ""}
+            for v in items if v.get("language") == "fr"]
+
+
 def openai(text: str, key: str, voice: str = "coral", model: str = "gpt-4o-mini-tts", speed: float = 1.0) -> tuple[bytes, str]:
     if not key:
         raise TTSError("Clé OpenAI à saisir dans les réglages de l'IA (fournisseur OpenAI).")

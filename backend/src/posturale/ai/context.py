@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 from sqlmodel import Session as DB, select
 
+from posturale import equipment
 from posturale.config import load_metrics
 from posturale.storage.models import Analysis, Bike, Capture, Profile
 
@@ -91,6 +92,7 @@ def build(db: DB) -> dict[str, Any]:
         "auto_tests": [_clean(t, ("id", "created_at")) for t in ctx.tests],
         "ressentis_recents": [_clean(f, ("id",)) for f in ctx.ressentis[-3:]],
         "fichier_fit": {k: (ctx.fit or {}).get(k) for k in ("duree_min", "global", "par_heure")} if ctx.fit else None,
+        "equipement": equipment.summary_for_ai(),
         "hypotheses_du_moteur": [{k: h.get(k) for k in ("titre", "categorie", "priorite", "hypothese", "action", "constats", "fiabilite")} for h in evaluate(ctx)],
     }
     return _r({k: v for k, v in data.items() if v not in (None, {}, [])})

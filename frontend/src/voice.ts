@@ -1,7 +1,7 @@
 // Voix du coach : lecture (Piper / OpenAI via le backend, ou voix du navigateur) et écoute du micro
 // (appui pour parler ou mains libres avec détection de la parole). La reconnaissance se fait sur le PC (Whisper).
 
-export type TtsEngine = "piper" | "openai" | "navigateur" | "aucune";
+export type TtsEngine = "piper" | "cartesia" | "openai" | "navigateur" | "aucune";
 
 let current: HTMLAudioElement | null = null;
 let token = 0;
