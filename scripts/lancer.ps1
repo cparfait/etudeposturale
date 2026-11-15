@@ -5,6 +5,14 @@ $py = Join-Path $root "backend\.venv\Scripts\python.exe"
 if (-not (Test-Path $py)) { throw "Backend non installé : lancer d'abord scripts\installer.bat" }
 if (-not (Test-Path (Join-Path $root "frontend\node_modules"))) { throw "Interface non installée : lancer d'abord scripts\installer.bat" }
 
+# Une instance précédente encore ouverte garderait les ports 8000 / 5173 (et resterait en HTTP) : on l'arrête.
+$old = Get-CimInstance Win32_Process | Where-Object {
+    ($_.Name -eq "python.exe" -and $_.CommandLine -match "uvicorn posturale\.api\.main") -or
+    ($_.Name -eq "node.exe" -and $_.CommandLine -match [regex]::Escape((Join-Path $root "frontend\node_modules")))
+}
+foreach ($p in $old) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }
+if ($old) { Write-Host "Ancienne instance arrêtée."; Start-Sleep -Seconds 1 }
+
 # Certificat HTTPS local : renouvelé si l'adresse Wi-Fi du PC a changé (le QR code du téléphone l'utilise)
 if (Test-Path (Join-Path $root "data\https\ca.key")) { & $py (Join-Path $root "scripts\https_local.py") | Out-Null }
 
