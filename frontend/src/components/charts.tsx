@@ -171,3 +171,66 @@ export function LineChart({ values, unit, label, color = "var(--brand-text)" }: 
     </div>
   );
 }
+
+/** Mesure au fil d'une sortie (minutes en abscisse) ; ligne de référence et bande optionnelles (ex. 50 % ± 2). */
+export function TimeChart({ t, values, unit, label, color = "var(--brand-text)", reference, band, digits = 0 }: {
+  t: number[]; values: Num[]; unit: string; label: string; color?: string;
+  reference?: { value: number; label: string }; band?: [number, number]; digits?: number;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  const ref = useRef<SVGSVGElement>(null);
+  const vals = values.filter((v): v is number => v != null);
+  if (!vals.length || t.length < 2) return <p className="subtle">Pas assez de données pour tracer la courbe.</p>;
+  const extra = [...(reference ? [reference.value] : []), ...(band ?? [])];
+  const lo0 = Math.min(...vals, ...extra), hi0 = Math.max(...vals, ...extra);
+  const pad = (hi0 - lo0) * 0.12 || 1, lo = lo0 - pad, hi = hi0 + pad;
+  const h = 170, m = { l: 44, r: 12, t: 12, b: 26 };
+  const t0 = 0, t1 = Math.max(t[t.length - 1] + (t[1] - t[0]) / 2, 1);
+  const x = (tm: number) => m.l + ((tm - t0) / (t1 - t0)) * (W - m.l - m.r);
+  const y = (v: number) => m.t + (1 - (v - lo) / (hi - lo)) * (h - m.t - m.b);
+  const fmtT = (tm: number) => (tm >= 60 ? `${Math.floor(tm / 60)} h${String(Math.round(tm % 60)).padStart(2, "0")}` : `${Math.round(tm)} min`);
+  const ticks = (() => {                                       // graduations toutes les 15, 30 ou 60 min
+    const span = t1 - t0, stepT = span > 180 ? 60 : span > 75 ? 30 : 15;
+    const out: number[] = [];
+    for (let v = 0; v <= t1; v += stepT) out.push(v);
+    return out;
+  })();
+  const yTicks = [lo0, (lo0 + hi0) / 2, hi0];
+  return (
+    <div className="chart-wrap">
+      <svg ref={ref} className="chart" viewBox={`0 0 ${W} ${h}`} role="img" aria-label={label}
+        onPointerMove={(e) => {
+          const r = ref.current!.getBoundingClientRect();
+          const tm = t0 + ((((e.clientX - r.left) / r.width) * W - m.l) / (W - m.l - m.r)) * (t1 - t0);
+          let best = 0;
+          t.forEach((v, i) => { if (Math.abs(v - tm) < Math.abs(t[best] - tm)) best = i; });
+          setHover(best);
+        }} onPointerLeave={() => setHover(null)}>
+        {band && <rect className="ref-band" x={m.l} width={W - m.l - m.r} y={y(band[1])} height={Math.max(1, y(band[0]) - y(band[1]))} />}
+        {yTicks.map((v, i) => (
+          <g key={i}>
+            <line className="grid-line" x1={m.l} x2={W - m.r} y1={y(v)} y2={y(v)} />
+            <text className="axis-text" x={m.l - 6} y={y(v) + 4} textAnchor="end">{v.toFixed(digits).replace(".", ",")}</text>
+          </g>
+        ))}
+        {reference && (
+          <g>
+            <line className="ref-line" x1={m.l} x2={W - m.r} y1={y(reference.value)} y2={y(reference.value)} />
+            <text className="axis-text" x={W - m.r} y={y(reference.value) - 5} textAnchor="end">{reference.label}</text>
+          </g>
+        )}
+        {ticks.map((v) => <text key={v} className="axis-text" x={x(v)} y={h - 6} textAnchor="middle">{fmtT(v)}</text>)}
+        <path className="series" stroke={color} d={path(t.map(x), values.map((v) => (v == null ? null : y(v))))} />
+        {hover != null && values[hover] != null && (
+          <g><line className="cross" x1={x(t[hover])} x2={x(t[hover])} y1={m.t} y2={h - m.b} />
+            <circle className="dot" cx={x(t[hover])} cy={y(values[hover] as number)} r={5} fill={color} /></g>
+        )}
+      </svg>
+      {hover != null && values[hover] != null && (
+        <div className="tooltip" style={{ left: `${(x(t[hover]) / W) * 100}%`, top: "8%" }}>
+          {fmtT(t[hover])} · {(values[hover] as number).toFixed(digits).replace(".", ",")} {unit}
+        </div>
+      )}
+    </div>
+  );
+}

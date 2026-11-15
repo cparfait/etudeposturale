@@ -110,6 +110,99 @@ def view(f: Any, configs: list[Any]) -> dict:
             **{k: s.get(k) for k in ("debut", "duree_min", "mouvement_min", "distance_km", "sport", "sous_sport", "global", "par_heure")}}
 
 
+def stored_file(summary: dict) -> Any | None:
+    """Fichier .FIT gardé à l'import (data/fit/sorties/<début>_<empreinte>.fit)."""
+    from posturale.config import data_dir
+
+    if not summary.get("debut"):
+        return None
+    hits = sorted((data_dir() / "fit" / "sorties").glob(f"{summary['debut'][:19].replace(':', '-')}_*.fit"))
+    return hits[0] if hits else None
+
+
+def series(path: Any, step_min: float = 5.0) -> list[dict]:
+    """Moyennes par tranche de 5 minutes : puissance, cadence, cardio, équilibre G/D (lecture du fichier gardé)."""
+    from datetime import timedelta
+
+    from posturale.fit.parser import read_records, summarize, window
+
+    recs = read_records(path)
+    if not recs:
+        return []
+    t0, t_end = recs[0]["timestamp"], recs[-1]["timestamp"]
+    out, k = [], 0
+    while t0 + timedelta(minutes=k * step_min) <= t_end:
+        a = t0 + timedelta(minutes=k * step_min)
+        chunk = window(recs, a, a + timedelta(minutes=step_min))
+        if chunk:
+            s = summarize(chunk)
+            out.append({"t_min": round(k * step_min + step_min / 2, 1), **{m: s[m] for m in METRICS}})
+        k += 1
+    return out
+
+
+def reading(g: dict, serie: list[dict]) -> list[dict]:
+    """Lecture automatique : on compare la jambe gauche à la droite (pas de norme inventée)."""
+    out: list[dict] = []
+    left = g.get("equilibre_gauche_pct")
+    if left is not None:
+        dev = abs(left - 50)
+        strong = "gauche" if left > 50 else "droite"
+        share = round(max(left, 100 - left))
+        if dev < 2:
+            out.append({"ton": "ok", "titre": "Pédalage équilibré", "texte": f"Les deux jambes fournissent presque autant ({_bal(left)})."})
+        elif dev < 4:
+            out.append({"ton": "info", "titre": "Léger déséquilibre", "texte": f"La jambe {strong} fournit {share} % de la puissance. Courant ; à suivre sur plusieurs sorties."})
+        else:
+            out.append({"ton": "warn", "titre": "Déséquilibre marqué", "texte": f"La jambe {strong} fournit {share} % de la puissance. Si ça se répète, relie-le à une douleur, "
+                        "à la hauteur de selle ou aux cales (séance de capture : angles des deux genoux)."})
+    bal = [b["equilibre_gauche_pct"] for b in serie if b.get("equilibre_gauche_pct") is not None]
+    if len(bal) >= 8:
+        n = max(2, len(bal) // 5)
+        first, last = sum(bal[:n]) / n, sum(bal[-n:]) / n
+        d = last - first
+        if abs(d) >= 1.5:
+            weak = "gauche" if d < 0 else "droite"
+            out.append({"ton": "warn" if abs(d) >= 3 else "info", "titre": "L'équilibre change en fin de sortie",
+                        "texte": f"En fin de sortie, la jambe {weak} fournit {_fr(round(abs(d), 1))} point{'s' if abs(d) >= 2 else ''} de moins qu'au début : "
+                                 "elle fatigue plus vite. Fréquent avec une douleur ou une selle mal réglée d'un côté."})
+        else:
+            out.append({"ton": "ok", "titre": "Équilibre stable", "texte": "L'équilibre ne bouge pas entre le début et la fin de la sortie."})
+    for key, name, gap in (("efficacite_couple", "Efficacité du couple", 5), ("fluidite", "Fluidité", 3)):
+        v = g.get(key) or [None, None]
+        if v[0] is not None and v[1] is not None and abs(v[0] - v[1]) >= gap:
+            better = "gauche" if v[0] > v[1] else "droite"
+            out.append({"ton": "info", "titre": f"{name} : écart entre les jambes",
+                        "texte": f"{_fr(v[0])} % à gauche contre {_fr(v[1])} % à droite : la jambe {better} transmet sa force de façon plus régulière."})
+    pg, pd = g.get("phase_puissance_g"), g.get("phase_puissance_d")
+    if pg and pd:
+        ds, de = (pd[0] - pg[0] + 180) % 360 - 180, (pd[1] - pg[1] + 180) % 360 - 180
+        if abs(ds) >= 10 or abs(de) >= 10:
+            parts = []
+            if abs(ds) >= 10:
+                parts.append(f"la jambe {'droite' if ds > 0 else 'gauche'} commence à pousser {round(abs(ds))}° plus tard")
+            if abs(de) >= 10:
+                parts.append(f"la jambe {'droite' if de > 0 else 'gauche'} arrête de pousser {round(abs(de))}° plus tard")
+            out.append({"ton": "info", "titre": "Phases de poussée différentes", "texte": " ; ".join(parts).capitalize()
+                        + ". Peut venir d'une cale, d'une jambe plus courte ou d'une gêne : à rapprocher des angles mesurés en vidéo."})
+    return out
+
+
+def detail(f: Any, configs: list[Any]) -> dict:
+    v = view(f, configs)
+    path = stored_file(f.summary or {})
+    try:
+        serie = series(path) if path else []
+    except Exception:
+        serie = []
+    g = v.get("global") or {}
+    v["serie"] = serie
+    v["fichier_disponible"] = path is not None
+    v["w_par_bpm"] = round(g["puissance_w"] / g["fc_bpm"], 2) if g.get("puissance_w") and g.get("fc_bpm") else None
+    v["lecture"] = reading(g, serie)
+    return v
+
+
 def load(db: Any) -> tuple[list[dict], list[Any]]:
     """Toutes les sorties importées (les plus récentes d'abord) et les configurations du vélo."""
     from sqlmodel import select

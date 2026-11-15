@@ -39,14 +39,18 @@ def _definition(local: int, glob: int, fields: list[tuple[int, int, int]]) -> by
 
 FILE_ID = [(0, 1, 0x00), (1, 2, 0x84), (4, 4, 0x86)]
 RECORD = [(253, 4, 0x86), (3, 1, 0x02), (4, 1, 0x02), (7, 2, 0x84), (30, 1, 0x02),
-          (43, 1, 0x02), (44, 1, 0x02), (45, 1, 0x02), (46, 1, 0x02)]   # efficacité du couple G/D, fluidité G/D
+          (43, 1, 0x02), (44, 1, 0x02), (45, 1, 0x02), (46, 1, 0x02),   # efficacité du couple G/D, fluidité G/D
+          (69, 2, 0x02), (70, 2, 0x02), (71, 2, 0x02), (72, 2, 0x02)]   # phases de puissance G (+pic), D (+pic)
+PHASE_SCALE = 0.7111111   # FIT : valeur brute = degrés x 0,711 (un tour = 256)
 SESSION = [(253, 4, 0x86), (2, 4, 0x86), (5, 1, 0x00), (6, 1, 0x00), (8, 4, 0x86), (9, 4, 0x86)]
 
 
 def activity(start: datetime, minutes: float, *, sport: str = "cycling", sub: str = "road", power: int = 200,
              cadence: int = 88, hr: int = 140, left_pct: float = 50.0, left_pct_end: float | None = None,
              torque: tuple[float, float] = (75.0, 77.0), smooth: tuple[float, float] = (21.0, 22.0),
-             speed_kmh: float = 30.0, step_s: int = 5) -> bytes:
+             speed_kmh: float = 30.0, step_s: int = 5,
+             phase_g: tuple[float, float] = (10.0, 200.0), phase_d: tuple[float, float] = (10.0, 200.0),
+             peak_g: tuple[float, float] = (80.0, 120.0), peak_d: tuple[float, float] = (80.0, 120.0)) -> bytes:
     """Une sortie synthétique ; l'équilibre gauche peut dériver linéairement de left_pct à left_pct_end."""
     body = _definition(0, 0, FILE_ID) + struct.pack("<BBHI", 0, 4, 1, _ts(start))
     body += _definition(1, 20, RECORD)
@@ -56,8 +60,9 @@ def activity(start: datetime, minutes: float, *, sport: str = "cycling", sub: st
         left = left_pct + ((left_pct_end if left_pct_end is not None else left_pct) - left_pct) * k
         bal = 0x80 | int(round(100 - left))           # bit 7 : valeur du côté droit
         t = start + timedelta(seconds=i * step_s)
-        body += struct.pack("<BIBBHBBBBB", 1, _ts(t), hr, cadence, power, bal,
-                            int(torque[0] * 2), int(torque[1] * 2), int(smooth[0] * 2), int(smooth[1] * 2))
+        ph = [round(a * PHASE_SCALE) & 0xFF for a in (*phase_g, *peak_g, *phase_d, *peak_d)]
+        body += struct.pack("<BIBBHBBBBB8B", 1, _ts(t), hr, cadence, power, bal,
+                            int(torque[0] * 2), int(torque[1] * 2), int(smooth[0] * 2), int(smooth[1] * 2), *ph)
     end = start + timedelta(seconds=(n - 1) * step_s)
     body += _definition(2, 18, SESSION)
     body += struct.pack("<BIIBBII", 2, _ts(end), _ts(start), SPORT[sport], SUB[sub], int(minutes * 60 * 1000),

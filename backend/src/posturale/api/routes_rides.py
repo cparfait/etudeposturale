@@ -74,6 +74,17 @@ def compare(db: DB = Depends(get_session)) -> dict:
     return R.compare(rides, configs)
 
 
+@router.get("/{rid}")
+def ride_detail(rid: int, db: DB = Depends(get_session)) -> dict:
+    """Une sortie en détail : série toutes les 5 min (fichier gardé à l'import), jambes gauche / droite, lecture."""
+    from posturale.storage.models import BikeConfig
+
+    f = db.get(FitFile, rid)
+    if not f or f.session_id is not None:
+        raise HTTPException(404, "Sortie introuvable")
+    return R.detail(f, list(db.exec(select(BikeConfig))))
+
+
 @router.delete("/{rid}", status_code=204)
 def delete_ride(rid: int, db: DB = Depends(get_session)) -> None:
     f = db.get(FitFile, rid)

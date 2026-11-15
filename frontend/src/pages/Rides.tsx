@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, ExternalLink, FileUp, FolderOpen, Info, Loader2, Trash2, Usb } from "lucide-react";
 import { http, type Any } from "../api";
 
@@ -41,6 +41,7 @@ export default function Rides() {
   const [over, setOver] = useState(false);
   const [all, setAll] = useState(false);
   const files = useRef<HTMLInputElement>(null);
+  const nav = useNavigate();
   const folder = useRef<HTMLInputElement>(null);
 
   const load = () => {
@@ -217,8 +218,8 @@ export default function Rides() {
                 </thead>
                 <tbody>
                   {shown.map((r) => (
-                    <tr key={r.id}>
-                      <td>{day(r.debut)}</td>
+                    <tr key={r.id} className="rd-row" onClick={() => nav(`/sorties/${r.id}`)}>
+                      <td><Link className="link" to={`/sorties/${r.id}`} onClick={(ev) => ev.stopPropagation()}>{day(r.debut)}</Link></td>
                       <td>{hm(r.mouvement_min ?? r.duree_min)}</td>
                       <td>{r.distance_km != null ? `${n(r.distance_km, 1)} km` : "—"}</td>
                       <td>{r.global?.puissance_w != null ? `${n(r.global.puissance_w)} W` : "—"}</td>
@@ -226,7 +227,7 @@ export default function Rides() {
                       <td>{n(r.global?.fc_bpm)}</td>
                       <td>{bal(r.global?.equilibre_gauche_pct)}</td>
                       <td><span className="rd-cfg" title={r.config ?? undefined}>{r.config ?? "avant tes réglages"}</span></td>
-                      <td><button type="button" className="icon-btn" aria-label={`Supprimer la sortie du ${day(r.debut)}`} onClick={() => remove(r.id)}><Trash2 size={15} /></button></td>
+                      <td><button type="button" className="icon-btn" aria-label={`Supprimer la sortie du ${day(r.debut)}`} onClick={(ev) => { ev.stopPropagation(); remove(r.id); }}><Trash2 size={15} /></button></td>
                     </tr>
                   ))}
                 </tbody>

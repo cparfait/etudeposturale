@@ -386,3 +386,36 @@
 .rd-table td { padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rd-table tr:hover td { background: var(--surface-2, rgba(0,0,0,.02)); }
 .rd-cfg { display: inline-block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; padding: 2px 9px; border-radius: 999px; background: var(--brand-soft); color: var(--brand-text); font-size: 0.76rem; font-weight: 700; }
+
+/* Détail d'une sortie */
+.chart .ref-band { fill: var(--brand-soft); }
+.chart .ref-line { stroke: var(--text-3); stroke-width: 1; stroke-dasharray: 5 4; }
+.rd-row { cursor: pointer; }
+.rd-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 0.9rem; }
+.rd-title::first-letter { text-transform: uppercase; }
+.rd-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.rd-stats > div { background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; }
+.rd-stats span { display: block; font-size: 0.78rem; color: var(--text-3); font-weight: 600; }
+.rd-stats strong { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rd-stats small { font-family: var(--font-ui); font-size: 0.8rem; color: var(--text-3); font-weight: 600; }
+.rd-detail { display: grid; gap: 16px; align-items: start; }
+@media (min-width: 1200px) { .rd-detail { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); } }
+.rd-reading { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.rd-reading li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.rd-reading li > svg { flex: none; margin-top: 2px; }
+.rd-reading li.ok > svg { color: var(--brand-text); }
+.rd-reading li.info > svg { color: var(--text-3); }
+.rd-reading li.warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+.rd-reading li.warn > svg { color: var(--warn); }
+.rd-reading strong { font-size: 0.92rem; }
+.rd-reading p { margin: 3px 0 0; font-size: 0.86rem; line-height: 1.5; color: var(--text-2, var(--text)); }
+.rd-legs { display: grid; gap: 14px; align-items: center; }
+@media (min-width: 700px) { .rd-legs { grid-template-columns: minmax(0, 1fr) 220px; } }
+.rd-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+.rd-dial { width: 220px; max-width: 100%; justify-self: center; }
+.rd-dial .rd-dial-track { fill: none; stroke: var(--line); stroke-width: 12; }
+.rd-dial .rd-dial-c { font-size: 13px; font-weight: 700; fill: var(--text); }
+.rd-nophase { font-size: 0.84rem; margin: 0; }
+.rd-chart + .rd-chart { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.rd-chart h3 { margin: 0 0 4px; font-size: 0.9rem; }
+.rd-cap { margin: 4px 0 0; font-size: 0.78rem; color: var(--text-3); }

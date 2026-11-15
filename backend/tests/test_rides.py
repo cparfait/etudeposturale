@@ -31,6 +31,7 @@ def test_generated_fit_is_read(tmp_path):
     assert s["sport"] == "cycling" and s["distance_km"] == 15.0 and s["mouvement_min"] == 30.0
     g = s["global"]
     assert g["puissance_w"] == 210 and g["equilibre_gauche_pct"] == 47 and g["efficacite_couple"] == [75.0, 77.0]
+    assert g["phase_puissance_g"] == pytest.approx([10, 200], abs=1.5) and g["pic_phase_d"] == pytest.approx([80, 120], abs=1.5)
 
 
 def test_expand_zip_and_sport_filter():
@@ -88,5 +89,13 @@ def test_import_dedup_and_compare(client):
     assert R.road_check(cmp, c2["id"])["apres"]["sorties"] == 2 and R.road_check(cmp, c1["id"]) is None
     from posturale.ai.context import build
     assert build(db)["sorties_route"]["verification_dernier_reglage"]["apres"]["libelle"] == "Selle -5 mm"
+    # détail d'une sortie « avant » de 2 h (gauche 46 -> 44 %) : série toutes les 5 min et lecture
+    old = next(r for r in rides if r["config"] == "Départ")
+    d = client.get(f"/api/rides/{old['id']}").json()
+    assert d["fichier_disponible"] and 22 <= len(d["serie"]) <= 26 and d["serie"][0]["t_min"] == 2.5
+    titres = [x["titre"] for x in d["lecture"]]
+    assert "Déséquilibre marqué" in titres and "L'équilibre change en fin de sortie" in titres
+    assert "jambe gauche" in next(x["texte"] for x in d["lecture"] if x["titre"] == "L'équilibre change en fin de sortie")
+    assert client.get("/api/rides/99999").status_code == 404
     client.delete(f"/api/rides/{rides[0]['id']}")
     assert len(client.get("/api/rides").json()) == 3

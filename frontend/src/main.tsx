@@ -15,6 +15,7 @@ import Recommendations from "./pages/Recommendations";
 import Report from "./pages/Report";
 import Framing from "./pages/Framing";
 import Rides from "./pages/Rides";
+import Ride from "./pages/Ride";
 import Sensors from "./pages/Sensors";
 import Markers from "./pages/Markers";
 import Coach from "./pages/Coach";
@@ -49,6 +50,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/rapport" element={<Report />} />
             <Route path="/cadrage" element={<Framing />} />
             <Route path="/sorties" element={<Rides />} />
+            <Route path="/sorties/:id" element={<Ride />} />
             <Route path="/capteurs" element={<Sensors />} />
             <Route path="/pastilles" element={<Markers />} />
             <Route path="/coach" element={<Coach />} />
