@@ -33,8 +33,14 @@ function fpsCheck(fps: number | undefined, width: number, height: number): Check
 }
 
 function evaluate(lm: NormalizedLandmark[] | undefined, luminance: number, fps: number | undefined, landscape: boolean, vw = 0, vh = 0): Check[] {
-  const key = [11, 12, 23, 24, 25, 26, 27, 28];
-  const vis = lm ? key.every((i) => (lm[i].visibility ?? 0) > 0.5 && lm[i].x > 0.02 && lm[i].x < 0.98 && lm[i].y > 0.02 && lm[i].y < 0.98) : null;
+  // De profil, le côté opposé est caché par le corps : pour chaque paire (épaules, hanches, genoux, chevilles),
+  // le point le plus visible suffit, à condition qu'il soit dans l'image avec une marge.
+  const pairs = [[11, 12], [23, 24], [25, 26], [27, 28]];
+  const near = (a: number, b: number) => ((lm![a].visibility ?? 0) >= (lm![b].visibility ?? 0) ? lm![a] : lm![b]);
+  const vis = lm ? pairs.every(([a, b]) => {
+    const p = near(a, b);
+    return (p.visibility ?? 0) > 0.5 && p.x > 0.02 && p.x < 0.98 && p.y > 0.02 && p.y < 0.98;
+  }) : null;
   let height: number | null = null, hip: number | null = null;
   if (lm) {
     const ys = lm.slice(0, 33).filter((p) => (p.visibility ?? 0) > 0.4).map((p) => p.y);

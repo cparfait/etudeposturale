@@ -49,3 +49,5 @@ frontend/certs/
 media/*/.hyperframes/
 media/*/renders/
 !frontend/public/intro/*.mp4
+media/*/work/
+media/*/.thumbnails/
