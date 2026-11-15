@@ -201,7 +201,7 @@ export default function AISettings() {
           <div className="card stack" style={{ gap: 14 }}>
             <div className="card-head" style={{ marginBottom: 0 }}><span className="icon-tile"><Volume2 size={18} /></span><div><h3 style={{ margin: 0 }}>Le coach te parle</h3><p>Synthèse vocale</p></div></div>
             <div className="segmented">
-              {([["piper", "Piper (PC)"], ["cartesia", "Cartesia"], ["openai", "OpenAI"], ["navigateur", "Navigateur"], ["aucune", "Muet"]] as [TtsEngine, string][]).map(([id, label]) => (
+              {([["piper", "Piper (PC)"], ["fish", "Fish Audio"], ["google", "Google"], ["azure", "Azure"], ["cartesia", "Cartesia"], ["openai", "OpenAI"], ["navigateur", "Navigateur"], ["aucune", "Muet"]] as [TtsEngine, string][]).map(([id, label]) => (
                 <button key={id} aria-pressed={v.tts === id} onClick={() => setVoice({ tts: id })}>{label}</button>
               ))}
             </div>
@@ -227,8 +227,12 @@ export default function AISettings() {
                 )
               )
             )}
-            {v.tts === "cartesia" && <CartesiaPanel hasKey={!!s.cles?.cartesia} voice={v.cartesia_voix} onVoice={(id) => setVoice({ cartesia_voix: id })}
-              onKey={async (cle) => { await http.put("/voice/keys/cartesia", { cle }); setS(await http.get("/ai/settings")); }} />}
+            {(["fish", "cartesia", "google", "azure"] as const).includes(v.tts) && (() => {
+              const svc = CLOUD[v.tts as CloudId];
+              return <CloudVoicePanel key={v.tts} svc={svc} hasKey={!!s.cles?.[svc.cle]} voice={v[svc.champ]} region={v.azure_region}
+                onVoice={(id) => setVoice({ [svc.champ]: id })} onRegion={(r) => setVoice({ azure_region: r })}
+                onKey={async (cle) => { await http.put(`/voice/keys/${v.tts}`, { cle }); setS(await http.get("/ai/settings")); }} />;
+            })()}
             {v.tts === "openai" && (
               <label className="field"><span className="field-label">Voix OpenAI</span>
                 <select className="select" value={v.openai_voix} onChange={(e) => setVoice({ openai_voix: e.target.value })}>
@@ -295,33 +299,77 @@ export default function AISettings() {
   );
 }
 
-/** Cartesia : clé (chiffrée, jamais réaffichée) et choix d'une voix française. */
-function CartesiaPanel({ hasKey, voice, onVoice, onKey }: { hasKey: boolean; voice: string; onVoice: (id: string) => void; onKey: (cle: string | null) => Promise<void> }) {
+type CloudId = "fish" | "cartesia" | "google" | "azure";
+interface CloudSvc { id: CloudId; nom: string; cle: string; champ: string; placeholder: string; lien: string; aide: string; defaut: string; libre?: boolean }
+const CLOUD: Record<CloudId, CloudSvc> = {
+  fish: {
+    id: "fish", nom: "Fish Audio", cle: "fish_audio", champ: "fish_voix", placeholder: "Clé API Fish Audio", defaut: "Voix par défaut", libre: true,
+    lien: "https://fish.audio/app/api-keys/",
+    aide: "Modèle gratuit « s2.1-pro-free », sans carte bancaire (usage personnel). Sur fish.audio : créer un compte, puis API Keys → nouvelle clé. Tu peux aussi coller l'identifiant de n'importe quelle voix du site (dans son adresse fish.audio/m/…).",
+  },
+  google: {
+    id: "google", nom: "Google Cloud", cle: "google_tts", champ: "google_voix", placeholder: "AIza…", defaut: "Meilleure voix Chirp 3 HD",
+    lien: "https://console.cloud.google.com/apis/library/texttospeech.googleapis.com",
+    aide: "Gratuit jusqu'à ≈ 1 million de caractères par mois en voix naturelles. Dans la console Google Cloud : activer « Cloud Text-to-Speech API », puis Identifiants → Créer une clé API (la restreindre à cette API). Carte bancaire demandée : mets une alerte de budget.",
+  },
+  azure: {
+    id: "azure", nom: "Azure Speech", cle: "azure_speech", champ: "azure_voix", placeholder: "Clé 1 de la ressource Speech", defaut: "fr-FR-DeniseNeural",
+    lien: "https://portal.azure.com/#create/Microsoft.CognitiveServicesSpeechServices",
+    aide: "Gratuit jusqu'à 500 000 caractères par mois (offre F0). Dans le portail Azure : créer une ressource « Speech », niveau tarifaire Gratuit F0, puis « Clés et point de terminaison » : copier la clé 1 et la région.",
+  },
+  cartesia: {
+    id: "cartesia", nom: "Cartesia", cle: "cartesia", champ: "cartesia_voix", placeholder: "sk_car_…", defaut: "Henri (par défaut)",
+    lien: "https://play.cartesia.ai/keys", aide: "Voix très naturelles et rapides ; petite offre gratuite, puis payant.",
+  },
+};
+const AZURE_REGIONS = ["francecentral", "westeurope", "northeurope", "switzerlandnorth", "germanywestcentral", "uksouth", "eastus", "westus2"];
+
+/** Service de voix en ligne : clé (chiffrée, jamais réaffichée), région (Azure) et choix d'une voix française. */
+function CloudVoicePanel({ svc, hasKey, voice, region, onVoice, onRegion, onKey }: {
+  svc: CloudSvc; hasKey: boolean; voice: string; region: string;
+  onVoice: (id: string) => void; onRegion: (r: string) => void; onKey: (cle: string | null) => Promise<void>;
+}) {
   const [key, setKey] = useState("");
   const [voices, setVoices] = useState<{ id: string; nom: string; description: string }[]>([]);
   const [err, setErr] = useState("");
-  useEffect(() => {
-    if (!hasKey) return;
-    http.get("/voice/cartesia/voices").then((r) => { setVoices(r.voix); setErr(""); }).catch((e) => setErr(e.message));
-  }, [hasKey]);
+  const [loading, setLoading] = useState(false);
+  const refresh = () => {
+    setLoading(true);
+    http.get(`/voice/${svc.id}/voices`).then((r) => { setVoices(r.voix); setErr(""); }).catch((e) => { setVoices([]); setErr(e.message); }).finally(() => setLoading(false));
+  };
+  useEffect(() => { if (hasKey) refresh(); }, [hasKey, region]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = voices.find((x) => x.id === voice);
   return (
     <div className="stack" style={{ gap: 12 }}>
-      <label className="field"><span className="field-label">Clé Cartesia {hasKey && <span className="chip ok" style={{ marginLeft: 6 }}>enregistrée</span>}</span>
+      <p className="subtle" style={{ margin: 0, fontSize: "0.84rem" }}>{svc.aide}</p>
+      <label className="field"><span className="field-label">Clé {svc.nom} {hasKey && <span className="chip ok" style={{ marginLeft: 6 }}>enregistrée</span>}</span>
         <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
-          <input className="input" type="password" autoComplete="off" placeholder={hasKey ? "•••••••• (remplacer)" : "sk_car_…"} value={key} onChange={(e) => setKey(e.target.value)} style={{ flex: 1 }} />
+          <input className="input" type="password" autoComplete="off" placeholder={hasKey ? "•••••••• (remplacer)" : svc.placeholder} value={key} onChange={(e) => setKey(e.target.value)} style={{ flex: 1, minWidth: 0 }} />
           <button className="btn btn-primary btn-sm" disabled={!key.trim()} onClick={async () => { await onKey(key.trim()); setKey(""); }}>Enregistrer</button>
           {hasKey && <button className="btn btn-ghost btn-sm" onClick={() => onKey(null)}>Supprimer</button>}
         </div>
-        <span className="field-help">Chiffrée par Windows sur ce PC, jamais réaffichée. <a className="link" href="https://play.cartesia.ai/keys" target="_blank" rel="noreferrer">Obtenir une clé</a></span>
+        <span className="field-help">Chiffrée par Windows sur ce PC, jamais réaffichée. <a className="link" href={svc.lien} target="_blank" rel="noreferrer">Obtenir une clé</a></span>
       </label>
-      {hasKey && (
-        <label className="field"><span className="field-label">Voix</span>
-          <select className="select" value={voice} onChange={(e) => onVoice(e.target.value)}>
-            {!current && <option value={voice}>Henri (par défaut)</option>}
-            {voices.map((x) => <option key={x.id} value={x.id}>{x.nom}</option>)}
+      {svc.id === "azure" && (
+        <label className="field"><span className="field-label">Région de la ressource</span>
+          <select className="select" value={region} onChange={(e) => onRegion(e.target.value)}>
+            {!AZURE_REGIONS.includes(region) && <option value={region}>{region}</option>}
+            {AZURE_REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
-          <span className="field-help">{err || current?.description || "Voix française."} En ligne : le texte lu part chez Cartesia.</span>
+        </label>
+      )}
+      {hasKey && svc.libre && (
+        <label className="field"><span className="field-label">Identifiant de voix (facultatif)</span>
+          <input className="input" value={voice} placeholder="ex. collé depuis fish.audio/m/…" onChange={(e) => onVoice(e.target.value.trim().replace(/^.*\/m\//, "").replace(/[/?#].*$/, ""))} />
+        </label>
+      )}
+      {hasKey && (
+        <label className="field"><span className="field-label">Voix {loading && <Loader2 size={12} className="spin" />}</span>
+          <select className="select" value={voice} onChange={(e) => onVoice(e.target.value)}>
+            {!current && <option value={voice}>{voice || svc.defaut}</option>}
+            {voices.map((x) => <option key={x.id} value={x.id}>{x.nom}{x.description ? ` — ${x.description}` : ""}</option>)}
+          </select>
+          <span className="field-help">{err ? <span style={{ color: "var(--danger)" }}>{err}</span> : `${voices.length ? `${voices.length} voix françaises.` : "Voix française."} En ligne : le texte lu part chez ${svc.nom}.`}</span>
         </label>
       )}
     </div>

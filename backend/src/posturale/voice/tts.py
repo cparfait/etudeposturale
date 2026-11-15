@@ -1,12 +1,14 @@
 """Synthèse vocale : Piper sur ce PC (par défaut) ou OpenAI. Les phrases déjà dites sont gardées en cache."""
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 import httpx
 
@@ -148,6 +150,167 @@ def cartesia_voices(key: str) -> list[dict]:
     items = data.get("data", data) if isinstance(data, dict) else data
     return [{"id": v["id"], "nom": v.get("name", v["id"]), "description": v.get("description") or ""}
             for v in items if v.get("language") == "fr"]
+
+
+# ----------------------------------------------------------------- Fish Audio
+FISH = "https://api.fish.audio"
+
+
+def _fish_error(r: httpx.Response) -> str:
+    hint = {401: "clé refusée", 402: "plus de crédit pour ce modèle (le modèle s2.1-pro-free est gratuit)",
+            400: "requête refusée (identifiant de voix ?)", 429: "trop de requêtes"}.get(r.status_code, f"erreur {r.status_code}")
+    return f"Fish Audio — {hint}" + (f" : {r.text[:200]}" if r.text.strip() else "")
+
+
+# Voix génériques choisies à la main : la bibliothèque publique de fish.audio mélange des imitations de personnes
+# réelles et du spam, on ne la liste donc pas automatiquement (un identifiant peut toujours être collé à la main).
+FISH_VOICES = [
+    {"id": "", "nom": "Voix par défaut de Fish Audio", "description": ""},
+    {"id": "a288bdc744da4ad194921adad6863175", "nom": "Clémence", "description": "femme, calme et douce"},
+    {"id": "9f0935a47689459480b820ed3f6d782d", "nom": "Voix masculine dynamique", "description": "homme, énergique et clair"},
+    {"id": "6d3a8a05a287483ab32da9891d7f7fc9", "nom": "Voix masculine posée", "description": "homme, sérieux et clair"},
+]
+
+
+def fish_voices(key: str) -> list[dict]:
+    if not key:
+        raise TTSError("Clé Fish Audio à saisir dans les réglages de la voix.")
+    return FISH_VOICES
+
+
+def fish(text: str, key: str, voice: str = "", model: str = "s2.1-pro-free", speed: float = 1.0) -> tuple[bytes, str]:
+    if not key:
+        raise TTSError("Clé Fish Audio à saisir dans les réglages de la voix.")
+    speed = min(max(speed, 0.6), 1.6)
+    out = _cache("fish", hashlib.sha1(f"{model}|{voice}|{speed:.2f}|{text}".encode()).hexdigest() + ".mp3")
+    if out.exists():
+        return out.read_bytes(), "audio/mpeg"
+    body: dict = {"text": text, "format": "mp3"}
+    if voice:
+        body["reference_id"] = voice
+    if abs(speed - 1) > 0.01:
+        body["prosody"] = {"speed": round(speed, 2)}
+    try:
+        r = httpx.post(f"{FISH}/v1/tts", json=body, timeout=90,
+                       headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "model": model})
+    except httpx.HTTPError as exc:
+        raise TTSError("Fish Audio injoignable.") from exc
+    if r.status_code >= 400:
+        raise TTSError(_fish_error(r))
+    out.write_bytes(r.content)
+    return r.content, "audio/mpeg"
+
+
+# ----------------------------------------------------------------- Google Cloud Text-to-Speech
+GOOGLE = "https://texttospeech.googleapis.com/v1"
+
+
+def _google_error(r: httpx.Response) -> str:
+    try:
+        msg = r.json().get("error", {}).get("message", "")
+    except ValueError:
+        msg = r.text[:200]
+    hint = {400: "requête refusée", 401: "clé refusée", 403: "clé refusée ou API « Cloud Text-to-Speech » non activée",
+            429: "quota atteint"}.get(r.status_code, f"erreur {r.status_code}")
+    return f"Google — {hint} : {msg[:200]}"
+
+
+def google_voices(key: str) -> list[dict]:
+    if not key:
+        raise TTSError("Clé Google Cloud à saisir dans les réglages de la voix.")
+    try:
+        r = httpx.get(f"{GOOGLE}/voices", params={"languageCode": "fr-FR"}, headers={"X-Goog-Api-Key": key}, timeout=20)
+    except httpx.HTTPError as exc:
+        raise TTSError("Google Cloud injoignable.") from exc
+    if r.status_code >= 400:
+        raise TTSError(_google_error(r))
+    rank = lambda n: (0 if "Chirp3-HD" in n else 1 if "Chirp" in n else 2 if "Neural2" in n else 3 if "Wavenet" in n else 4, n)  # noqa: E731
+    voices = [v for v in r.json().get("voices", []) if any(c.startswith("fr-FR") for c in v.get("languageCodes", []))]
+    voices.sort(key=lambda v: rank(v["name"]))
+    gender = {"FEMALE": "femme", "MALE": "homme"}
+    return [{"id": v["name"], "nom": v["name"].removeprefix("fr-FR-"),
+             "description": f"Voix {gender.get(v.get('ssmlGender'), '')}".strip()} for v in voices]
+
+
+def google(text: str, key: str, voice: str = "", speed: float = 1.0) -> tuple[bytes, str]:
+    if not key:
+        raise TTSError("Clé Google Cloud à saisir dans les réglages de la voix.")
+    if not voice:
+        voices = google_voices(key)
+        if not voices:
+            raise TTSError("Google — aucune voix française disponible.")
+        voice = voices[0]["id"]
+    speed = min(max(speed, 0.6), 1.6)
+    out = _cache("google", hashlib.sha1(f"{voice}|{speed:.2f}|{text}".encode()).hexdigest() + ".mp3")
+    if out.exists():
+        return out.read_bytes(), "audio/mpeg"
+    body = {"input": {"text": text}, "voice": {"languageCode": "fr-FR", "name": voice},
+            "audioConfig": {"audioEncoding": "MP3", **({"speakingRate": round(speed, 2)} if abs(speed - 1) > 0.01 else {})}}
+    try:
+        r = httpx.post(f"{GOOGLE}/text:synthesize", headers={"X-Goog-Api-Key": key}, json=body, timeout=60)
+        if r.status_code == 400 and "speakingRate" in body["audioConfig"]:  # certaines voix n'acceptent pas la vitesse
+            body["audioConfig"].pop("speakingRate")
+            r = httpx.post(f"{GOOGLE}/text:synthesize", headers={"X-Goog-Api-Key": key}, json=body, timeout=60)
+    except httpx.HTTPError as exc:
+        raise TTSError("Google Cloud injoignable.") from exc
+    if r.status_code >= 400:
+        raise TTSError(_google_error(r))
+    audio = base64.b64decode(r.json().get("audioContent", ""))
+    out.write_bytes(audio)
+    return audio, "audio/mpeg"
+
+
+# ----------------------------------------------------------------- Azure Speech
+def _azure_base(region: str) -> str:
+    region = "".join(ch for ch in (region or "").lower() if ch.isalnum())
+    if not region:
+        raise TTSError("Région Azure à renseigner (ex. francecentral, westeurope).")
+    return f"https://{region}.tts.speech.microsoft.com/cognitiveservices"
+
+
+def _azure_error(r: httpx.Response) -> str:
+    hint = {400: "requête refusée (voix inconnue ?)", 401: "clé refusée ou mauvaise région", 403: "accès refusé",
+            429: "quota atteint (offre gratuite F0 : 500 000 caractères par mois)"}.get(r.status_code, f"erreur {r.status_code}")
+    return f"Azure — {hint}" + (f" : {r.text[:200]}" if r.text.strip() else "")
+
+
+def azure_voices(key: str, region: str) -> list[dict]:
+    if not key:
+        raise TTSError("Clé Azure Speech à saisir dans les réglages de la voix.")
+    try:
+        r = httpx.get(f"{_azure_base(region)}/voices/list", headers={"Ocp-Apim-Subscription-Key": key}, timeout=20)
+    except httpx.HTTPError as exc:
+        raise TTSError(f"Azure injoignable (région « {region} »).") from exc
+    if r.status_code >= 400:
+        raise TTSError(_azure_error(r))
+    gender = {"Female": "femme", "Male": "homme"}
+    voices = [v for v in r.json() if v.get("Locale") == "fr-FR"]
+    voices.sort(key=lambda v: ("Multilingual" in v["ShortName"], v["ShortName"]))
+    return [{"id": v["ShortName"], "nom": v.get("LocalName") or v["ShortName"],
+             "description": f"Voix {gender.get(v.get('Gender'), '')}".strip() + (" · multilingue" if "Multilingual" in v["ShortName"] else "")}
+            for v in voices]
+
+
+def azure(text: str, key: str, region: str, voice: str = "fr-FR-DeniseNeural", speed: float = 1.0) -> tuple[bytes, str]:
+    if not key:
+        raise TTSError("Clé Azure Speech à saisir dans les réglages de la voix.")
+    speed = min(max(speed, 0.6), 1.6)
+    out = _cache("azure", hashlib.sha1(f"{voice}|{speed:.2f}|{text}".encode()).hexdigest() + ".mp3")
+    if out.exists():
+        return out.read_bytes(), "audio/mpeg"
+    rate = f"{round((speed - 1) * 100):+d}%"
+    ssml = (f"<speak version='1.0' xml:lang='fr-FR'><voice name='{escape(voice)}'>"
+            f"<prosody rate='{rate}'>{escape(text)}</prosody></voice></speak>")
+    try:
+        r = httpx.post(f"{_azure_base(region)}/v1", content=ssml.encode("utf-8"), timeout=60, headers={
+            "Ocp-Apim-Subscription-Key": key, "Content-Type": "application/ssml+xml",
+            "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3", "User-Agent": "etude-posturale"})
+    except httpx.HTTPError as exc:
+        raise TTSError(f"Azure injoignable (région « {region} »).") from exc
+    if r.status_code >= 400:
+        raise TTSError(_azure_error(r))
+    out.write_bytes(r.content)
+    return r.content, "audio/mpeg"
 
 
 def openai(text: str, key: str, voice: str = "coral", model: str = "gpt-4o-mini-tts", speed: float = 1.0) -> tuple[bytes, str]:

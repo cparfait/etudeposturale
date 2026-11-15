@@ -34,6 +34,12 @@ def say(data: SayIn) -> Response:
     try:
         if v["tts"] == "cartesia":
             audio, mime = tts.cartesia(text, settings.get_key("cartesia", s), v["cartesia_voix"], v["cartesia_modele"], v["vitesse"])
+        elif v["tts"] == "fish":
+            audio, mime = tts.fish(text, settings.get_key("fish_audio", s), v["fish_voix"], v["fish_modele"], v["vitesse"])
+        elif v["tts"] == "google":
+            audio, mime = tts.google(text, settings.get_key("google_tts", s), v["google_voix"], v["vitesse"])
+        elif v["tts"] == "azure":
+            audio, mime = tts.azure(text, settings.get_key("azure_speech", s), v["azure_region"], v["azure_voix"], v["vitesse"])
         elif v["tts"] == "openai":
             audio, mime = tts.openai(text, settings.get_key("openai", s), v["openai_voix"], v["openai_tts_modele"], v["vitesse"])
         elif v["tts"] == "piper":
@@ -54,19 +60,33 @@ class KeyIn(BaseModel):
     cle: str | None = None
 
 
-@router.put("/keys/cartesia")
-def cartesia_key(data: KeyIn) -> dict:
-    """Clé Cartesia, chiffrée par Windows comme celles des fournisseurs d'IA ; jamais renvoyée."""
-    settings.set_key("cartesia", data.cle)
+VOICE_SERVICES = {"fish": "fish_audio", "cartesia": "cartesia", "google": "google_tts", "azure": "azure_speech"}  # service → nom de la clé
+
+
+@router.put("/keys/{service}")
+def voice_key(service: str, data: KeyIn) -> dict:
+    """Clé d'un service de voix, chiffrée par Windows comme celles des fournisseurs d'IA ; jamais renvoyée."""
+    if service not in VOICE_SERVICES:
+        raise HTTPException(404, "Service de voix inconnu")
+    settings.set_key(VOICE_SERVICES[service], data.cle)
     return {"cle_enregistree": bool(data.cle)}
 
 
-@router.get("/cartesia/voices")
-def cartesia_voices() -> dict:
+@router.get("/{service}/voices")
+def voice_list(service: str) -> dict:
+    s = settings.load()
     try:
-        return {"voix": tts.cartesia_voices(settings.get_key("cartesia"))}
+        if service == "cartesia":
+            return {"voix": tts.cartesia_voices(settings.get_key("cartesia", s))}
+        if service == "fish":
+            return {"voix": tts.fish_voices(settings.get_key("fish_audio", s))}
+        if service == "google":
+            return {"voix": tts.google_voices(settings.get_key("google_tts", s))}
+        if service == "azure":
+            return {"voix": tts.azure_voices(settings.get_key("azure_speech", s), s["voix"]["azure_region"])}
     except tts.TTSError as exc:
         raise HTTPException(502, str(exc)) from exc
+    raise HTTPException(404, "Service de voix inconnu")
 
 
 @router.post("/stt/prepare")

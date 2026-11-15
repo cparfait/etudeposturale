@@ -113,7 +113,7 @@ ollama pull gemma4:12b
   La clé se saisit dans « Réglages IA et voix » ; elle est chiffrée par Windows (DPAPI) et n'est jamais renvoyée à l'interface.
 - **Ce qui est envoyé** : un résumé texte (profil, vélo, mesures, douleurs, hypothèses du moteur), visible dans « Ce que voit le coach ».
   Jamais la vidéo. Les images clés (squelette dessiné, 1024 px) seulement si tu l'autorises dans les réglages et le demandes.
-- **Voix** : Cartesia en ligne (clé dans les réglages, chiffrée), Piper sur le PC (les voix françaises de LMU Stats Viewer sont reprises automatiquement, sinon copier `piper.exe` et une voix
+- **Voix** : en ligne avec ta clé (chiffrée) — Fish Audio (modèle gratuit s2.1-pro-free, usage personnel), Google Cloud (≈ 1 million de caractères gratuits par mois), Azure Speech (500 000 par mois, offre F0), Cartesia —, ou Piper sur le PC (les voix françaises de LMU Stats Viewer sont reprises automatiquement, sinon copier `piper.exe` et une voix
   `.onnx` + `.onnx.json` dans `data/voice/`), Whisper `large-v3-turbo` sur la carte (≈ 1,6 Go téléchargés au premier usage dans `models/`),
   ou OpenAI. Commandes comprises sans IA : « répète », « stop », « efface ».
 
@@ -149,5 +149,5 @@ ou **suivi** ; vue de face ou de dos ajoutée si une douleur le justifie.
 cd backend && .venv/Scripts/python -m pytest
 ```
 
-59 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
+63 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
 calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles, coach IA (fournisseurs, clés, flux), voix Piper et séance guidée (plan, adaptation par l'IA, débrief, modification unique).
