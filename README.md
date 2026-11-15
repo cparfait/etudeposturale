@@ -1,7 +1,24 @@
 # Étude posturale vélo
 
-Outil local d'étude posturale (bike fit) à partir d'un téléphone, de pastilles colorées et des capteurs du home trainer.
-Tout est traité sur le PC (RTX 4090) : aucune vidéo n'est envoyée en ligne.
+Faire son étude posturale (bike fit) chez soi, sur son home trainer, avec un smartphone, quelques pastilles colorées
+et, si on les a, les capteurs du vélo (puissance, équilibre gauche / droite, cardio).
+Tout est traité sur le PC : aucune vidéo n'est envoyée en ligne. L'interface est en français.
+
+<p align="center"><img src="frontend/public/tuto/seance-poster.jpg" alt="Tutoriel : une séance guidée" width="720"></p>
+
+> **Tutoriel vidéo (1 min 20)** : [frontend/public/tuto/seance.mp4](frontend/public/tuto/seance.mp4), aussi accessible
+> depuis l'accueil de l'application. On y suit une séance complète : pastilles, téléphone, cadrage, prises, analyse, débrief.
+
+**Principe** : le téléphone filme de profil pendant que tu pédales ; le PC suit les articulations (RTMW sur la carte
+graphique, recalé sur les pastilles), mesure les angles sur des centaines de tours de pédale, les compare à des plages
+sourcées, puis propose **une seule modification à la fois** (santé d'abord), que la séance suivante vient vérifier.
+Les sorties Garmin importées confirment ensuite le réglage sur la route.
+
+**Statut** : prototype personnel fonctionnel, validé sur vidéos synthétiques et données simulées ; la validation sur
+des séances réelles est en cours ([état et validation](docs/05_etat_et_validation.md)). Ce n'est pas un avis médical :
+en cas de douleur persistante, voir un professionnel.
+
+## Documentation
 
 - Cadrage et décisions : [PROMPT_PROJET_ETUDE_POSTURALE.md](PROMPT_PROJET_ETUDE_POSTURALE.md)
 - Phase 0 : [état de l'art](docs/00_etat_de_l_art.md), [métriques](docs/01_metriques.md), [matériel](docs/02_materiel.md)
@@ -22,8 +39,20 @@ Tout est traité sur le PC (RTX 4090) : aucune vidéo n'est envoyée en ligne.
 | Coach IA | Questions à l'écrit ou à la voix (appui pour parler ou mains libres), réponses lues à voix haute, images clés de l'analyse en option |
 | Réglages IA et voix | Fournisseur (Ollama, LM Studio, OpenAI, Anthropic, Google, Mistral…), clés chiffrées par Windows, voix Piper / Whisper |
 | Contrôle des pastilles | Sur une photo ou une image de la vidéo : pastilles trouvées, pipette, réglage des couleurs utilisé par les analyses |
-| Cadrage en direct | MediaPipe dans le navigateur du téléphone : feu vert quand le cadrage est bon |
+| Cadrage en direct | MediaPipe dans le navigateur : feu vert seulement quand un cycliste entier est bien de profil ; l'image du téléphone (QR code) s'affiche en direct sur le PC |
 | Capteurs et ERG | Web Bluetooth : puissance et équilibre (Assioma), cardio, puissance imposée au Tacx Neo 2T |
+| Mes sorties | Import en lot de fichiers .FIT ou .zip Garmin Connect, comparaison avant / après réglage, détail d'une sortie (équilibre G/D au fil du temps, efficacité du couple, fluidité, phases de poussée) |
+| Tutoriel | Vidéo d'une séance guidée, par chapitres, depuis l'accueil, le guide de démarrage et la séance guidée |
+
+## Matériel
+
+- **Obligatoire** : vélo sur home trainer, smartphone, trépied, pastilles (ou mire ChArUco), mètre ruban, un PC.
+  Une carte NVIDIA accélère fortement l'analyse (développé sur RTX 4090).
+- **Recul** : prévoir environ **2 m** entre le téléphone (zoom 1x, à l'horizontale, à hauteur de selle) et le vélo.
+  Seuls le cycliste des épaules aux pieds et le pédalier doivent être dans l'image : la roue avant et la tête peuvent
+  sortir du cadre. Éviter l'ultra grand-angle (0,5x) : la déformation fausse les angles.
+- **Optionnel** : home trainer connecté (ERG), pédales capteur de puissance, cardio, micro, compteur GPS (.FIT), mire
+  ChArUco imprimée ([calibration/](calibration/)), coach IA local ou en ligne.
 
 ## Installation
 
@@ -160,11 +189,35 @@ ou **suivi** ; vue de face ou de dos ajoutée si une douleur le justifie.
   enregistre la nouvelle configuration : la séance suivante devient une vérification.
 - La séance se reprend où tu l'as laissée (par exemple pour importer les vidéos plus tard).
 
+## Mes sorties (Garmin Connect)
+
+Menu « Mes sorties ». Dans Garmin Connect, ouvrir une activité → ⚙ → « Exporter l'original » (un .zip), ou demander
+l'export complet du compte ; les liens sont sur la page. Glisser les fichiers .FIT / .zip (ou un dossier entier) :
+les sorties vélo sont gardées (course à pied et doublons ignorés) et rattachées au réglage en place à leur date.
+
+- **Avant / après** : puissance, cardio, watts par battement, équilibre gauche / droite, efficacité et fluidité par réglage.
+- **Détail d'une sortie** : courbes toutes les 5 minutes et lecture automatique qui compare tes deux jambes entre elles
+  (déséquilibre, jambe qui faiblit en fin de sortie, poussée qui commence plus tard d'un côté — utile pour les cales).
+- Le coach IA et le débrief de la séance guidée s'en servent pour vérifier le réglage sur la route.
+
+## Tutoriel vidéo
+
+Le film est produit dans [media/tuto/](media/tuto/) (composition HyperFrames ; images
+Z-Image et LTX-2 dans ComfyUI, captures de l'application avec Playwright, voix Cartesia). Les scripts sont dans
+`media/tuto/tools/` ; le rendu final est copié dans `frontend/public/tuto/`.
+
 ## Tests
 
 ```bash
 cd backend && .venv/Scripts/python -m pytest
 ```
 
-63 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
-calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles, coach IA (fournisseurs, clés, flux), voix Piper et séance guidée (plan, adaptation par l'IA, débrief, modification unique).
+74 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
+calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT et sorties Garmin (fichiers générés par `tests/fitgen.py`),
+moteur de recommandations, API, réglage des couleurs de pastilles, coach IA (fournisseurs, clés, flux), voix et séance guidée
+(plan, adaptation par l'IA, débrief, modification unique).
+
+## Confidentialité
+
+Les données (profil, santé, vidéos, sorties, base SQLite) restent dans `data/`, ignoré par git. Les clés d'API sont
+chiffrées par Windows (DPAPI). Seul le coach IA en ligne, s'il est choisi, reçoit un résumé texte ; jamais la vidéo.
