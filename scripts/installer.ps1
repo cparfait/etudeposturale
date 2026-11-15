@@ -21,7 +21,7 @@ if (-not (Test-Path $py)) {
 
 Step "Dépendances du backend (avec le moteur de pose GPU)"
 & $py -m pip install --upgrade pip --quiet
-& $py -m pip install -e "backend[dev,gpu,voice]"
+& $py -m pip install -e "backend[dev,gpu,voice,https]"
 if ($LASTEXITCODE) { throw "Installation du backend en échec" }
 
 # rtmlib tire onnxruntime (CPU), qui masque la version GPU ; cuDNN doit rester en 9.10.
@@ -37,6 +37,15 @@ if ($LASTEXITCODE) { throw "Installation de faster-whisper en échec" }
 Step "Interface (npm)"
 npm --prefix frontend install
 if ($LASTEXITCODE) { throw "Installation de l'interface en échec" }
+
+Step "HTTPS sur le réseau local (pour filmer avec le téléphone depuis la page)"
+& $py scripts\https_local.py
+if ($LASTEXITCODE) { Write-Host "Certificat HTTPS non créé : le téléphone pourra seulement envoyer des vidéos." -ForegroundColor Yellow }
+else {
+    Write-Host "Windows va demander s'il faut faire confiance à l'autorité « Étude posturale — autorité locale » : réponds Oui." -ForegroundColor Yellow
+    Write-Host "(Elle est propre à ce PC ; sa clé reste dans data\https. Sans elle, le navigateur du PC affichera un avertissement.)"
+    & $py scripts\https_local.py --installer-autorite
+}
 
 Step "Vérification du moteur de pose"
 & $py -c "from posturale.pose.engines import available_engines; print(available_engines())"

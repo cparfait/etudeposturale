@@ -9,10 +9,12 @@ export default function PhonePairing({ pairing, onRole, compact = false }: {
 }) {
   const [qr, setQr] = useState("");
   const [url, setUrl] = useState("");
+  const [autorite, setAutorite] = useState(false);
   useEffect(() => {
     if (!pairing?.code) return;
-    phoneUrl(pairing.code).then(({ url: u }) => {
+    phoneUrl(pairing.code).then(({ url: u, autorite: a }) => {
       setUrl(u);
+      setAutorite(a);
       QRCode.toDataURL(u, { margin: 1, width: 360, color: { dark: "#0f150e", light: "#ffffff" } }).then(setQr).catch(() => {});
     });
   }, [pairing?.code]);
@@ -31,6 +33,15 @@ export default function PhonePairing({ pairing, onRole, compact = false }: {
         {!secure && (
           <p className="pp-warn"><ShieldAlert size={15} /> Sans HTTPS, le téléphone peut envoyer une vidéo filmée avec son appli Appareil photo,
             mais pas filmer depuis la page. Pour l'enregistrement lancé depuis le PC, active le HTTPS (README, « Utiliser le téléphone »).</p>
+        )}
+        {secure && autorite && (
+          <details className="pp-ca">
+            <summary>Avertissement « connexion non sécurisée » sur le téléphone ?</summary>
+            <p>Normal la première fois : le certificat vient de ton PC, pas d'internet. Choisis « Continuer » (Paramètres avancés),
+              ou installe une fois l'autorité de ce PC depuis le téléphone : <a className="link" href="/api/remote/autorite.crt">télécharger le certificat</a>,
+              puis Android : Paramètres › Sécurité › Chiffrement › Installer un certificat › Certificat CA ;
+              iPhone : Réglages › Profil téléchargé, puis Général › Informations › Réglages des certificats (activer).</p>
+          </details>
         )}
         {devices.length === 0 ? <p className="subtle pp-none">Aucun téléphone relié pour l'instant.</p> : (
           <ul className="pp-list">

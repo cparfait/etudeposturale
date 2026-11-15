@@ -5,6 +5,9 @@ $py = Join-Path $root "backend\.venv\Scripts\python.exe"
 if (-not (Test-Path $py)) { throw "Backend non installé : lancer d'abord scripts\installer.bat" }
 if (-not (Test-Path (Join-Path $root "frontend\node_modules"))) { throw "Interface non installée : lancer d'abord scripts\installer.bat" }
 
+# Certificat HTTPS local : renouvelé si l'adresse Wi-Fi du PC a changé (le QR code du téléphone l'utilise)
+if (Test-Path (Join-Path $root "data\https\ca.key")) { & $py (Join-Path $root "scripts\https_local.py") | Out-Null }
+
 Start-Process powershell -WorkingDirectory $root -ArgumentList "-NoExit", "-Command", `
     "`$Host.UI.RawUI.WindowTitle = 'Posturale - backend'; & '$py' -m uvicorn posturale.api.main:app --port 8000 --app-dir backend/src"
 Start-Process powershell -WorkingDirectory $root -ArgumentList "-NoExit", "-Command", `

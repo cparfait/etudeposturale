@@ -133,8 +133,13 @@ Dans la séance guidée (étape « Installer le téléphone ») ou sur le détai
 
 - **Enregistrement lancé depuis le PC** : à « c'est parti », les téléphones filment exactement la durée de la prise, puis
   **envoient la vidéo tout seuls** et l'analyse démarre. La préparation n'est pas filmée, plus besoin de clap.
-- Le navigateur du téléphone n'ouvre la caméra qu'en **HTTPS** : il faut les certificats mkcert (section ci-dessous).
+- Le navigateur du téléphone n'ouvre la caméra qu'en **HTTPS**. `scripts\installer.bat` s'en charge : il crée une autorité
+  propre à ce PC (`data\https\`, sans outil externe) et un certificat pour ses adresses (`frontend\certs\`), puis demande
+  à Windows d'y faire confiance (réponds Oui). `scripts\lancer.bat` renouvelle le certificat si l'adresse Wi-Fi change.
+  À la main : `backend\.venv\Scripts\python scripts\https_local.py --installer-autorite`.
+  Sur le téléphone : « Continuer » la première fois, ou installer l'autorité (lien sous le QR code).
   Sans HTTPS, le téléphone se relie quand même et peut envoyer une vidéo filmée avec l'appli Appareil photo.
+- **Sur un serveur derrière un proxy** (Nginx Proxy Manager…) : rien de tout cela, le proxy fournit un vrai certificat.
 - L'interface est servie sur le réseau local (`host: true`) : au premier lancement, Windows peut demander d'autoriser Node.js
   sur les réseaux privés.
 

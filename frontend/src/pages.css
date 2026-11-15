@@ -315,3 +315,6 @@
 .sd-side .pp-qr { flex-direction: row; justify-self: start; gap: 12px; }
 .sd-side .pp-qr img { width: 112px; height: 112px; }
 .pp-err { flex-basis: 100%; font-size: 0.78rem; color: var(--danger); }
+.pp-ca { font-size: 0.8rem; color: var(--text-2); }
+.pp-ca summary { cursor: pointer; font-weight: 600; color: var(--text-2); }
+.pp-ca p { margin: 6px 0 0; line-height: 1.45; }

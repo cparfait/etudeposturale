@@ -75,9 +75,26 @@ def lan_addresses() -> list[str]:
     return private or [ip for ip in out if not ip.startswith("127.")]
 
 
+def _ca_file():
+    from posturale.config import data_dir
+
+    return data_dir() / "https" / "ca.crt"
+
+
 @router.get("/address")
 def address() -> dict:
-    return {"adresses": lan_addresses()}
+    return {"adresses": lan_addresses(), "autorite": _ca_file().exists()}
+
+
+@router.get("/autorite.crt")
+def authority():
+    """Autorité HTTPS locale (scripts/https_local.py), à installer une fois sur le téléphone pour éviter l'avertissement."""
+    from fastapi.responses import FileResponse
+
+    f = _ca_file()
+    if not f.exists():
+        raise HTTPException(404, "Pas d'autorité locale : HTTPS non configuré sur ce PC.")
+    return FileResponse(f, media_type="application/x-x509-ca-cert", filename="etude-posturale-autorite.crt")
 
 
 class PairIn(BaseModel):

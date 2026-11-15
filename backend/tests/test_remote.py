@@ -59,3 +59,23 @@ def test_browser_webm_is_remuxed(client, tmp_path):
         cap = client.post(f"/api/sessions/{sid}/captures", files={"file": ("rec.webm", f, "video/webm")}, data={"vue": "profil"}).json()
     assert cap["meta"]["duration_s"] > 1.5 and round(cap["meta"]["fps"]) == 30
     assert list((tmp_path / "data" / "videos").glob("*.mkv"))
+
+
+def test_local_https_authority(client, tmp_path):
+    assert client.get("/api/remote/address").json()["autorite"] is False
+    assert client.get("/api/remote/autorite.crt").status_code == 404
+    pytest.importorskip("cryptography")
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("https_local", Path(__file__).resolve().parents[2] / "scripts" / "https_local.py")
+    h = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(h)
+    h.CA_DIR, h.CERT_DIR = tmp_path / "data" / "https", tmp_path / "certs"
+    assert h.issue_server_cert() is True and h.issue_server_cert() is False      # rien à refaire si l'IP n'a pas changé
+    pem = (tmp_path / "certs" / "cert.pem").read_text()
+    assert pem.count("BEGIN CERTIFICATE") == 2                                    # certificat + autorité (chaîne complète)
+    assert "localhost" in h.current_sans(tmp_path / "certs" / "cert.pem")
+    assert client.get("/api/remote/address").json()["autorite"] is True
+    r = client.get("/api/remote/autorite.crt")
+    assert r.status_code == 200 and b"BEGIN CERTIFICATE" in r.content and b"PRIVATE" not in r.content

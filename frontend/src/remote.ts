@@ -13,12 +13,12 @@ export const ETAT_LABEL: Record<string, string> = {
 };
 
 /** Adresse à mettre dans le QR code : même protocole et même port que l'interface, mais l'IP du PC sur le réseau. */
-export async function phoneUrl(code: string): Promise<{ url: string; ips: string[] }> {
-  const r = await http.get("/remote/address").catch(() => ({ adresses: [] }));
+export async function phoneUrl(code: string): Promise<{ url: string; ips: string[]; autorite: boolean }> {
+  const r = await http.get("/remote/address").catch(() => ({ adresses: [], autorite: false }));
   const ips: string[] = r.adresses ?? [];
   const host = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ? ips[0] ?? location.hostname : location.hostname;
   const port = location.port ? `:${location.port}` : "";
-  return { url: `${location.protocol}//${host}${port}/tel?c=${code}`, ips };
+  return { url: `${location.protocol}//${host}${port}/tel?c=${code}`, ips, autorite: !!r.autorite };
 }
 
 /** Appairage de la séance et suivi des téléphones (interrogé toutes les 1,5 s). */

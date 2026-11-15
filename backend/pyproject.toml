@@ -18,6 +18,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "httpx>=0.27"]
+# HTTPS sur le réseau local (scripts/https_local.py) : la caméra du téléphone n'est accessible qu'en HTTPS.
+https = ["cryptography>=42"]
 # Moteur de pose RTMW sur la RTX 4090. cuDNN épinglé : la 9.28 fait échouer ONNX Runtime 1.23 (CUDNN_BACKEND_API_FAILED).
 # Ne pas installer « onnxruntime » (CPU) en plus : il masque la version GPU.
 gpu = ["rtmlib>=0.0.16", "onnxruntime-gpu[cuda,cudnn]==1.23.2", "nvidia-cudnn-cu12==9.10.2.21"]
