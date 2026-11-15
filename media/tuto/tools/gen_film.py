@@ -51,7 +51,11 @@ def video(cid: str, n: int, src: str, start: float, dur: float, media_start: flo
             + (f' data-media-start="{media_start}"' if media_start else "") + ' muted playsinline></video>')
 
 
+VO_TIMES: list[tuple[str, float, float]] = []   # (chapitre, début local, durée) : sert à baisser la musique sous la voix
+
+
 def voice(cid: str, lid: str, start: float) -> str:
+    VO_TIMES.append((cid, start, DUR[lid]))
     return (f'<audio id="{cid}-vo-{lid}" class="clip" src="assets/voix/{lid}.wav" data-start="{start}" '
             f'data-duration="{DUR[lid]:.2f}" data-volume="1"></audio>')
 
@@ -252,6 +256,24 @@ def build() -> None:
 
     # racine
     t, hosts = 0.0, []
+    offsets = {}
+    acc = 0.0
+    for cid_, d_ in SCENES:
+        offsets[cid_] = acc
+        acc += d_
+    spans = sorted((offsets[c] + a, offsets[c] + a + d) for c, a, d in VO_TIMES)
+    merged: list[list[float]] = []
+    for a, b in spans:
+        if merged and a - merged[-1][1] < 1.0:      # répliques proches : on reste bas, pas de « pompage »
+            merged[-1][1] = max(merged[-1][1], b)
+        else:
+            merged.append([a, b])
+    LOW, RAMP_IN, RAMP_OUT = 0.4, 0.25, 0.45
+    pts = [{"t": 0, "v": 1}]
+    for a, b in merged:
+        pts += [{"t": round(max(0, a - RAMP_IN), 2), "v": 1}, {"t": round(a, 2), "v": LOW},
+                {"t": round(b, 2), "v": LOW}, {"t": round(b + RAMP_OUT, 2), "v": 1}]
+    lane = json.dumps({"version": 1, "lanes": [{"target": "volume", "points": pts}]}).replace('"', "&quot;")
     for i, (cid, d) in enumerate(SCENES):
         hosts.append(f'      <div id="{cid}" data-composition-id="{cid}" data-composition-src="compositions/{cid}.html" '
                      f'data-start="{t:.2f}" data-duration="{d:.2f}" data-track-index="1" data-track-kind="graphics" '
@@ -271,8 +293,8 @@ def build() -> None:
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="{t:.2f}" data-width="1920" data-height="1080">
 {chr(10).join(hosts)}
-      <audio id="musique" class="clip" src="assets/musique.m4a" data-start="0" data-duration="{t:.2f}" data-volume="0.2"
-        data-fade-in="0.15" data-fade-out="2.5" data-track-index="5"></audio>
+      <audio id="musique" class="clip" src="assets/musique.m4a" data-start="0" data-duration="{t:.2f}" data-volume="0.22"
+        data-fade-in="0.15" data-fade-out="2.5" data-track-index="5" data-automation="{lane}"></audio>
     </div>
     <script>
       window.__timelines["main"] = gsap.timeline({{ paused: true }});
