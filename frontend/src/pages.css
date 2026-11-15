@@ -272,6 +272,13 @@
 .pp-code b { letter-spacing: 0.12em; color: #0f150e; font-size: 0.92rem; }
 .pp-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .pp-lead { display: flex; gap: 8px; align-items: center; margin: 0; font-weight: 600; font-size: 0.92rem; }
+/* Image en direct des téléphones reliés */
+.pp-feeds { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.pf { margin: 0; position: relative; border-radius: 12px; overflow: hidden; background: #0f150e; aspect-ratio: 16 / 9; display: grid; place-items: center; }
+.pf img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pf-wait { display: inline-flex; align-items: center; gap: 6px; color: #c9d3c2; font-size: 0.78rem; }
+.pf figcaption { position: absolute; left: 6px; bottom: 6px; padding: 2px 8px; border-radius: 999px; background: rgb(0 0 0 / 0.6); color: #fff; font-size: 0.72rem; font-weight: 700; }
+
 /* QR code « ouvrir cette page sur le téléphone » */
 .oop { display: flex; gap: 16px; align-items: center; margin-top: 16px; }
 .oop-qr { flex: none; padding: 8px; border-radius: 14px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; min-width: 136px; min-height: 136px; }
@@ -306,8 +313,11 @@
 .tel-view { position: relative; border-radius: 16px; overflow: hidden; background: #000; aspect-ratio: 16 / 9; }
 .tel-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .tel-line { position: absolute; left: 0; right: 0; border-top: 1.5px dashed rgb(255 255 255 / 0.4); pointer-events: none; }
+.tel-watched { position: absolute; left: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: rgb(15 21 14 / 0.75); color: #b8f34a; font-size: 0.8rem; font-weight: 700; }
 .tel-badge { position: absolute; left: 10px; top: 10px; padding: 5px 10px; border-radius: 999px; background: rgb(0 0 0 / 0.6); color: #fff; font-size: 0.82rem; font-weight: 700; }
 .tel-rec { position: absolute; right: 10px; top: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #dc2626; color: #fff; font-weight: 800; animation: pulse 1.2s infinite; }
+.tel-view.is-fs, .tel-view:fullscreen { position: fixed; inset: 0; z-index: 300; border-radius: 0; aspect-ratio: auto; width: 100vw; height: 100vh; height: 100dvh; }
+.tel-view.is-fs .tel-fs { width: 48px; height: 48px; right: 16px; bottom: 16px; }
 .tel-fs { position: absolute; right: 10px; bottom: 10px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgb(0 0 0 / 0.55); color: #fff; display: grid; place-items: center; }
 .tel-nocam { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--warn-soft); color: var(--warn); font-size: 0.9rem; }
 .tel-nocam svg { flex: none; margin-top: 2px; }

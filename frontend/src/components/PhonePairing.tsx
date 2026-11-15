@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { CheckCircle2, Loader2, ShieldAlert, Smartphone, WifiOff } from "lucide-react";
 import { ETAT_LABEL, phoneUrl, type Pairing } from "../remote";
+import PhoneFeed from "./PhoneFeed";
 
 /** QR code à scanner avec le téléphone, puis la liste des téléphones reliés (vue filmée, état). */
 export default function PhonePairing({ pairing, onRole, compact = false }: {
@@ -58,6 +59,13 @@ export default function PhonePairing({ pairing, onRole, compact = false }: {
               </li>
             ))}
           </ul>
+        )}
+        {pairing && devices.some((d) => d.connecte && d.secure) && (
+          <div className="pp-feeds">
+            {devices.filter((d) => d.connecte && d.secure).map((d) => (
+              <PhoneFeed key={d.id} code={pairing.code} did={d.id} label={`${d.nom} · ${d.role_label}`} />
+            ))}
+          </div>
         )}
       </div>
     </div>

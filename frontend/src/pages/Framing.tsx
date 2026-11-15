@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, CircleDashed, Maximize2, Minimize2, ShieldAlert, SwitchCamera } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, CircleDashed, Maximize2, Minimize2, ShieldAlert, Smartphone, SwitchCamera } from "lucide-react";
 import type { NormalizedLandmark, PoseLandmarker } from "@mediapipe/tasks-vision";
 import FramingGoal from "../components/FramingGoal";
 import OpenOnPhone from "../components/OpenOnPhone";
+import { phoneStream, useRemote, type Device } from "../remote";
 
 // Modèle : d'abord une copie locale (public/mediapipe/), sinon le fichier officiel de Google (téléchargé une fois par le navigateur).
 const MODEL_LOCAL = "/mediapipe/pose_landmarker_full.task";
@@ -66,6 +67,14 @@ export default function Framing() {
   const [cams, setCams] = useState<MediaDeviceInfo[]>([]);
   const [camId, setCamId] = useState<string>(() => { try { return localStorage.getItem(CAM_KEY) ?? ""; } catch { return ""; } });
   const gen = useRef(0);                         // chaque démarrage a son numéro : un démarrage dépassé s'arrête tout seul
+  // Téléphone relié par QR code : son image arrive en direct et devient une caméra comme une autre (« tel:<id> »)
+  const { pairing, online } = useRemote("cadrage");
+  const codeRef = useRef<string | null>(null);
+  codeRef.current = pairing?.code ?? null;
+  const phoneRef = useRef<Device | null>(null);
+  const phoneId = camId.startsWith("tel:") ? camId.slice(4) : null;
+  phoneRef.current = phoneId ? online.find((d) => d.id === phoneId) ?? null : null;
+  const seen = useRef(new Set<string>());
 
   // La caméra démarre dès l'ouverture de la page
   useEffect(() => {
@@ -95,6 +104,7 @@ export default function Framing() {
 
   async function start(deviceId?: string) {
     const my = ++gen.current;
+    const phone = deviceId?.startsWith("tel:") ? deviceId.slice(4) : null;
     try {
       setStatus("Chargement du modèle de pose…");
       const { FilesetResolver, PoseLandmarker } = await import("@mediapipe/tasks-vision");
@@ -105,22 +115,25 @@ export default function Framing() {
         runningMode: "VIDEO", numPoses: 1,
       });
       if (my !== gen.current) { landmarker.close(); return; }
-      setStatus("Ouverture de la caméra…");
+      setStatus(phone ? "En attente de l'image du téléphone…" : "Ouverture de la caméra…");
       const size = { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } };
       let stream: MediaStream;
-      try {
+      let stopPhone = () => {};
+      if (phone && codeRef.current) {
+        const p = phoneStream(codeRef.current, phone);
+        stream = p.stream; stopPhone = p.stop;
+      } else try {
         stream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId }, ...size } : { facingMode: "environment", ...size }, audio: false });
       } catch (err) {
         if (!deviceId) throw err;                  // la caméra mémorisée n'existe plus : celle par défaut
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", ...size }, audio: false });
       }
-      if (my !== gen.current) { stream.getTracks().forEach((t) => t.stop()); landmarker.close(); return; }
-      const used = stream.getVideoTracks()[0]?.getSettings().deviceId ?? "";
-      setCamId(used);
+      if (my !== gen.current) { stopPhone(); stream.getTracks().forEach((t) => t.stop()); landmarker.close(); return; }
+      setCamId(phone ? `tel:${phone}` : stream.getVideoTracks()[0]?.getSettings().deviceId ?? "");
       navigator.mediaDevices.enumerateDevices().then((d) => setCams(d.filter((x) => x.kind === "videoinput"))).catch(() => {});
       const v = video.current!;
       v.srcObject = stream;
-      await v.play();
+      if (phone) v.play().catch(() => {}); else await v.play();  // le flux du téléphone ne démarre qu'à sa première image
       // Cadence réelle : images effectivement reçues (et non la valeur annoncée par la caméra), sur une fenêtre glissante de 2 s
       let fps: number | undefined;
       const stamps: number[] = [];
@@ -140,7 +153,7 @@ export default function Framing() {
         fps = stream.getVideoTracks()[0].getSettings().frameRate;  // repli : valeur annoncée
       }
       setRunning(true);
-      setStatus("Cadrage en cours");
+      setStatus(phone ? "Image du téléphone en direct" : "Cadrage en cours");
       const small = document.createElement("canvas");
       small.width = 64; small.height = 36;
       const sctx = small.getContext("2d", { willReadFrequently: true })!;
@@ -156,7 +169,11 @@ export default function Framing() {
         let sum = 0;
         for (let i = 0; i < px.length; i += 4) sum += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
         const lum = sum / (px.length / 4) / 255;
-        setChecks(evaluate(lm, lum, fps, v.videoWidth >= v.videoHeight, v.videoWidth, v.videoHeight));
+        // Téléphone : la cadence et la résolution sont celles de sa caméra (l'aperçu reçu est volontairement réduit)
+        const ph = phone ? phoneRef.current : null;
+        setChecks(phone
+          ? evaluate(lm, lum, ph?.fps ?? undefined, v.videoWidth >= v.videoHeight, ph?.largeur ?? 0, ph?.hauteur ?? 0)
+          : evaluate(lm, lum, fps, v.videoWidth >= v.videoHeight, v.videoWidth, v.videoHeight));
         const c = canvas.current!;
         c.width = v.videoWidth; c.height = v.videoHeight;
         const ctx = c.getContext("2d")!;
@@ -178,6 +195,7 @@ export default function Framing() {
       stopRef.current = () => {
         cancelAnimationFrame(raf);
         alive = false;
+        stopPhone();
         stream.getTracks().forEach((t) => t.stop());
         landmarker.close();
         setRunning(false);
@@ -192,17 +210,26 @@ export default function Framing() {
   }
 
   function switchCam(id: string) {
-    try { localStorage.setItem(CAM_KEY, id); } catch { /* stockage indisponible */ }
+    if (!id.startsWith("tel:")) try { localStorage.setItem(CAM_KEY, id); } catch { /* stockage indisponible */ }
     setCamId(id);
     stopRef.current();
     start(id);
   }
+  const sources = [...online.map((d) => ({ id: `tel:${d.id}`, label: `Téléphone : ${d.nom}` })),
+    ...cams.map((c, i) => ({ id: c.deviceId, label: c.label || `Caméra ${i + 1}` }))];
   const nextCam = () => {
-    if (cams.length < 2) return;
-    const i = cams.findIndex((c) => c.deviceId === camId);
-    switchCam(cams[(i + 1) % cams.length].deviceId);
+    if (sources.length < 2) return;
+    const i = sources.findIndex((c) => c.id === camId);
+    switchCam(sources[(i + 1) % sources.length].id);
   };
-  const camLabel = (c: MediaDeviceInfo, i: number) => c.label || `Caméra ${i + 1}`;
+
+  // Un téléphone vient de scanner le QR code : on affiche aussitôt son image
+  useEffect(() => {
+    const fresh = online.find((d) => !seen.current.has(d.id));
+    online.forEach((d) => seen.current.add(d.id));
+    if (fresh && !camId.startsWith("tel:")) { stopRef.current(); start(`tel:${fresh.id}`); }
+  }, [online.map((d) => d.id).join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const phoneLost = !!phoneId && !phoneRef.current && !!pairing;
 
   const essential = checks.filter((c) => c.id !== "fps");  // la cadence n'empêche pas de cadrer : elle prévient sur la qualité
   const allOk = running && essential.every((c) => c.ok);
@@ -213,14 +240,14 @@ export default function Framing() {
         <div>
           <div className="eyebrow">Avant d'enregistrer</div>
           <h1>Cadrage en direct</h1>
-          <p>Ouvre cette page sur le téléphone posé sur son trépied : quand tout est vert, passe dans l'appli Appareil photo pour filmer la mesure.</p>
+          <p>Scanne le QR code avec le téléphone posé sur son trépied : son image s'affiche ici avec les contrôles. Une caméra branchée au PC marche aussi.</p>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          {cams.length > 1 && (
+          {sources.length > 1 && (
             <label className="cam-pick">
-              <SwitchCamera size={16} />
+              {phoneId ? <Smartphone size={16} /> : <SwitchCamera size={16} />}
               <select className="select" value={camId} onChange={(e) => switchCam(e.target.value)} aria-label="Caméra utilisée">
-                {cams.map((c, i) => <option key={c.deviceId} value={c.deviceId}>{camLabel(c, i)}</option>)}
+                {sources.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </label>
           )}
@@ -236,7 +263,7 @@ export default function Framing() {
       {!window.isSecureContext && (
         <div className="alert warn" style={{ marginBottom: 16 }}>
           <ShieldAlert size={18} />
-          <span>Le navigateur n'autorise la caméra qu'en HTTPS (ou sur ce PC via localhost). Pour le téléphone : lance scripts\lancer.bat après l'installation (HTTPS automatique), puis scanne le QR code ci-dessous.</span>
+          <span>Le navigateur n'autorise la caméra qu'en HTTPS (ou sur ce PC via localhost). Pour le téléphone : lance scripts\lancer.bat après l'installation (HTTPS automatique), puis scanne le QR code.</span>
         </div>
       )}
 
@@ -251,7 +278,7 @@ export default function Framing() {
                 {fs ? <Minimize2 size={18} /> : <Maximize2 size={18} />}{fs && " Quitter"}
               </button>
             )}
-            {running && fs && cams.length > 1 && (
+            {running && fs && sources.length > 1 && (
               <button type="button" className="live-fs-btn cam" onClick={nextCam} aria-label="Caméra suivante"><SwitchCamera size={18} /> Changer de caméra</button>
             )}
             {running && fs && essential.some((c) => !c.ok) && (
@@ -265,7 +292,7 @@ export default function Framing() {
               </ul>
             )}
           </div>
-          <p className="subtle" style={{ marginTop: 8, fontSize: "0.84rem" }}>{status}. Les pointillés : la hanche doit se trouver entre les deux lignes.</p>
+          <p className="subtle" style={{ marginTop: 8, fontSize: "0.84rem" }}>{phoneLost ? "Téléphone déconnecté : rescanne le QR code ou choisis une autre caméra" : status}. Les pointillés : la hanche doit se trouver entre les deux lignes.</p>
           <FramingGoal />
         </div>
         <div>
@@ -283,9 +310,12 @@ export default function Framing() {
             Le calcul se fait dans le navigateur (MediaPipe) : l'image ne quitte pas l'appareil. Le modèle (≈ 9 Mo) est téléchargé une fois depuis Google si aucune copie locale n'existe dans <code>public/mediapipe/</code>.
           </p>
         </section>
-          <OpenOnPhone path="/cadrage">
-            <p className="subtle" style={{ fontSize: "0.8rem" }}>Pour filmer depuis le téléphone avec départ lancé par le PC, utilise plutôt le QR code d'une séance (Séances de capture ou Séance guidée).</p>
-          </OpenOnPhone>
+          {pairing && (
+            <OpenOnPhone path={`/tel?c=${pairing.code}`}
+              title={online.length ? `${online.length} téléphone${online.length > 1 ? "s" : ""} relié${online.length > 1 ? "s" : ""}` : "Voir l'image du téléphone ici"}>
+              <p className="subtle" style={{ fontSize: "0.8rem" }}>Ici, le téléphone sert à cadrer. Pour enregistrer la mesure, scanne le QR code d'une séance (Séances de capture ou Séance guidée).</p>
+            </OpenOnPhone>
+          )}
         </div>
       </div>
     </div>

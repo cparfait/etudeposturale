@@ -17,6 +17,6 @@ export default defineConfig({
     strictPort: true,  // pas de bascule silencieuse sur 5174 : l'adresse ouverte et le QR code restent justes
     host: true,  // accessible depuis le téléphone (même Wi-Fi) : QR code de la séance
     https,
-    proxy: { "/api": process.env.POSTURALE_API ?? "http://127.0.0.1:8000" },
+    proxy: { "/api": { target: process.env.POSTURALE_API ?? "http://127.0.0.1:8000", ws: true } },  // ws : aperçu en direct des téléphones
   },
 });

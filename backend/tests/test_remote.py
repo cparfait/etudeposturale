@@ -16,6 +16,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("POSTURALE_DATA", str(tmp_path / "data"))
     set_engine(create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool))
     routes_remote._pairs.clear()
+    routes_remote._live.clear()
     return TestClient(app)
 
 
@@ -79,3 +80,19 @@ def test_local_https_authority(client, tmp_path):
     assert client.get("/api/remote/address").json()["autorite"] is True
     r = client.get("/api/remote/autorite.crt")
     assert r.status_code == 200 and b"BEGIN CERTIFICATE" in r.content and b"PRIVATE" not in r.content
+
+
+def test_live_preview_relay(client):
+    code = client.post("/api/remote", json={}).json()["code"]                 # cadrage seul : pas de séance
+    did = client.post(f"/api/remote/{code}/join", json={"nom": "Pixel", "secure": True}).json()["appareil"]
+    assert client.post(f"/api/remote/{code}/poll", json={"appareil": did}).json()["apercu"] is False
+    with client.websocket_connect(f"/api/remote/{code}/apercu/{did}") as viewer:
+        poll = client.post(f"/api/remote/{code}/poll", json={"appareil": did, "largeur": 1920, "hauteur": 1080}).json()
+        assert poll["apercu"] is True and poll["session_id"] is None             # un écran regarde : le téléphone envoie
+        with client.websocket_connect(f"/api/remote/{code}/flux/{did}") as phone:
+            phone.send_bytes(b"jpeg-1")
+            assert viewer.receive_bytes() == b"jpeg-1"
+            phone.send_bytes(b"jpeg-2")
+            assert viewer.receive_bytes() == b"jpeg-2"
+    dev = client.get(f"/api/remote/{code}").json()["appareils"][0]
+    assert (dev["largeur"], dev["hauteur"]) == (1920, 1080)

@@ -6,13 +6,14 @@ du serveur local : une appairage dure le temps de la séance. Les vidéos arrive
 """
 from __future__ import annotations
 
+import asyncio
 import secrets
 import socket
 import threading
 import time
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from sqlmodel import Session as DB
 
@@ -27,6 +28,11 @@ ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # sans 0/O ni 1/I
 _lock = threading.Lock()
 _pairs: dict[str, dict[str, Any]] = {}
 STALE_S = 6.0
+_live: dict[str, dict[str, Any]] = {}   # aperçu en direct par téléphone : dernière image JPEG, numéro, écrans qui regardent
+
+
+def _slot(did: str) -> dict:
+    return _live.setdefault(did, {"img": None, "seq": 0, "viewers": 0})
 
 
 def _now() -> float:
@@ -42,7 +48,7 @@ def _get(code: str) -> dict:
 
 def _device_view(d: dict) -> dict:
     age = _now() - d["vu"]
-    return {k: d[k] for k in ("id", "nom", "role", "etat", "capture_id", "message", "secure", "fps")} | {
+    return {k: d.get(k) for k in ("id", "nom", "role", "etat", "capture_id", "message", "secure", "fps", "largeur", "hauteur")} | {
         "role_label": ROLE_LABEL.get(d["role"], "—"), "connecte": age < STALE_S, "vu_il_y_a_s": round(age, 1)}
 
 
@@ -98,13 +104,13 @@ def authority():
 
 
 class PairIn(BaseModel):
-    session_id: int
+    session_id: Optional[int] = None   # None : cadrage seul (aperçu en direct, sans enregistrement)
 
 
 @router.post("", status_code=201)
 def pair(data: PairIn, db: DB = Depends(get_session)) -> dict:
     """Code d'appairage de la séance (le même tant que le serveur tourne)."""
-    if not db.get(Seance, data.session_id):
+    if data.session_id is not None and not db.get(Seance, data.session_id):
         raise HTTPException(404, "Séance introuvable")
     with _lock:
         for code, p in _pairs.items():
@@ -144,6 +150,8 @@ class PollIn(BaseModel):
     capture_id: Optional[int] = None
     message: str = ""
     fps: Optional[float] = None
+    largeur: Optional[int] = None
+    hauteur: Optional[int] = None
 
 
 @router.post("/{code}/poll")
@@ -154,13 +162,13 @@ def poll(code: str, data: PollIn) -> dict:
         d = p["appareils"].get(data.appareil)
         if not d:
             raise HTTPException(404, "Téléphone inconnu : rescanne le QR code.")
-        d.update(vu=_now(), etat=data.etat, message=data.message[:200], fps=data.fps)
+        d.update(vu=_now(), etat=data.etat, message=data.message[:200], fps=data.fps, largeur=data.largeur, hauteur=data.hauteur)
         if data.capture_id:
             d["capture_id"] = data.capture_id
         cmd = p["commande"]
         concerned = cmd is not None and (not cmd["cles"] or d["role"] in cmd["cles"])
         return {"role": d["role"], "role_label": ROLE_LABEL[d["role"]], "session_id": p["sid"],
-                "commande": cmd if concerned else None}
+                "commande": cmd if concerned else None, "apercu": _slot(data.appareil)["viewers"] > 0}
 
 
 class RoleIn(BaseModel):
@@ -198,3 +206,53 @@ def command(code: str, data: CommandIn) -> dict:
                 if not p["commande"]["cles"] or d["role"] in p["commande"]["cles"]:
                     d["capture_id"] = None   # nouvelle prise : l'ancienne vidéo n'est plus celle attendue
         return _view(code.upper(), p)
+
+
+# --- Aperçu en direct : le téléphone envoie de petites images JPEG, le PC les affiche (cadrage, séance) ---
+
+def _known(code: str, did: str) -> bool:
+    with _lock:
+        p = _pairs.get(code.upper())
+        return bool(p and did in p["appareils"])
+
+
+@router.websocket("/{code}/flux/{did}")
+async def phone_feed(ws: WebSocket, code: str, did: str) -> None:
+    """Le téléphone pousse ses images (uniquement quand un écran regarde : voir « apercu » dans /poll)."""
+    if not _known(code, did):
+        await ws.close(code=4404)
+        return
+    await ws.accept()
+    slot = _slot(did)
+    try:
+        while True:
+            img = await ws.receive_bytes()
+            if len(img) <= 2_000_000:
+                slot["img"], slot["seq"] = img, slot["seq"] + 1
+    except (WebSocketDisconnect, RuntimeError):
+        pass
+
+
+@router.websocket("/{code}/apercu/{did}")
+async def preview(ws: WebSocket, code: str, did: str) -> None:
+    """Le PC reçoit la dernière image du téléphone dès qu'elle change (les images en retard sont sautées)."""
+    if not _known(code, did):
+        await ws.close(code=4404)
+        return
+    await ws.accept()
+    slot = _slot(did)
+    slot["viewers"] += 1
+    gone = asyncio.ensure_future(ws.receive())   # se termine quand l'écran ferme la connexion
+    seq = -1
+    try:
+        while not gone.done():
+            if slot["img"] is not None and slot["seq"] != seq:
+                seq = slot["seq"]
+                await ws.send_bytes(slot["img"])
+            else:
+                await asyncio.sleep(0.02)
+    except (WebSocketDisconnect, RuntimeError):
+        pass
+    finally:
+        slot["viewers"] -= 1
+        gone.cancel()

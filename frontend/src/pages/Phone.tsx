@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, CircleDot, Loader2, Maximize2, Smartphone, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDot, Loader2, Maximize2, Minimize2, MonitorUp, Smartphone, Upload } from "lucide-react";
 import { LogoMark } from "../Layout";
 
 // Page du téléphone relié à une séance : aperçu caméra, enregistrement lancé depuis le PC, envoi automatique.
@@ -22,7 +22,9 @@ function deviceName() {
   const ua = navigator.userAgent;
   const m = ua.match(/\(([^;)]+);[^)]*?;\s*([^;)]+?)\s*(Build|\))/);
   if (/iPhone/.test(ua)) return "iPhone";
-  return (m?.[2] ?? "Téléphone").replace(/^wv$/, "Téléphone").slice(0, 30);
+  const model = m?.[2] ?? "";
+  if (!model || model === "wv" || model === "K") return /Android/.test(ua) ? "Android" : "Téléphone";  // Chrome masque le modèle (« K »)
+  return model.slice(0, 30);
 }
 
 function pickMime(): { mime: string; ext: string } {
@@ -66,6 +68,31 @@ export default function Phone() {
   const [progress, setProgress] = useState(0);
   const [fps, setFps] = useState<number | null>(null);
   const [camErr, setCamErr] = useState("");
+  const [fs, setFs] = useState(false);          // plein écran : API du navigateur, sinon (iPhone) l'image occupe tout l'écran en CSS
+  const viewRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onChange = () => { if (!document.fullscreenElement && !(document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement) setFs(false); };
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => { document.removeEventListener("fullscreenchange", onChange); document.removeEventListener("webkitfullscreenchange", onChange); };
+  }, []);
+  async function toggleFs() {
+    type FsEl = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
+    type FsDoc = Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
+    const d = document as FsDoc;
+    if (fs) {
+      try { if (d.fullscreenElement) await d.exitFullscreen(); else if (d.webkitFullscreenElement) d.webkitExitFullscreen?.(); } catch { /* déjà sorti */ }
+      setFs(false);
+      return;
+    }
+    setFs(true);
+    const el = viewRef.current as FsEl | null;
+    try {
+      if (el?.requestFullscreen) await el.requestFullscreen({ navigationUI: "hide" });
+      else await el?.webkitRequestFullscreen?.();
+    } catch { /* repli CSS */ }
+    try { await (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.("landscape"); } catch { /* non pris en charge */ }
+  }
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const rec = useRef<MediaRecorder | null>(null);
@@ -77,6 +104,8 @@ export default function Phone() {
   const msgRef = useRef("");
   msgRef.current = msg;
   const secure = window.isSecureContext && !!navigator.mediaDevices?.getUserMedia;
+  const [watched, setWatched] = useState(false);   // un écran du PC affiche l'aperçu
+  const watchedRef = useRef(false);
 
   // Rejoindre la séance (ou reprendre après un rechargement de la page)
   useEffect(() => {
@@ -160,7 +189,9 @@ export default function Phone() {
         const r = await api(`/remote/${code}/poll`, { method: "POST", body: JSON.stringify({
           appareil: device, etat: stateRef.current === "connexion" ? "connecte" : stateRef.current,
           capture_id: captureId.current, message: msgRef.current, fps: fpsRef.current,
+          largeur: video.current?.videoWidth || null, hauteur: video.current?.videoHeight || null,
         }) });
+        watchedRef.current = !!r.apercu; setWatched(!!r.apercu);
         setFps(fpsRef.current);
         setRole(r.role); setSid(r.session_id);
         const cmd: Cmd | null = r.commande;
@@ -179,6 +210,33 @@ export default function Phone() {
     return () => clearInterval(id);
   }, [device, code, secure, startRec]);
 
+  // Aperçu en direct vers le PC : petites images JPEG, seulement quand un écran regarde (10 i/s, 3 pendant l'enregistrement)
+  useEffect(() => {
+    if (!secure || !device) return;
+    let ws: WebSocket | null = null;
+    let busy = false;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    let last = 0;
+    const id = setInterval(() => {
+      const v = video.current;
+      if (!watchedRef.current) { if (ws) { ws.close(); ws = null; } return; }
+      if (!ws || ws.readyState > 1) {
+        ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/remote/${code}/flux/${device}`);
+        return;
+      }
+      const gap = stateRef.current === "enregistre" ? 330 : 100;
+      if (ws.readyState !== 1 || busy || ws.bufferedAmount > 0 || !v || v.readyState < 2 || performance.now() - last < gap) return;
+      last = performance.now();
+      const w = Math.min(960, v.videoWidth);
+      canvas.width = w; canvas.height = Math.round((w * v.videoHeight) / v.videoWidth);
+      ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+      busy = true;
+      canvas.toBlob((b) => { busy = false; if (b && ws?.readyState === 1) ws.send(b); }, "image/jpeg", 0.65);
+    }, 50);
+    return () => { clearInterval(id); ws?.close(); };
+  }, [secure, device, code]);
+
   async function changeRole(r: string) {
     setRole(r);
     await api(`/remote/${code}/appareils/${device}`, { method: "PUT", body: JSON.stringify({ role: r }) }).catch(() => {});
@@ -189,19 +247,20 @@ export default function Phone() {
     <div className="tel">
       <header className="tel-top">
         <LogoMark size={30} />
-        <div className="grow"><strong>Téléphone relié</strong><small>Séance {code}</small></div>
+        <div className="grow"><strong>Téléphone relié</strong><small>{sid == null && state !== "connexion" ? "Cadrage" : "Séance"} {code}</small></div>
         <select className="select tel-role" value={role} onChange={(e) => changeRole(e.target.value)} aria-label="Vue filmée par ce téléphone" disabled={state === "enregistre"}>
           {ROLES.map(([id, l]) => <option key={id} value={id}>{l}</option>)}
         </select>
       </header>
 
       {secure ? (
-        <div className="tel-view">
+        <div className={`tel-view${fs ? " is-fs" : ""}`} ref={viewRef}>
           <video ref={video} playsInline muted />
           <span className="tel-line" style={{ top: "30%" }} /><span className="tel-line" style={{ top: "60%" }} />
           <span className="tel-badge">{roleLabel}{fps ? ` · ${Math.round(fps)} i/s` : ""}</span>
+          {watched && <span className="tel-watched"><MonitorUp size={15} /> Image visible sur le PC</span>}
           {state === "enregistre" && <span className="tel-rec"><CircleDot size={18} /> REC {Math.ceil(left)} s</span>}
-          <button type="button" className="tel-fs" aria-label="Plein écran" onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})}><Maximize2 size={18} /></button>
+          <button type="button" className="tel-fs" aria-label={fs ? "Quitter le plein écran" : "Plein écran"} onClick={toggleFs}>{fs ? <Minimize2 size={20} /> : <Maximize2 size={18} />}</button>
         </div>
       ) : (
         <div className="tel-nocam"><AlertTriangle size={18} /><span>Ce navigateur n'autorise pas la caméra sans HTTPS : filme avec l'appli Appareil photo (1080p, 60 i/s), puis envoie la vidéo ci-dessous.</span></div>
@@ -210,7 +269,9 @@ export default function Phone() {
 
       <section className={`tel-status ${state}`} aria-live="polite">
         {state === "connexion" && <><Loader2 className="spin" size={18} /> Connexion à la séance…</>}
-        {state === "pret" && <><Smartphone size={18} /> {secure ? "Prêt. Pose le téléphone sur son trépied : l'enregistrement démarrera depuis le PC." : "Relié au PC. Envoie ta vidéo quand elle est filmée."}</>}
+        {state === "pret" && <><Smartphone size={18} /> {!secure ? "Relié au PC. Envoie ta vidéo quand elle est filmée."
+          : sid == null ? "Relié au cadrage : pose le téléphone sur son trépied et regarde l'écran du PC, les contrôles s'y affichent."
+          : "Prêt. Pose le téléphone sur son trépied : l'enregistrement démarrera depuis le PC."}</>}
         {state === "enregistre" && <><CircleDot size={18} /> Enregistrement en cours — ne touche pas au téléphone.</>}
         {state === "envoi" && <><Loader2 className="spin" size={18} /> Envoi de la vidéo au PC… {Math.round(progress * 100)} %</>}
         {state === "envoye" && <><CheckCircle2 size={18} /> Vidéo envoyée : l'analyse démarre sur le PC. Le téléphone reste prêt pour la prise suivante.</>}
@@ -218,11 +279,11 @@ export default function Phone() {
       </section>
       {state === "envoi" && <div className="tel-bar"><span style={{ width: `${progress * 100}%` }} /></div>}
 
-      <label className="btn btn-ghost tel-upload">
+      {sid != null && <label className="btn btn-ghost tel-upload">
         <Upload size={16} /> Envoyer une vidéo déjà filmée ({roleLabel.toLowerCase()})
         <input type="file" accept="video/*" hidden disabled={state === "enregistre" || state === "envoi"}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) send(f, (f.name.split(".").pop() ?? "mp4").toLowerCase()); e.target.value = ""; }} />
-      </label>
+      </label>}
     </div>
   );
 }
