@@ -54,7 +54,7 @@ export default function Home() {
     <div className="page">
       <section className="hero">
         <div>
-          <div className="eyebrow">Étude posturale complète · 100 % locale</div>
+          <div className="eyebrow">Étude posturale complète · vidéos gardées sur ton PC</div>
           <h1>Ta position,<br /><em>mesurée</em> au degré près.</h1>
           <p className="hero-lead">
             Un téléphone, quelques pastilles et ton home trainer : l'outil mesure l'angle de ton genou à chaque coup de pédale et te dit,

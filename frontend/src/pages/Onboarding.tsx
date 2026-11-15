@@ -82,7 +82,7 @@ export default function Onboarding() {
             aria-label="Présentation : un cycliste pédale, l'application pose les pastilles et mesure l'angle du genou." />
           <p className="ob-lead">
             Filme-toi en pédalant sur ton home trainer : l'application mesure les angles de tes articulations à chaque tour
-            et te dit, au millimètre près, quoi régler sur ton vélo. Une modification à la fois, et tout reste sur ton ordinateur.
+            et te dit, au millimètre près, quoi régler sur ton vélo. Une modification à la fois, et tes vidéos restent sur ton ordinateur.
           </p>
           {/* Ce clic autorise aussi le navigateur à jouer la voix qui accompagne les écrans suivants */}
           <button className="btn btn-primary ob-splash-go" onClick={() => setStarted(true)}>Commencer <ArrowRight size={20} /></button>
@@ -147,7 +147,7 @@ function Welcome() {
         <li><Gauge size={22} /><strong>L'outil mesure</strong><span>les angles de tes articulations, à chaque tour</span></li>
         <li><Wrench size={22} /><strong>Tu règles</strong><span>une seule chose à la fois, en millimètres</span></li>
       </ol>
-      <p className="ob-note"><Lock size={15} /> Tout reste sur ton ordinateur : vidéos et mesures ne sont envoyées nulle part.</p>
+      <p className="ob-note"><Lock size={15} /> Tes vidéos restent sur ton ordinateur. Si tu choisis un coach IA ou une voix en ligne, ils ne reçoivent que du texte, jamais tes vidéos.</p>
       </div>
     </div>
   );

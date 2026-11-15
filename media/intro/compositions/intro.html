@@ -25,10 +25,10 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 1180px;
-      height: 817px;
-      margin-left: -590px;
-      margin-top: -440px;
+      width: 1040px;
+      height: 912px;
+      margin-left: -520px;
+      margin-top: -470px;
     }
     #intro-stage svg { width: 100%; height: 100%; overflow: visible; }
     .draw { stroke-dasharray: 1 1.2; stroke-dashoffset: 1.1; }
@@ -89,7 +89,7 @@
     <div id="intro-ground" class="clip" data-start="0" data-duration="7"></div>
 
     <div id="intro-stage" class="clip" data-start="0" data-duration="7" data-layout-allow-overflow>
-      <svg id="intro-svg" viewBox="0 0 520 360" aria-label="Cycliste qui pédale, avec les pastilles et l'angle du genou mesuré">
+      <svg id="intro-svg" viewBox="0 -96 520 456" aria-label="Cycliste qui pédale, avec les pastilles et l'angle du genou mesuré">
         <defs>
           <radialGradient id="intro-glow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stop-color="#b8f34a" stop-opacity="0.55" />
@@ -98,10 +98,10 @@
         </defs>
         <g id="intro-trainer" opacity="0">
           <line x1="40" y1="352" x2="500" y2="352" stroke="rgba(255,255,255,0.12)" />
-          <path d="M84,350 L118,258 L152,350" stroke="rgba(255,255,255,0.22)" stroke-width="5" fill="none" stroke-linecap="round" />
+          <path d="M112,350 L146,258 L180,350" stroke="rgba(255,255,255,0.22)" stroke-width="5" fill="none" stroke-linecap="round" />
         </g>
         <g id="intro-wheels" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="5">
-          <circle class="draw" pathLength="1" cx="118" cy="258" r="92" transform="rotate(-90 118 258)" />
+          <circle class="draw" pathLength="1" cx="146" cy="258" r="92" transform="rotate(-90 146 258)" />
           <circle class="draw" pathLength="1" cx="424" cy="258" r="92" transform="rotate(-90 424 258)" />
         </g>
         <g id="intro-far" opacity="0" stroke="#dfe9d6" stroke-linecap="round" fill="none">
@@ -120,11 +120,11 @@
         <path id="intro-saddle" fill="#eef3ea" opacity="0" />
         <g id="intro-body" opacity="0">
           <g stroke="#cfdcc4" stroke-linecap="round" fill="none">
-            <path id="intro-torso" stroke-width="22" />
+            <path id="intro-torso" stroke-width="26" />
             <path id="intro-arm" stroke-width="12" />
             <path id="intro-forearm" stroke-width="10" />
           </g>
-          <circle id="intro-head" r="17" fill="#cfdcc4" />
+          <circle id="intro-head" r="28" fill="#cfdcc4" />
           <g stroke="#f4f8ef" stroke-linecap="round" fill="none">
             <path id="intro-thigh" stroke-width="17" />
             <path id="intro-shank" stroke-width="13" />
@@ -159,7 +159,7 @@
     <div id="intro-copy" class="clip" data-start="3.7" data-duration="3.3">
       <h1 id="intro-title" data-var-text="title">Étude posturale</h1>
       <p id="intro-tagline" data-var-text="tagline">Ton bike fit à la maison, mesuré au degré près.</p>
-      <span id="intro-badge"><i></i><span data-var-text="badge">100 % local</span></span>
+      <span id="intro-badge"><i></i><span data-var-text="badge">Vidéos gardées sur ton PC</span></span>
     </div>
   </div>
 
@@ -172,13 +172,24 @@
       const len = (a) => Math.hypot(a[0], a[1]);
       const pt = (p) => p[0].toFixed(1) + "," + p[1].toFixed(1);
       const seatDir = [-Math.cos(rad(73.5)), -Math.sin(rad(73.5))];
-      const BB = [258, 276], REAR = [118, 258], FRONT = [424, 258], CRANK = 38;
+      const BB = [258, 276], REAR = [146, 258], FRONT = [424, 258], CRANK = 47;
       const along = (d) => add(BB, [seatDir[0] * d, seatDir[1] * d]);
       const SADDLE_TOP = along(204), SEAT_CLUSTER = along(158);
       const SADDLE_NOSE = add(SADDLE_TOP, [30, 1]), SADDLE_TAIL = add(SADDLE_TOP, [-28, -2]);
       const HEAD_TOP = [384, 126], HEAD_BOTTOM = [393, 168], STEM_END = [412, 118], HOODS = [436, 126];
-      const HIP = add(SADDLE_TOP, [-6, -12]), THIGH = 124, SHANK = 126, ANKLE_OFFSET = [-7, -15];
-      const SHOULDER = [322, 54], ELBOW = [372, 94], HEAD = [352, 30];
+      // Cycliste de 1,80 m (≈ 3,64 mm par px) : cuisse 440 mm, jambe 445, tronc 520, bras 335, avant-bras + main 365.
+      const HIP = add(SADDLE_TOP, [-6, -12]), THIGH = 121, SHANK = 122, ANKLE_OFFSET = [-30, -25];
+      const TORSO = 142, UPPER_ARM = 92, FOREARM = 100;
+      const SHOULDER = [HIP[0] + TORSO * Math.cos(rad(34)), HIP[1] - TORSO * Math.sin(rad(34))];
+      const HEAD = [SHOULDER[0] + 40, SHOULDER[1] - 42];
+      const BACK_CTRL = [(HIP[0] + SHOULDER[0]) / 2 - 10, (HIP[1] + SHOULDER[1]) / 2 - 22];
+      const ELBOW = (() => {
+        const d = sub(HOODS, SHOULDER), dist = Math.min(len(d), UPPER_ARM + FOREARM - 0.001);
+        const a = (UPPER_ARM ** 2 - FOREARM ** 2 + dist * dist) / (2 * dist), h = Math.sqrt(Math.max(UPPER_ARM ** 2 - a * a, 0));
+        const u = [d[0] / len(d), d[1] / len(d)], base = add(SHOULDER, [u[0] * a, u[1] * a]);
+        const e1 = [base[0] - u[1] * h, base[1] + u[0] * h], e2 = [base[0] + u[1] * h, base[1] - u[0] * h];
+        return e1[1] > e2[1] ? e1 : e2;
+      })();
 
       const $ = (id) => document.getElementById(id);
       const attr = (id, k, v) => $(id).setAttribute(k, v);
@@ -190,7 +201,7 @@
       attr("intro-stem", "d", "M" + pt(HEAD_TOP) + " L385,116 L" + pt(STEM_END));
       attr("intro-bar", "d", "M" + pt(STEM_END) + " C 432 114, 446 120, 444 136 C 442 152, 430 160, 418 158");
       attr("intro-saddle", "d", "M" + pt(SADDLE_TAIL) + " Q" + pt(add(SADDLE_TOP, [0, -4])) + " " + pt(SADDLE_NOSE) + " L" + pt(add(SADDLE_NOSE, [-4, 4])) + " Q" + pt(add(SADDLE_TOP, [-2, 5])) + " " + pt(add(SADDLE_TAIL, [2, 6])) + " Z");
-      attr("intro-torso", "d", "M" + pt(HIP) + " Q 250 40 " + pt(SHOULDER));
+      attr("intro-torso", "d", "M" + pt(HIP) + " Q " + pt(BACK_CTRL) + " " + pt(SHOULDER));
       attr("intro-arm", "d", line(SHOULDER, ELBOW));
       attr("intro-forearm", "d", line(ELBOW, HOODS));
       attr("intro-head", "cx", HEAD[0]); attr("intro-head", "cy", HEAD[1]);
@@ -212,7 +223,7 @@
         const v1 = sub(HIP, knee), v2 = sub(ankle, knee);
         const cos = (v1[0] * v2[0] + v1[1] * v2[1]) / (len(v1) * len(v2));
         const flexion = 180 - (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
-        return { pedal, ankle, knee, heel: add(ankle, [-15, 8]), toe: add(pedal, [24, 2]), flexion };
+        return { pedal, ankle, knee, heel: add(ankle, [-18, 12]), toe: add(pedal, [28, 4]), flexion };
       }
       function arc(c, from, to, r) {
         const a1 = Math.atan2(from[1] - c[1], from[0] - c[0]);

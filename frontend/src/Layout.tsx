@@ -96,7 +96,7 @@ export default function Layout() {
         <div className="sidebar-foot">
           <div className="privacy">
             <ShieldCheck size={16} />
-            <span>100 % local : vidéos et mesures restent sur ce PC.</span>
+            <span>Tes vidéos restent sur ce PC. Un coach ou une voix en ligne, si tu en choisis un, ne reçoit que du texte.</span>
           </div>
           <ThemeToggle />
         </div>

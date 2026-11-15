@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  BB, CRANK, ELBOW, FRAME_PATHS, FRONT, HEAD, HIP, HOODS, KNEE_RANGE, REAR, SHOULDER, WHEEL_R,
+  BACK_CTRL, BB, CRANK, ELBOW, FRAME_PATHS, FRONT, HEAD, HEAD_R, HIP, HOODS, KNEE_RANGE, REAR, SCENE_VIEWBOX, SHOULDER, WHEEL_R,
   legAt, pt, sub, type P,
 } from "./bikeGeometry";
 
@@ -48,7 +48,7 @@ export default function PedalingRider({ onFlexion }: { onFlexion?: (f: number) =
   const limb = (a: P, b: P) => `M${pt(a)} L${pt(b)}`;
 
   return (
-    <svg viewBox="0 0 520 360" role="img" aria-label="Cycliste schématique en train de pédaler, avec les pastilles sur la hanche, le genou et la cheville, et l'angle du genou mesuré en direct">
+    <svg viewBox={SCENE_VIEWBOX} role="img" aria-label="Cycliste schématique en train de pédaler, avec les pastilles sur la hanche, le genou et la cheville, et l'angle du genou mesuré en direct">
       <defs>
         <radialGradient id="glow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor={BODY} stopOpacity="0.55" />
@@ -90,11 +90,11 @@ export default function PedalingRider({ onFlexion }: { onFlexion?: (f: number) =
 
       {/* Haut du corps */}
       <g stroke="#cfdcc4" strokeLinecap="round" fill="none">
-        <path d={`M${pt(HIP)} Q 250 40 ${pt(SHOULDER)}`} strokeWidth="22" />
+        <path d={`M${pt(HIP)} Q ${pt(BACK_CTRL)} ${pt(SHOULDER)}`} strokeWidth="26" />
         <path d={limb(SHOULDER, ELBOW)} strokeWidth="12" />
         <path d={limb(ELBOW, HOODS)} strokeWidth="10" />
       </g>
-      <circle cx={HEAD[0]} cy={HEAD[1]} r="17" fill="#cfdcc4" />
+      <circle cx={HEAD[0]} cy={HEAD[1]} r={HEAD_R} fill="#cfdcc4" />
 
       {/* Jambe côté caméra */}
       <g stroke="#f4f8ef" strokeLinecap="round" fill="none">
