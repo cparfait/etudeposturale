@@ -271,8 +271,8 @@ def build() -> None:
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="{t:.2f}" data-width="1920" data-height="1080">
 {chr(10).join(hosts)}
-      <audio id="musique" class="clip" src="assets/musique.m4a" data-start="0" data-duration="{t:.2f}" data-volume="0.28"
-        data-fade-in="1" data-fade-out="2.5" data-track-index="5"></audio>
+      <audio id="musique" class="clip" src="assets/musique.m4a" data-start="0" data-duration="{t:.2f}" data-volume="0.2"
+        data-fade-in="0.15" data-fade-out="2.5" data-track-index="5"></audio>
     </div>
     <script>
       window.__timelines["main"] = gsap.timeline({{ paused: true }});
