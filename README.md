@@ -18,6 +18,8 @@ Tout est traité sur le PC (RTX 4090) : aucune vidéo n'est envoyée en ligne.
 | Analyse | Verdict hauteur de selle + correction en mm, squelette superposé à la vidéo, courbe du genou, toutes les mesures sourcées |
 | Recommandations | Hypothèses ordonnées comme chez un fitter (santé → charge → asymétrie → cales → selle → recul → manivelle) |
 | Rapport | Synthèse imprimable / PDF, comparaison G/D et avant/après |
+| Coach IA | Questions à l'écrit ou à la voix (appui pour parler ou mains libres), réponses lues à voix haute, images clés de l'analyse en option |
+| Réglages IA et voix | Fournisseur (Ollama, LM Studio, OpenAI, Anthropic, Google, Mistral…), clés chiffrées par Windows, voix Piper / Whisper |
 | Contrôle des pastilles | Sur une photo ou une image de la vidéo : pastilles trouvées, pipette, réglage des couleurs utilisé par les analyses |
 | Cadrage en direct | MediaPipe dans le navigateur du téléphone : feu vert quand le cadrage est bon |
 | Capteurs et ERG | Web Bluetooth : puissance et équilibre (Assioma), cardio, puissance imposée au Tacx Neo 2T |
@@ -98,11 +100,27 @@ cd frontend && mkdir -p certs && mkcert -cert-file certs/cert.pem -key-file cert
 
 (remplacer `192.168.1.10` par l'adresse IP du PC), installer l'autorité `rootCA.pem` (dossier donné par `mkcert -CAROOT`) sur le téléphone, relancer l'interface, puis ouvrir `https://192.168.1.10:5173/cadrage` sur le téléphone.
 
+## Coach IA et voix
+
+- **Sur ce PC (par défaut)** : Ollama ou LM Studio. Rien ne sort. Exemple avec un modèle qui lit aussi les images :
+
+```bash
+ollama pull gemma4:12b
+```
+
+- **En ligne** : OpenAI, Anthropic, Google, Mistral (UE), OpenRouter, Groq, DeepSeek, OVHcloud (UE) ou tout service compatible OpenAI.
+  La clé se saisit dans « Réglages IA et voix » ; elle est chiffrée par Windows (DPAPI) et n'est jamais renvoyée à l'interface.
+- **Ce qui est envoyé** : un résumé texte (profil, vélo, mesures, douleurs, hypothèses du moteur), visible dans « Ce que voit le coach ».
+  Jamais la vidéo. Les images clés (squelette dessiné, 1024 px) seulement si tu l'autorises dans les réglages et le demandes.
+- **Voix** : Piper sur le PC (les voix françaises de LMU Stats Viewer sont reprises automatiquement, sinon copier `piper.exe` et une voix
+  `.onnx` + `.onnx.json` dans `data/voice/`), Whisper `large-v3-turbo` sur la carte (≈ 1,6 Go téléchargés au premier usage dans `models/`),
+  ou OpenAI. Commandes comprises sans IA : « répète », « stop », « efface ».
+
 ## Tests
 
 ```bash
 cd backend && .venv/Scripts/python -m pytest
 ```
 
-36 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
-calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles.
+45 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
+calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles, coach IA (fournisseurs, clés, flux) et voix Piper.

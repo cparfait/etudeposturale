@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sun, User, Video } from "lucide-react";
+import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sliders, Sparkles, Sun, User, Video } from "lucide-react";
 import { useTheme, type ThemeChoice } from "./theme";
 
 export function LogoMark({ size = 36 }: { size?: number }) {
@@ -29,16 +29,18 @@ function Logo() {
 const MAIN = [
   { to: "/", label: "Accueil", short: "Accueil", icon: Home, end: true, tab: true },
   { to: "/profil", label: "Mon profil", short: "Profil", icon: User },
-  { to: "/velo", label: "Mon vélo", short: "Vélo", icon: Bike, tab: true },
+  { to: "/velo", label: "Mon vélo", short: "Vélo", icon: Bike },
   { to: "/seance", label: "Séances de capture", short: "Séances", icon: Video, tab: true },
   { to: "/sante", label: "Santé et ressentis", short: "Santé", icon: HeartPulse, tab: true },
   { to: "/conseils", label: "Recommandations", short: "Conseils", icon: Lightbulb, tab: true },
+  { to: "/coach", label: "Coach IA", short: "Coach", icon: Sparkles, tab: true },
 ];
 const TOOLS = [
   { to: "/cadrage", label: "Cadrage en direct", icon: Crosshair },
   { to: "/pastilles", label: "Contrôle des pastilles", icon: Pipette },
   { to: "/capteurs", label: "Capteurs et ERG", icon: Bluetooth },
   { to: "/rapport", label: "Rapport", icon: FileText },
+  { to: "/reglages-ia", label: "Réglages IA et voix", icon: Sliders },
 ];
 
 function ThemeToggle() {

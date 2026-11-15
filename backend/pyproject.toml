@@ -13,6 +13,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "opencv-contrib-python>=4.10",
     "fitdecode>=0.10",
+    "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
@@ -20,6 +21,9 @@ dev = ["pytest>=8", "httpx>=0.27"]
 # Moteur de pose RTMW sur la RTX 4090. cuDNN épinglé : la 9.28 fait échouer ONNX Runtime 1.23 (CUDNN_BACKEND_API_FAILED).
 # Ne pas installer « onnxruntime » (CPU) en plus : il masque la version GPU.
 gpu = ["rtmlib>=0.0.16", "onnxruntime-gpu[cuda,cudnn]==1.23.2", "nvidia-cudnn-cu12==9.10.2.21"]
+# Reconnaissance vocale locale (Whisper sur la carte). faster-whisper lui-même s'installe avec --no-deps
+# (il réclame onnxruntime CPU, qui masquerait la version GPU) : voir scripts/installer.ps1.
+voice = ["ctranslate2>=4.5", "av>=11", "tokenizers>=0.15", "huggingface-hub>=0.23"]
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -17,7 +17,9 @@
 | Recommandations | Règles §7 de 01_metriques + charge, asymétrie, signaux d'alerte | Scénario « selle haute + douleur arrière + ischios raides » → bonne hypothèse en priorité ; alerte médicale en tête si douleur ≥ 7 |
 | Réglage des pastilles | Plages HSV réglables dans l'app (pipette, curseurs, teinte qui passe par le rouge), enregistrées dans `data/marker_colors.json` et utilisées par les analyses | Tests API + détection ; écran vérifié sur une image de la vidéo de démonstration |
 | Installation | `scripts/installer.bat` (avec le correctif ONNX Runtime GPU) et `scripts/lancer.bat` | Installation rejouée sur le PC : moteur en « GPU (CUDA) » |
-| Interface | 12 écrans, thèmes clair/sombre, mobile 375 px sans débordement | Vérifiée dans le navigateur sur données de démonstration |
+| Coach IA | Fournisseurs repris de LMU (3 formats : compatible OpenAI, Anthropic, Google), clés chiffrées DPAPI, résumé des données sans vidéo, images clés annotées en option, réponses en flux | Tests (clés jamais renvoyées, formats, images, flux, erreurs) ; essai réel avec Ollama + gemma4:12b : réponse vocale en 3,8 s, 4 images analysées, une seule modification proposée |
+| Voix | Piper (voix de LMU), Whisper large-v3-turbo sur la RTX 4090, OpenAI en option ; appui pour parler, mains libres avec détection de la parole, commandes « répète / stop / efface » | Aller-retour Piper → Whisper : phrase retranscrite exactement (Piper 1 s, Whisper 0,8 s) |
+| Interface | 14 écrans, thèmes clair/sombre, mobile 375 px sans débordement | Vérifiée dans le navigateur sur données de démonstration |
 
 ## 2. Écrit mais non validé sur le réel
 
@@ -28,11 +30,14 @@
 | Pilotage du Tacx Neo 2T (FE-C sur BLE, repli FTMS) | Pas de matériel ici | Page Capteurs : connecter, imposer 150 W, vérifier sur le compteur |
 | Équilibre G/D en Bluetooth (Assioma) | Champ optionnel du Cycling Power Service | Comparer à l'Edge 1050 |
 | Cadrage en direct sur le Pixel | Nécessite HTTPS (mkcert) et la caméra du téléphone | README, section « Utiliser le téléphone » |
+| Micro en conditions réelles (mains libres) | Bruit du home trainer et du ventilateur ; seuil de détection adaptatif non éprouvé | Page Coach, mode « Mains libres », en pédalant |
+| Coach avec un fournisseur en ligne | Aucune clé saisie ici | Saisir une clé, bouton « Tester », puis une question |
 | Recalage .FIT ↔ vidéo | Repose sur l'horloge du téléphone (date de création du fichier) | Vérifier que les prises tombent dans la bonne fenêtre de puissance |
 
 ## 3. Non fait (choix assumés)
 
 - **3D multi-caméra (Pose2Sim)** : nécessite un 3e appareil à 60 fps (la webcam est à 30 fps) et une validation préalable du 2D. Les vues de face et de dos sont analysées en 2D, chacune dans son plan.
+- **Séance guidée par la voix et coach qui adapte la séance** (lots 3 et 4 de la proposition) : à faire après validation du coach et de la voix.
 - **Synchronisation automatique de plusieurs caméras** : inutile tant que chaque vue est analysée séparément.
 - **Transcodage des vidéos pour la lecture dans le navigateur** : les vidéos H.264/HEVC des téléphones sont lues par Chrome ; un autre codec s'analyse mais ne s'affiche pas dans le lecteur.
 

@@ -21,7 +21,7 @@ if (-not (Test-Path $py)) {
 
 Step "Dépendances du backend (avec le moteur de pose GPU)"
 & $py -m pip install --upgrade pip --quiet
-& $py -m pip install -e "backend[dev,gpu]"
+& $py -m pip install -e "backend[dev,gpu,voice]"
 if ($LASTEXITCODE) { throw "Installation du backend en échec" }
 
 # rtmlib tire onnxruntime (CPU), qui masque la version GPU ; cuDNN doit rester en 9.10.
@@ -29,6 +29,10 @@ Step "ONNX Runtime GPU (retrait de la version CPU, cuDNN 9.10)"
 & $py -m pip uninstall -y onnxruntime 2>$null | Out-Null
 & $py -m pip install --force-reinstall --no-deps onnxruntime-gpu==1.23.2 nvidia-cudnn-cu12==9.10.2.21 --quiet
 if ($LASTEXITCODE) { throw "Installation d'ONNX Runtime GPU en échec" }
+
+Step "Reconnaissance vocale (faster-whisper, sans ses dépendances CPU)"
+& $py -m pip install --no-deps "faster-whisper>=1.1" --quiet
+if ($LASTEXITCODE) { throw "Installation de faster-whisper en échec" }
 
 Step "Interface (npm)"
 npm --prefix frontend install
