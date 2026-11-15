@@ -4,7 +4,7 @@ Faire son étude posturale (bike fit) chez soi, sur son home trainer, avec un sm
 et, si on les a, les capteurs du vélo (puissance, équilibre gauche / droite, cardio).
 Tout est traité sur le PC : aucune vidéo n'est envoyée en ligne. L'interface est en français.
 
-<p align="center"><img src="frontend/public/tuto/seance-poster.jpg" alt="Tutoriel : une séance guidée" width="720"></p>
+<p align="center"><a href="frontend/public/tuto/seance.mp4"><img src="frontend/public/tuto/seance-poster.jpg" alt="Tutoriel : une séance guidée (cliquer pour lire la vidéo)" width="720"></a><br><sub>▶ Cliquer sur l'image pour lire la vidéo</sub></p>
 
 > **Tutoriel vidéo (1 min 20)** : [frontend/public/tuto/seance.mp4](frontend/public/tuto/seance.mp4), aussi accessible
 > depuis l'accueil de l'application. On y suit une séance complète : pastilles, téléphone, cadrage, prises, analyse, débrief.
