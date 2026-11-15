@@ -171,3 +171,28 @@
   .ob-three { grid-template-columns: minmax(0, 1fr); }
   .ob-foot .btn { flex: 1; justify-content: center; }
 }
+
+/* Mon équipement (page) : mêmes listes compactes que le guide, en colonnes */
+@media (min-width: 1200px) {
+  .eq-compact .eq-page { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  .eq-compact .eq-list { gap: 8px; }
+  .eq-compact .eq-item { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; padding: 9px 12px; gap: 10px; }
+  .eq-compact .eq-why { display: none; }  /* explication au survol (déjà vue dans le guide) */
+  .eq-compact .eq-without { grid-column: 1 / -1; }
+  .eq-compact .eq-icon { width: 32px; height: 32px; border-radius: 9px; }
+  .eq-compact .eq-why { font-size: 0.82rem; margin-top: 2px; }
+  .eq-compact .eq-without { margin-top: 8px; padding: 7px 10px; font-size: 0.8rem; }
+  .eq-compact .eq-choice button { padding: 5px 10px; font-size: 0.78rem; }
+  .eq-compact .eq-section { margin-bottom: 8px; }
+}
+
+/* Test du micro (équipement) */
+.mic-test { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.mic-test-btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 0.82rem; font-weight: 650; padding: 6px 12px; border-radius: 10px;
+  border: 1px solid var(--brand-text); background: var(--brand-soft); color: var(--brand-text); cursor: pointer; }
+.mic-test-btn.ghost { border-color: var(--line); background: var(--surface); color: var(--text-2); }
+.mic-test-btn:focus-visible { box-shadow: var(--focus); outline: none; }
+.mic-test-msg { display: inline-flex; align-items: center; gap: 6px; font-size: 0.84rem; color: var(--text-2); }
+.mic-test-msg.ok { color: var(--ok); font-weight: 600; }
+.mic-test-msg.warn { color: var(--warn); }
+.mic-test-msg.rec { color: var(--danger); font-weight: 600; }

@@ -1,5 +1,6 @@
 import { Activity, AlertTriangle, Bike, Camera, Check, Circle, Gauge, Grid3x3, HeartPulse, Info, Mic, Ruler, Smartphone, Sparkles, Sun, Wand2, X, Zap } from "lucide-react";
 import { saveEquipment, type Equipment, type Level } from "../equipment";
+import MicTest from "./MicTest";
 
 const ICONS: Record<string, typeof Bike> = {
   bike: Bike, smartphone: Smartphone, tripod: Camera, circle: Circle, ruler: Ruler, sun: Sun, gauge: Gauge, zap: Zap,
@@ -17,7 +18,7 @@ export default function EquipmentList({ eq, levels, compact = false }: { eq: Equ
         const v = eq.items[c.id];
         const replaced = c.id === "pastilles_orange" && v === false && eq.items.mire;
         return (
-          <li key={c.id} className={`eq-item lvl-${c.niveau} ${v === true ? "yes" : v === false ? "no" : ""}`}>
+          <li key={c.id} title={c.pourquoi} className={`eq-item lvl-${c.niveau} ${v === true ? "yes" : v === false ? "no" : ""}`}>
             <span className="eq-icon"><Icon size={20} /></span>
             <div className="eq-body">
               <div className="eq-head">
@@ -25,6 +26,7 @@ export default function EquipmentList({ eq, levels, compact = false }: { eq: Equ
                 <span className={`eq-tag ${c.niveau}`}>{LEVEL_LABEL[c.niveau]}</span>
               </div>
               <p className="eq-why">{c.pourquoi}</p>
+              {c.id === "micro" && <MicTest onResult={(ok) => { if (ok) set("micro", true); }} />}
               {v === false && (
                 <p className={`eq-without ${c.niveau === "obligatoire" && !replaced ? "danger" : c.niveau === "recommande" ? "warn" : ""}`}>
                   {c.niveau === "obligatoire" && !replaced ? <AlertTriangle size={15} /> : c.niveau === "optionnel" ? <Wand2 size={15} /> : <Info size={15} />}

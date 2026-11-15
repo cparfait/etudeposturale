@@ -118,6 +118,7 @@ export default function SessionDetail() {
   const checks = CHECKS.map((c, i) => ({ ...c, i, d: c.t.startsWith("Échauffement") && !has(eq, "trainer_connecte")
     ? "Résistance fixe sur le home trainer (la même à chaque séance), cadence 85–95 tr/min, mains sur les cocottes." : c.d }))
     .filter((c) => !(c.i === 0 && !has(eq, "pastilles_vertes")));
+  const nextCheck = checks.find((c) => !done[c.i])?.i;  // seule la prochaine étape montre son explication
   const fit = s.fits[0];
 
   return (
@@ -131,7 +132,7 @@ export default function SessionDetail() {
         <span className="chip">{engines.rtmw ? `Moteur RTMW : ${engines.rtmw}` : "Moteur de pose…"}</span>
       </header>
 
-      <div className="grid-2">
+      <div className="sd-layout">
         <section className="card">
           <div className="card-head">
             <span className="icon-tile"><ClipboardCheck size={19} /></span>
@@ -140,16 +141,67 @@ export default function SessionDetail() {
           <ul className="checklist">
             {checks.map((c) => { const i = c.i; return (
               <li key={i} className={done[i] ? "done" : ""}>
-                <button type="button" aria-pressed={done[i]} onClick={() => setDone((d) => d.map((v, j) => (j === i ? !v : v)))}>
+                <button type="button" aria-pressed={done[i]} title={c.d} onClick={() => setDone((d) => d.map((v, j) => (j === i ? !v : v)))}>
                   <span className="ck-box">{done[i] && <Check size={14} />}</span>
-                  <span><span className="ck-title">{c.t}</span><span className="ck-text">{c.d}</span></span>
+                  <span><span className="ck-title">{c.t}</span>{c.i === nextCheck && <span className="ck-text">{c.d}</span>}</span>
                 </button>
               </li>
             ); })}
           </ul>
         </section>
 
-        <div className="stack">
+        <div className={`sd-main${s.captures.length ? " has-caps" : ""}`}>
+        <div className="section-title"><h2>Vidéos</h2><span className="subtle">L'analyse démarre dès l'import (1 à 3 min sur la RTX 4090).</span></div>
+        <div className="grid-3">
+          {SLOTS.map((sl) => (
+            <Drop key={sl.vue} label={sl.title} text={sl.text} accept="video/*" onFile={(f) => uploadVideo(sl.vue, f)} busy={busy === sl.vue} icon={sl.icon} />
+          ))}
+        </div>
+
+        {s.captures.length > 0 && (
+          <section className="card">
+            <div className="card-head">
+              <span className="icon-tile"><Gauge size={19} /></span>
+              <div><h2>Analyses</h2><p>Clique sur une analyse terminée pour voir le résultat.</p></div>
+            </div>
+            <ul className="list">
+              {s.captures.map((c: Any) => {
+                const a = c.analyses[0];
+                const side = a?.summary?.cote ? (a.summary.cote === "G" ? " gauche" : " droit") : "";
+                return (
+                  <li key={c.id} className="list-item">
+                    <div className="grow">
+                      <div className="row">
+                        <strong>{c.vue === "profil" ? `Profil${side}` : c.vue === "face" ? "Face" : "Dos"}</strong>
+                        <span className="subtle" style={{ fontSize: "0.82rem" }}>{c.filename} · {c.meta.fps?.toFixed(0)} img/s · {c.meta.duration_s?.toFixed(0)} s</span>
+                        {a && <span className={`chip ${a.status === "terminee" ? "ok" : a.status === "erreur" ? "warn" : ""}`}>{STATUS[a.status]}</span>}
+                      </div>
+                      {a && (a.status === "en_cours" || a.status === "en_attente") && (
+                        <div style={{ marginTop: 8 }}>
+                          <div className="progress"><span style={{ width: `${Math.round(a.progress * 100)}%` }} /></div>
+                          <div className="subtle" style={{ fontSize: "0.8rem", marginTop: 4 }}>{a.message}</div>
+                        </div>
+                      )}
+                      {a?.status === "erreur" && <div className="alert danger" style={{ marginTop: 8 }}>{a.error}</div>}
+                      {a?.status === "terminee" && a.summary?.verdict_selle && (
+                        <div className="subtle" style={{ fontSize: "0.84rem", marginTop: 4 }}>
+                          Extension du genou {a.summary.verdict_selle.flexion_moyenne}° ± {a.summary.verdict_selle.flexion_ecart_type}° — {a.summary.verdict_selle.message}
+                        </div>
+                      )}
+                    </div>
+                    {a?.status === "terminee" ? (
+                      <Link to={`/analyse/${a.id}`} className="btn btn-primary btn-sm">Résultat</Link>
+                    ) : a?.status === "erreur" || !a ? (
+                      <button className="btn btn-ghost btn-sm" onClick={() => reanalyze(c.id)}><Play size={14} /> Analyser</button>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+        </div>
+        <div className="stack sd-side">
           {has(eq, "mire") && <section className="card">
             <div className="card-head">
               <span className="icon-tile bike"><Camera size={19} /></span>
@@ -184,55 +236,6 @@ export default function SessionDetail() {
         </div>
       </div>
 
-      <div className="section-title"><h2>Vidéos</h2><span className="subtle">L'analyse démarre dès l'import (1 à 3 min sur la RTX 4090).</span></div>
-      <div className="grid-3">
-        {SLOTS.map((sl) => (
-          <Drop key={sl.vue} label={sl.title} text={sl.text} accept="video/*" onFile={(f) => uploadVideo(sl.vue, f)} busy={busy === sl.vue} icon={sl.icon} />
-        ))}
-      </div>
-
-      {s.captures.length > 0 && (
-        <section className="card" style={{ marginTop: 18 }}>
-          <div className="card-head">
-            <span className="icon-tile"><Gauge size={19} /></span>
-            <div><h2>Analyses</h2><p>Clique sur une analyse terminée pour voir le résultat.</p></div>
-          </div>
-          <ul className="list">
-            {s.captures.map((c: Any) => {
-              const a = c.analyses[0];
-              const side = a?.summary?.cote ? (a.summary.cote === "G" ? " gauche" : " droit") : "";
-              return (
-                <li key={c.id} className="list-item">
-                  <div className="grow">
-                    <div className="row">
-                      <strong>{c.vue === "profil" ? `Profil${side}` : c.vue === "face" ? "Face" : "Dos"}</strong>
-                      <span className="subtle" style={{ fontSize: "0.82rem" }}>{c.filename} · {c.meta.fps?.toFixed(0)} img/s · {c.meta.duration_s?.toFixed(0)} s</span>
-                      {a && <span className={`chip ${a.status === "terminee" ? "ok" : a.status === "erreur" ? "warn" : ""}`}>{STATUS[a.status]}</span>}
-                    </div>
-                    {a && (a.status === "en_cours" || a.status === "en_attente") && (
-                      <div style={{ marginTop: 8 }}>
-                        <div className="progress"><span style={{ width: `${Math.round(a.progress * 100)}%` }} /></div>
-                        <div className="subtle" style={{ fontSize: "0.8rem", marginTop: 4 }}>{a.message}</div>
-                      </div>
-                    )}
-                    {a?.status === "erreur" && <div className="alert danger" style={{ marginTop: 8 }}>{a.error}</div>}
-                    {a?.status === "terminee" && a.summary?.verdict_selle && (
-                      <div className="subtle" style={{ fontSize: "0.84rem", marginTop: 4 }}>
-                        Extension du genou {a.summary.verdict_selle.flexion_moyenne}° ± {a.summary.verdict_selle.flexion_ecart_type}° — {a.summary.verdict_selle.message}
-                      </div>
-                    )}
-                  </div>
-                  {a?.status === "terminee" ? (
-                    <Link to={`/analyse/${a.id}`} className="btn btn-primary btn-sm">Résultat</Link>
-                  ) : a?.status === "erreur" || !a ? (
-                    <button className="btn btn-ghost btn-sm" onClick={() => reanalyze(c.id)}><Play size={14} /> Analyser</button>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
       <p className="disclaimer"><Upload size={15} /> Les vidéos restent dans le dossier <code>data/</code> de ce PC ; rien n'est envoyé en ligne.</p>
     </div>
   );

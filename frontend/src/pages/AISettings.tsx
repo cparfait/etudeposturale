@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Cloud, Download, ExternalLink, Image as ImageIcon, KeyRound, Loader2, Lock, Mic, RefreshCw, Square, Trash2, Volume2, Zap } from "lucide-react";
+import { Check, Cloud, Download, ExternalLink, Image as ImageIcon, KeyRound, Loader2, Lock, Mic, RefreshCw, Sparkles, Square, Trash2, Volume2, Zap } from "lucide-react";
 import { http, type Any } from "../api";
 import { useToast } from "../toast";
 import { pushToTalk, speak, stopSpeaking, transcribe, type TtsEngine } from "../voice";
@@ -100,6 +100,7 @@ function ProviderPanel({ p, onSaved }: { p: Any; onSaved: (s: Any) => void }) {
 export default function AISettings() {
   const toast = useToast();
   const [s, setS] = useState<Any | null>(null);
+  const [section, setSection] = useState<"ia" | "voix">(() => (location.hash === "#voix" ? "voix" : "ia"));
   const [open, setOpen] = useState<string>("");
   const [vs, setVs] = useState<Any | null>(null);
   const [preparing, setPreparing] = useState(false);
@@ -147,8 +148,7 @@ export default function AISettings() {
         <div>
           <div className="eyebrow">Coach IA</div>
           <h1>Réglages IA et voix</h1>
-          <p>Choisis qui fait tourner le coach : un modèle sur ton PC (rien ne sort) ou un service en ligne avec ta clé.
-            Les mesures restent calculées par l'application ; l'IA les explique et te guide.</p>
+          <p>Un modèle sur ton PC (rien ne sort) ou un service en ligne avec ta clé. Les mesures restent calculées par l'application ; l'IA les explique.</p>
         </div>
         {active && (
           <span className={`chip ${active.local ? "ok" : "bike"}`} style={{ alignSelf: "flex-start" }}>
@@ -157,8 +157,12 @@ export default function AISettings() {
         )}
       </header>
 
-      <section className="stack">
-        <h2 className="section-title">Fournisseur d'IA</h2>
+      <div className="tabs ai-tabs" role="tablist" aria-label="Réglages">
+        <button type="button" role="tab" aria-selected={section === "ia"} onClick={() => setSection("ia")}><Sparkles size={16} /> Coach IA</button>
+        <button type="button" role="tab" aria-selected={section === "voix"} onClick={() => setSection("voix")}><Volume2 size={16} /> Voix (parler et écouter)</button>
+      </div>
+
+      {section === "ia" && <section className="stack">
         {groups.map((g) => (
           <div key={g.titre} className="stack" style={{ gap: 10 }}>
             <div className="eyebrow" style={{ margin: 0 }}>{g.titre}</div>
@@ -185,18 +189,16 @@ export default function AISettings() {
           <div style={{ flex: 1 }}>
             <strong>Autoriser l'envoi d'images de l'analyse</strong>
             <p className="subtle" style={{ margin: "4px 0 0", fontSize: "0.86rem" }}>
-              Quand tu coches « Joindre les images » dans le coach, il reçoit 2 images par côté filmé (extension et flexion maximales),
-              avec le squelette dessiné, réduites à 1024 px. Jamais la vidéo. Le modèle doit savoir lire les images
-              (Claude, GPT, Gemini, ou un modèle local « vision » comme qwen2.5vl ou gemma3).
+              Avec « Joindre les images » dans le coach : 2 images par côté filmé, squelette dessiné, jamais la vidéo.
+              Il faut un modèle qui lit les images (Claude, GPT, Gemini, gemma3…).
               {!active?.local && " Avec un fournisseur en ligne, ces images quittent ton PC."}
             </p>
           </div>
           <Switch label="Autoriser l'envoi d'images" on={s.images} onChange={async (x) => setS(await http.put("/ai/settings", { images: x }))} />
         </div>
-      </section>
+      </section>}
 
-      <section className="stack" style={{ marginTop: 28 }}>
-        <h2 className="section-title">Voix du coach</h2>
+      {section === "voix" && <section className="stack">
         <div className="grid-2">
           <div className="card stack" style={{ gap: 14 }}>
             <div className="card-head" style={{ marginBottom: 0 }}><span className="icon-tile"><Volume2 size={18} /></span><div><h3 style={{ margin: 0 }}>Le coach te parle</h3><p>Synthèse vocale</p></div></div>
@@ -294,7 +296,7 @@ export default function AISettings() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
     </div>
   );
 }

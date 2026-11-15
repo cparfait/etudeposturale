@@ -86,3 +86,12 @@ def test_cartesia_key_and_tts(client, monkeypatch, tmp_path):
     assert sent["headers"]["X-API-Key"] == "sk_car_test123" and sent["body"]["language"] == "fr"
     assert sent["body"]["generation_config"] == {"speed": 1.2} and sent["body"]["voice"]["id"]
     assert "cartesia" not in json.dumps(client.get("/api/ai/settings").json()["cles"]) or client.get("/api/ai/settings").json()["cles"]["cartesia"] is True
+
+
+def test_new_pain_zones_and_meniscus_rule(client):
+    zones = {z["id"] for z in client.get("/api/catalog").json()["zones"]}
+    assert {"genou_menisque_int", "genou_menisque_ext", "coude", "haut_dos", "epaule"} <= zones
+    client.post("/api/pains", json={"zone": "genou_menisque_int", "cote": "D", "intensite": 3})
+    h = next(x for x in client.get("/api/recommendations").json()["hypotheses"] if x["id"] == "menisque")
+    assert h["categorie"] == "sante" and h["priorite"] == "moyenne" and "flexion" in h["action"]
+    assert "face" in client.get("/api/guide/plan").json()["vues"]  # douleur au genou : vue de face ajoutée

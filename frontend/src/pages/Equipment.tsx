@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, GraduationCap, Wand2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, GraduationCap } from "lucide-react";
 import EquipmentList from "../components/EquipmentList";
 import { useEquipment } from "../equipment";
 
@@ -8,7 +8,7 @@ export default function Equipment() {
   if (!eq) return <div className="page"><p className="subtle">Chargement…</p></div>;
   const missing = eq.catalogue.filter((c) => eq.manquants.includes(c.id));
   return (
-    <div className="page">
+    <div className="page eq-compact">
       <header className="page-head">
         <div>
           <div className="eyebrow">Avant de filmer</div>
@@ -38,12 +38,6 @@ export default function Equipment() {
         <section>
           <h2 className="eq-section">Optionnel</h2>
           <EquipmentList eq={eq} levels={["optionnel"]} />
-          {eq.adaptations.length > 0 && (
-            <div className="ob-adapt" style={{ marginTop: 14 }}>
-              <strong><Wand2 size={16} /> Ce que l'outil adapte pour toi</strong>
-              <ul>{eq.adaptations.map((a) => <li key={a.id}><b>{a.nom}</b> : {a.texte.replace(/^L'outil s'adapte : /, "")}</li>)}</ul>
-            </div>
-          )}
         </section>
       </div>
     </div>

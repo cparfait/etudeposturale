@@ -83,7 +83,8 @@ export default function Profile() {
         )}
       </header>
 
-      <div className="stack">
+      <div className="profile-grid">
+        <div className="stack">
         <section className="card">
           <div className="card-head">
             <span className="icon-tile"><Ruler size={19} /></span>
@@ -94,16 +95,8 @@ export default function Profile() {
 
         <section className="card">
           <div className="card-head">
-            <span className="icon-tile"><Activity size={19} /></span>
-            <div><h2>Pratique</h2><p>L'objectif change les plages cibles proposées.</p></div>
-          </div>
-          <Fields specs={PRACTICE} values={values} onChange={set} />
-        </section>
-
-        <section className="card">
-          <div className="card-head">
             <span className="icon-tile"><NotebookPen size={19} /></span>
-            <div><h2>Notes</h2><p>La carte des douleurs détaillée arrive en phase 4.</p></div>
+            <div><h2>Notes</h2><p>Blessures, antécédents. Les douleurs actuelles se notent sur la carte de « Santé et ressentis ».</p></div>
           </div>
           <Fields specs={NOTES} values={values} onChange={set} />
           <div className="form-foot">
@@ -112,6 +105,15 @@ export default function Profile() {
               ? <Link to="/velo" className="btn btn-primary">Continuer : mon vélo <ArrowRight size={17} /></Link>
               : <button className="btn btn-primary" type="submit" disabled={!dirty || busy}><Save size={17} /> Enregistrer</button>}
           </div>
+        </section>
+        </div>
+
+        <section className="card">
+          <div className="card-head">
+            <span className="icon-tile"><Activity size={19} /></span>
+            <div><h2>Pratique</h2><p>L'objectif change les plages cibles proposées.</p></div>
+          </div>
+          <Fields specs={PRACTICE} values={values} onChange={set} />
         </section>
       </div>
     </form>

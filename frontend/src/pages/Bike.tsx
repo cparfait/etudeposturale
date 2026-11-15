@@ -62,7 +62,7 @@ const OPTION_LABEL: Record<string, string> = Object.fromEntries(
   CONFIG_FIELDS.flatMap((f) => f.options?.map((o) => [o.value, o.label]) ?? []),
 );
 
-type Tab = "cadre" | "cotes" | "cales";
+type Tab = "cadre" | "cotes" | "cales" | "historique";
 
 function fmtDate(iso: string) {
   const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : iso + "Z");
@@ -154,6 +154,7 @@ export default function Bike() {
     { id: "cadre", label: "Cadre", icon: BikeIcon, count: 0 },
     { id: "cotes", label: "Cotes", icon: Ruler, count: changedIn(COTES) },
     { id: "cales", label: "Cales et chaussures", icon: Footprints, count: changedIn(CALES) },
+    { id: "historique", label: `Historique (${history.length})`, icon: History, count: 0 },
   ];
 
   return (
@@ -164,8 +165,8 @@ export default function Bike() {
           <h1>Mon vélo</h1>
           <p>Chaque enregistrement des cotes crée une <strong>nouvelle configuration datée</strong> : l'historique sert aux comparaisons avant/après.</p>
         </div>
-        <div className="row" style={{ gap: 8, alignSelf: "flex-start" }}>
-          {current && <span className="chip brand">En cours : {current.libelle ?? `n° ${current.id}`}</span>}
+        <div className="row" style={{ gap: 8, alignSelf: "flex-start", minWidth: 0, maxWidth: "100%" }}>
+          {current && <span className="chip brand" style={{ whiteSpace: "normal", maxWidth: "100%" }}>En cours : {current.libelle ?? `n° ${current.id}`}</span>}
           {current?.hauteur_selle_mm && changed.size === 0 && (
             <Link to="/seance-guidee" className="btn btn-primary">Continuer : séance guidée <ArrowRight size={17} /></Link>
           )}
@@ -190,7 +191,7 @@ export default function Bike() {
             ))}
           </div>
 
-          {tab === "cadre" ? (
+          {tab === "historique" ? null : tab === "cadre" ? (
             <form className="card" onSubmit={(e) => { e.preventDefault(); run(() => api.putBike(bike), "Vélo enregistré"); }}>
               <div className="card-head">
                 <span className="icon-tile bike"><BikeIcon size={19} /></span>
@@ -230,7 +231,7 @@ export default function Bike() {
             </form>
           )}
 
-          <section className="card" style={{ marginTop: 18 }}>
+          {tab === "historique" && <section className="card">
             <div className="card-head">
               <span className="icon-tile"><History size={19} /></span>
               <div><h2>Historique des configurations</h2><p>La plus récente en haut, avec ce qui a changé.</p></div>
@@ -269,7 +270,7 @@ export default function Bike() {
                 })}
               </ol>
             )}
-          </section>
+          </section>}
         </div>
       </div>
     </div>

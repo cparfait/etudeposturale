@@ -269,8 +269,8 @@ export default function Markers() {
           )}
         </section>
 
-        <aside className="stack">
-          <div className="card">
+        <aside className="stack mk-aside">
+          <div className="card mk-view">
             <h3 style={{ marginTop: 0 }}>Vue filmée</h3>
             <div className="segmented">
               {VIEWS.map((x) => <button key={x.id} aria-pressed={view === x.id} onClick={() => setView(x.id)}>{x.label}</button>)}

@@ -7,6 +7,8 @@ PAIN_ZONES = [
     {"id": "genou_arriere_int", "label": "Genou — arrière intérieur (semi-tendineux)", "groupe": "genou"},
     {"id": "genou_interieur", "label": "Genou — intérieur", "groupe": "genou"},
     {"id": "genou_exterieur", "label": "Genou — extérieur (bandelette)", "groupe": "genou"},
+    {"id": "genou_menisque_int", "label": "Genou — ménisque interne (interligne intérieur)", "groupe": "genou"},
+    {"id": "genou_menisque_ext", "label": "Genou — ménisque externe (interligne extérieur)", "groupe": "genou"},
     {"id": "hanche_avant", "label": "Hanche — avant (pli de l'aine)", "groupe": "hanche"},
     {"id": "hanche_laterale", "label": "Hanche — latérale", "groupe": "hanche"},
     {"id": "fessier", "label": "Fessier", "groupe": "hanche"},
@@ -16,7 +18,9 @@ PAIN_ZONES = [
     {"id": "pied", "label": "Pied (brûlure, engourdissement)", "groupe": "pied"},
     {"id": "lombaires", "label": "Bas du dos", "groupe": "tronc", "centre": True},
     {"id": "nuque", "label": "Nuque", "groupe": "tronc", "centre": True},
+    {"id": "haut_dos", "label": "Haut du dos (entre les omoplates)", "groupe": "tronc", "centre": True},
     {"id": "epaule", "label": "Épaule", "groupe": "haut"},
+    {"id": "coude", "label": "Coude", "groupe": "haut"},
     {"id": "main", "label": "Main / poignet (engourdissement)", "groupe": "haut"},
     {"id": "perinee", "label": "Périnée / assise", "groupe": "tronc", "centre": True},
 ]

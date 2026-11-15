@@ -154,3 +154,15 @@
   .gd-nav .btn { flex: 1; justify-content: center; }
   .gd-nav .btn-primary { margin-left: 0; }
 }
+/* PC : préparation sans défilement */
+@media (min-width: 1200px) {
+  .gd-prep { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+  .gd-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 14px; }
+  .gd-facts > div { padding: 10px 12px; }
+  .gd-outline { columns: 3; margin-top: 14px; font-size: 0.84rem; }
+  .gd-outline li { padding: 2px 0; }
+  .gd-reasons { margin-top: 12px; }
+  .gd-plan-title { font-size: 1.45rem; margin-top: 6px; }
+  .gd-cmds { gap: 4px; font-size: 0.84rem; }
+  .gd-small { font-size: 0.76rem; }
+}

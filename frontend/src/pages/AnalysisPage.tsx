@@ -50,9 +50,11 @@ function ProfileResult({ r, metrics, a }: { r: Any; metrics: Any; a: Any }) {
   const sideName = r.cote === "G" ? "gauche" : "droite";
   const color = r.cote === "G" ? "var(--series-g)" : "var(--series-d)";
   const knee = r.courbes?.genou_flexion;
+  const [detail, setDetail] = useState<"courbe" | "mesures">(knee ? "courbe" : "mesures");
   return (
     <>
-      <div className="grid-2">
+      <div className="an-layout">
+        <div className="an-left">
         <section className="card">
           <div className="card-head">
             <span className="icon-tile"><Ruler size={19} /></span>
@@ -76,26 +78,18 @@ function ProfileResult({ r, metrics, a }: { r: Any; metrics: Any; a: Any }) {
                     Incertitude ± {v.incertitude_mm} mm. Puis 2 ou 3 sorties et une nouvelle capture.</p>
                 </div>
               )}
-              <ul className="subtle" style={{ fontSize: "0.8rem", marginTop: 12, paddingLeft: 18 }}>
-                {v.hypotheses.map((h: string) => <li key={h}>{h}</li>)}
-                <li>Plage {p1.min}–{p1.max}° en dynamique : {p1.source.join(", ")} ({FIAB[p1.fiabilite]}).</li>
-              </ul>
             </>
           ) : <p className="subtle">Verdict indisponible (pas assez de tours valides).</p>}
         </section>
 
-        <section className="card">
-          <div className="card-head">
-            <span className="icon-tile bike"><ShieldCheck size={19} /></span>
-            <div><h2>Contrôle du suivi</h2><p>Vérifie que le squelette colle aux pastilles.</p></div>
-          </div>
-          <VideoOverlay src={`/api/captures/${a.capture_id}/video`} overlay={r.overlay} width={r.video.width} height={r.video.height} />
-          <div style={{ marginTop: 12 }}><QualityChips q={r.qualite} /></div>
-        </section>
+
+      <div className="tabs an-tabs" role="tablist" aria-label="Détails">
+        {knee && <button type="button" role="tab" aria-selected={detail === "courbe"} onClick={() => setDetail("courbe")}>Le genou sur un tour</button>}
+        <button type="button" role="tab" aria-selected={detail === "mesures"} onClick={() => setDetail("mesures")}>Toutes les mesures ({Object.keys(r.metriques).length})</button>
       </div>
 
-      {knee && (
-        <section className="card" style={{ marginTop: 18 }}>
+      {knee && detail === "courbe" && (
+        <section className="card">
           <div className="card-head">
             <span className="icon-tile"><Info size={19} /></span>
             <div><h2>Le genou sur un tour de manivelle</h2><p>Moyenne des tours ; la zone verte est la plage indicative de l'extension max (bas du coup de pédale).</p></div>
@@ -106,7 +100,7 @@ function ProfileResult({ r, metrics, a }: { r: Any; metrics: Any; a: Any }) {
         </section>
       )}
 
-      <section className="card" style={{ marginTop: 18 }}>
+      {detail === "mesures" && <section className="card">
         <div className="card-head">
           <span className="icon-tile"><Ruler size={19} /></span>
           <div><h2>Toutes les mesures de profil</h2><p>Plages indicatives et sources : config/metrics.yaml.</p></div>
@@ -120,10 +114,10 @@ function ProfileResult({ r, metrics, a }: { r: Any; metrics: Any; a: Any }) {
                 const plage = def?.plage?.dynamique ?? def?.plage?.descriptif ?? def?.plage?.performance;
                 const st = status(m.moyenne, plage);
                 return (
-                  <tr key={k}>
+                  <tr key={k} title={plage?.fiabilite ? `Fiabilité : ${FIAB[plage.fiabilite]}` : undefined}>
                     <td><strong>{k}</strong> {NAMES[k] ?? def?.nom}</td>
                     <td className="num">{m.moyenne?.toFixed(1)} ± {m.ecart_type?.toFixed(1)} {def?.unite === "mm" ? "mm" : "°"}
-                      {st && <> <span className={`chip ${st}`} style={{ marginLeft: 6 }}>{st === "ok" ? "dans la plage" : "hors plage"}</span></>}</td>
+                      {st && <> <span className={`chip ${st}`} style={{ marginLeft: 6 }}>{st === "ok" ? "ok" : "hors plage"}</span></>}</td>
                     <td className="num">{rangeText(plage)}</td>
                     <td className="subtle">{plage?.fiabilite ? FIAB[plage.fiabilite] : "—"}</td>
                   </tr>
@@ -135,7 +129,23 @@ function ProfileResult({ r, metrics, a }: { r: Any; metrics: Any; a: Any }) {
         <p className="subtle" style={{ fontSize: "0.8rem", marginTop: 10 }}>
           Échelle : {r.echelle.source} ({r.echelle.mm_par_px} mm/px) · pédalier : {r.echelle.pedalier} · moteur : {r.moteur} · calcul {r.duree_calcul_s} s.
         </p>
-      </section>
+        {v && (
+          <ul className="subtle" style={{ fontSize: "0.8rem", marginTop: 8, paddingLeft: 18 }}>
+            {v.hypotheses.map((h: string) => <li key={h}>{h}</li>)}
+            <li>Plage {p1.min}–{p1.max}° en dynamique : {p1.source.join(", ")} ({FIAB[p1.fiabilite]}).</li>
+          </ul>
+        )}
+      </section>}
+        </div>
+        <section className="card">
+          <div className="card-head">
+            <span className="icon-tile bike"><ShieldCheck size={19} /></span>
+            <div><h2>Contrôle du suivi</h2><p>Vérifie que le squelette colle aux pastilles.</p></div>
+          </div>
+          <VideoOverlay src={`/api/captures/${a.capture_id}/video`} overlay={r.overlay} width={r.video.width} height={r.video.height} />
+          <div style={{ marginTop: 12 }}><QualityChips q={r.qualite} /></div>
+        </section>
+      </div>
     </>
   );
 }

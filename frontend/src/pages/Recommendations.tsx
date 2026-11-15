@@ -37,7 +37,7 @@ export default function Recommendations() {
           </div>
         </div>
       ) : (
-        <ol className="stack" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <ol className="hypo-grid">
           {hyps.map((h, i) => (
             <li key={h.id} className={`card hypo ${h.priorite}`}>
               <div className="row between">

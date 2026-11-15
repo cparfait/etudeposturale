@@ -69,6 +69,17 @@ def evaluate(ctx: Context) -> list[dict]:
             "Consulter un professionnel de santé (médecin du sport, kinésithérapeute) avant de modifier la position.",
             "haute", "pratique"))
 
+    # ------------------------------------------------------------ ménisque : prudence sur la flexion du genou
+    menisc = [d for d in ctx.douleurs if d["zone"].startswith("genou_menisque")]
+    if menisc:
+        out.append(Hypothesis(
+            "menisque", "sante", "Douleur méniscale : avis médical et genou ménagé",
+            [f"{d['zone'].replace('genou_menisque_', 'ménisque ').replace('int', 'interne').replace('ext', 'externe')} ({d.get('cote')}) : {d.get('intensite')}/10" for d in menisc],
+            "Un ménisque supporte mal la flexion profonde du genou en charge et les rotations forcées du tibia.",
+            "Faire confirmer par un médecin. En attendant : pas de selle trop basse ni trop avancée (flexion maximale du genou modérée "
+            "en haut du coup de pédale), cales avec un peu de liberté angulaire, et pas de changement brutal de rotation de cale.",
+            "haute" if any((d.get("intensite") or 0) >= 5 for d in menisc) else "moyenne", "pratique"))
+
     # ------------------------------------------------------------ charge d'entraînement
     long_pains = [d for d in ctx.douleurs if any(w in (d.get("moment") or "").lower() for w in ("longue", "grosse", "km", "heure", " h"))]
     big = [r for r in ctx.ressentis if (r.get("distance_km") or 0) >= 80 or (r.get("duree_min") or 0) >= 240]

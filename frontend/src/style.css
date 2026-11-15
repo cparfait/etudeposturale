@@ -440,3 +440,102 @@ a.step:hover { transform: translateY(-2px); border-color: var(--line-strong); }
   .bike-layout { grid-template-columns: minmax(0, 1fr); }
   .diagram-card { position: relative; top: 0; }
 }
+
+/* ------------------------------------------------------------------ PC : éviter le défilement */
+/* Le menu défile seul s'il est plus haut que l'écran ; la page utilise la largeur disponible. */
+@media (min-width: 901px) {
+  .sidebar { overflow-y: auto; padding: 16px 14px; gap: 2px; scrollbar-width: thin; }
+  .logo { padding-bottom: 14px; }
+  .nav-item { padding: 7px 10px; font-size: 0.92rem; }
+  .nav-label { padding: 10px 10px 4px; }
+  .sidebar-foot { padding-top: 10px; gap: 8px; }
+  .privacy { padding: 9px 10px; font-size: 0.74rem; }
+  .page { padding: 26px 32px 32px; }
+  .page-head { margin-bottom: 18px; }
+  .page-head p { margin-top: 4px; }
+  .eyebrow { margin-bottom: 4px; }
+  h1 { font-size: 2rem; }
+  .card { padding: 18px 20px; }
+  .card-head { margin-bottom: 14px; }
+}
+@media (min-width: 1500px) {
+  .page { max-width: 1440px; }
+}
+.hypo-grid { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 1200px) {
+  /* Accueil : bandeau moins haut, le parcours et l'aperçu remontent */
+  .hero { padding-top: 26px; padding-bottom: 26px; }
+  .hero-figure svg { max-height: 330px; }
+  .hero-lead { margin: 12px 0 18px; }
+  .section-title { margin: 22px 0 12px; }
+  .step { padding: 14px 16px; gap: 6px; }
+  .stat { padding: 10px 12px; }
+  /* Recommandations : deux colonnes */
+  .hypo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+.profile-grid { display: flex; flex-direction: column; gap: 18px; }
+@media (min-width: 1200px) {
+  .profile-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+}
+@media (min-width: 1200px) {
+  .hero { padding: 22px 34px; gap: 8px; }
+  .hero h1 { font-size: 2.55rem; }
+  .hero-figure svg { max-height: 270px; }
+  .home-eq { margin-top: 12px; padding-top: 10px; padding-bottom: 10px; }
+  .step h3 { font-size: 0.95rem; }
+  .step p { font-size: 0.82rem; }
+  .overview .card { padding: 14px 18px; }
+  .overview .card-head { margin-bottom: 10px; }
+  .disclaimer { margin-top: 14px !important; font-size: 0.76rem; }
+}
+@media (min-width: 1200px) {
+  .hero-figure svg { max-height: 230px; }
+  .step p { display: none; }
+  .section-title { margin: 16px 0 10px; }
+}
+@media (min-width: 901px) {
+  .page { padding: 20px 32px 24px; }
+  .hypo .why, .hypo ul { font-size: 0.88rem; }
+}
+@media (min-width: 1200px) { .hero-figure svg { max-height: 205px; } }
+@media (min-width: 1400px) {
+  .bike-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+  .bike-layout .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; }
+  .bike-layout .field.wide { grid-column: 1 / -1; }
+}
+/* Séance : préparation | vidéos et analyses | calibration et .FIT */
+.sd-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.sd-main { grid-column: 1 / -1; grid-row: 2; }
+.sd-main .section-title { margin-top: 4px; }
+@media (min-width: 1400px) {
+  .sd-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.85fr); }
+  .sd-main { grid-column: 2; grid-row: 1; }
+  .sd-main .section-title { margin: 0 0 10px; flex-direction: column; gap: 2px; }
+  .sd-main .grid-3 { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .sd-main .drop { flex-direction: row; text-align: left; justify-content: flex-start; padding: 14px 16px; min-height: 0; gap: 12px; }
+  .sd-layout .checklist button { padding: 8px 10px; }
+  .sd-layout .ck-text { font-size: 0.78rem; }
+}
+@media (max-width: 1000px) { .sd-layout { grid-template-columns: minmax(0, 1fr); } .sd-main { grid-row: auto; } }
+@media (min-width: 1400px) {
+  .sd-main .drop { flex-wrap: wrap; }
+  .sd-main .drop small { flex-basis: 100%; padding-left: 34px; font-size: 0.78rem; }
+}
+@media (min-width: 1400px) {
+  .sd-main.has-caps .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .sd-main.has-caps .drop { padding: 10px 12px; flex-wrap: nowrap; }
+  .sd-main.has-caps .drop small { display: none; }
+  .sd-main .card { margin-top: 12px !important; }
+  .sd-side .drop { min-height: 0; padding: 14px; }
+}
+.ai-tabs { max-width: 520px; }
+@media (min-width: 1200px) {
+  .page-head p { max-width: 100ch; }
+  .page-head { margin-bottom: 14px; }
+  .tabs { margin-bottom: 12px; }
+  .segmented button { padding-top: 7px; padding-bottom: 7px; }
+}
+@media (min-width: 1200px) {
+  .hero { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+  .hero-lead { max-width: 70ch; }
+}
