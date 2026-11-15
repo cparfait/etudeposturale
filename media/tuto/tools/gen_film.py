@@ -1,4 +1,4 @@
-"""Écrit les chapitres du tutoriel (compositions/c0..c6.html) et index.html à partir d'une seule description.
+﻿"""Écrit les chapitres du tutoriel (compositions/c0..c6.html) et index.html à partir d'une seule description.
 
 Les fichiers produits restent du HTML HyperFrames ordinaire, modifiables dans le studio ; relancer ce script les réécrit.
 Durées : voix (assets/voix/durees.json) et vidéos (ffprobe).
@@ -271,7 +271,7 @@ def build() -> None:
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="{t:.2f}" data-width="1920" data-height="1080">
 {chr(10).join(hosts)}
-      <audio id="musique" class="clip" src="assets/musique.m4a" data-start="0" data-duration="{t:.2f}" data-volume="0.12"
+      <audio id="musique" class="clip" src="assets/musique.m4a" data-start="0" data-duration="{t:.2f}" data-volume="0.28"
         data-fade-in="1" data-fade-out="2.5" data-track-index="5"></audio>
     </div>
     <script>
