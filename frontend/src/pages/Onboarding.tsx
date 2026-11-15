@@ -139,14 +139,16 @@ export default function Onboarding() {
 function Welcome() {
   return (
     <div className="ob-welcome">
-      <p className="ob-lead">Cet outil t'aide à <strong>régler ta position sur le vélo</strong>, seul, chez toi.</p>
       <div className="ob-figure"><PedalingRider /></div>
+      <div className="ob-welcome-text">
+      <p className="ob-lead">Cet outil t'aide à <strong>régler ta position sur le vélo</strong>, seul, chez toi.</p>
       <ol className="ob-three">
         <li><Video size={22} /><strong>Tu te filmes</strong><span>une minute de pédalage, de profil</span></li>
         <li><Gauge size={22} /><strong>L'outil mesure</strong><span>les angles de tes articulations, à chaque tour</span></li>
         <li><Wrench size={22} /><strong>Tu règles</strong><span>une seule chose à la fois, en millimètres</span></li>
       </ol>
       <p className="ob-note"><Lock size={15} /> Tout reste sur ton ordinateur : vidéos et mesures ne sont envoyées nulle part.</p>
+      </div>
     </div>
   );
 }
@@ -211,16 +213,7 @@ function Path({ eq }: { eq: Equipment }) {
     { icon: Wrench, t: "Appliquer une modification, puis vérifier", d: "Le débrief propose un seul réglage. Après 2–3 sorties, nouvelle séance pour comparer.", tag: "obligatoire", time: "ensuite" },
   ];
   return (
-    <div className="stack" style={{ gap: 16 }}>
-      {missing.length > 0 && (
-        <div className="ob-missing">
-          <AlertTriangle size={20} />
-          <div>
-            <strong>Avant ta première séance, il te manque {missing.length > 1 ? `${missing.length} éléments obligatoires` : "un élément obligatoire"} :</strong>
-            <ul>{missing.map((m) => <li key={m.id}><b>{m.nom}</b> — {m.sans}</li>)}</ul>
-          </div>
-        </div>
-      )}
+    <div className="ob-path-grid">
       <ol className="ob-path">
         {steps.map((s, k) => (
           <li key={s.t} className={s.done ? "done" : ""}>
@@ -232,12 +225,26 @@ function Path({ eq }: { eq: Equipment }) {
           </li>
         ))}
       </ol>
+      <div className="ob-path-side">
+      {missing.length === 0 && eq.adaptations.length === 0 && (
+        <div className="ob-adapt"><strong><Check size={16} /> Tout l'indispensable est là</strong><ul><li>Tu peux enchaîner sur ton profil, ton vélo, puis la séance guidée.</li></ul></div>
+      )}
+      {missing.length > 0 && (
+        <div className="ob-missing">
+          <AlertTriangle size={20} />
+          <div>
+            <strong>Avant ta première séance, il te manque {missing.length > 1 ? `${missing.length} éléments obligatoires` : "un élément obligatoire"} :</strong>
+            <ul>{missing.map((m) => <li key={m.id}><b>{m.nom}</b> — {m.sans}</li>)}</ul>
+          </div>
+        </div>
+      )}
       {eq.adaptations.length > 0 && (
         <div className="ob-adapt">
           <strong><Wand2 size={16} /> L'outil s'adapte à ton matériel</strong>
           <ul>{eq.adaptations.map((a) => <li key={a.id}><b>{a.nom}</b> : {a.texte.replace(/^L'outil s'adapte : /, "")}</li>)}</ul>
         </div>
       )}
+      </div>
     </div>
   );
 }
