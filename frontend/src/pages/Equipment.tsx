@@ -31,14 +31,7 @@ export default function Equipment() {
       )}
 
       <div className="eq-page">
-        <section>
-          <h2 className="eq-section">Indispensable et recommandé</h2>
-          <EquipmentList eq={eq} levels={["obligatoire", "recommande"]} />
-        </section>
-        <section>
-          <h2 className="eq-section">Optionnel</h2>
-          <EquipmentList eq={eq} levels={["optionnel"]} />
-        </section>
+        <EquipmentList eq={eq} levels={["obligatoire", "recommande", "optionnel"]} />
       </div>
     </div>
   );

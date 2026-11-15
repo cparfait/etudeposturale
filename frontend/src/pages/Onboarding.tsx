@@ -183,7 +183,7 @@ function Needed({ eq }: { eq: Equipment }) {
   return (
     <div className="stack" style={{ gap: 14 }}>
       <div className="ob-lead-row">
-        <p className="ob-lead">Pour chaque élément, réponds <strong>J'ai</strong> ou <strong>Je n'ai pas</strong> : l'outil te dit ce que ça change. <span className="subtle">({answered} / {total})</span></p>
+        <p className="ob-lead">As-tu chaque élément ? Réponds <strong>Oui</strong> ou <strong>Non</strong> : l'outil te dit ce que ça change. <span className="subtle">({answered} / {total})</span></p>
       </div>
       <p className="ob-colors-note"><Palette size={15} /> Couleurs libres : deux couleurs vives bien différentes (corps / vélo). L'app les apprend sur une photo (étalonnage, 1 min).</p>
       <EquipmentList eq={eq} levels={["obligatoire", "recommande"]} />
