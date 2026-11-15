@@ -128,10 +128,9 @@
   .ob-timeline li:not(:last-child)::before { left: auto; right: -14px; top: 36px; bottom: auto; width: 12px; height: 2px; }
   .ob-timeline strong { font-size: 1.12rem; }
   .ob-timeline p { font-size: 0.98rem; }
-  .ob .eq-list { display: block; columns: 3; column-gap: 12px; }
-  .ob .eq-list > li { break-inside: avoid; margin-bottom: 10px; }
-  .ob .eq-item { grid-template-columns: auto minmax(0, 1fr); }
-  .ob .eq-choice { grid-column: 2; }
+  /* Liste : une ligne par élément, boutons à droite */
+  .ob .eq-list { display: flex; flex-direction: column; }
+  .ob .eq-item { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
   .ob-path-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
   .ob-path-side { position: sticky; top: 24px; }
 }
@@ -144,8 +143,8 @@
   .ob-head { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
   .ob-head h1 { font-size: 2.5rem; }
   .ob-head .ob-voice { flex: 0 1 520px; }
-  .ob .eq-list { gap: 10px 12px; }
-  .ob .eq-item { padding: 12px 14px; gap: 12px; }
+  .ob .eq-list { gap: 8px; }
+  .ob .eq-item { padding: 10px 16px; gap: 14px; }
   .ob .eq-icon { width: 34px; height: 34px; border-radius: 10px; }
   .ob .eq-why { font-size: 0.84rem; margin-top: 2px; }
   .ob .eq-without { margin-top: 8px; padding: 7px 10px; font-size: 0.82rem; }
@@ -196,3 +195,12 @@
 .mic-test-msg.ok { color: var(--ok); font-weight: 600; }
 .mic-test-msg.warn { color: var(--warn); }
 .mic-test-msg.rec { color: var(--danger); font-weight: 600; }
+@media (min-width: 1180px) {
+  .ob-main { margin-top: 10px; gap: 14px; }
+  .ob .eq-list { gap: 6px; }
+  .ob .eq-item { padding: 8px 14px; }
+  .ob .eq-icon { width: 30px; height: 30px; border-radius: 9px; }
+  .ob .eq-why { font-size: 0.82rem; line-height: 1.4; }
+  .ob .eq-without { margin-top: 6px; padding: 5px 9px; }
+  .ob .mic-test { margin-top: 6px; }
+}
