@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sliders, Sparkles, Sun, User, Video } from "lucide-react";
+import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sliders, Sparkles, Sun, User, Video, Wand2 } from "lucide-react";
 import { useTheme, type ThemeChoice } from "./theme";
 
 export function LogoMark({ size = 36 }: { size?: number }) {
@@ -31,6 +31,7 @@ const MAIN = [
   { to: "/profil", label: "Mon profil", short: "Profil", icon: User },
   { to: "/velo", label: "Mon vélo", short: "Vélo", icon: Bike },
   { to: "/seance", label: "Séances de capture", short: "Séances", icon: Video, tab: true },
+  { to: "/seance-guidee", label: "Séance guidée", short: "Guidée", icon: Wand2 },
   { to: "/sante", label: "Santé et ressentis", short: "Santé", icon: HeartPulse, tab: true },
   { to: "/conseils", label: "Recommandations", short: "Conseils", icon: Lightbulb, tab: true },
   { to: "/coach", label: "Coach IA", short: "Coach", icon: Sparkles, tab: true },

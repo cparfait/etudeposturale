@@ -100,8 +100,17 @@ def as_text(data: dict) -> str:
     return "DONNÉES (JSON, générées par l'application) :\n" + json.dumps(data, ensure_ascii=False, indent=1, default=str)
 
 
-def system_prompt(vocal: bool, with_images: bool) -> str:
-    return "\n\n".join([SYSTEM] + ([VOCAL] if vocal else []) + ([IMAGES] if with_images else []))
+GUIDE = """Séance guidée en cours : tu pilotes la séance de capture pas à pas, à la voix. La personne est sur le vélo
+ou en train de s'installer. Réponds à sa question en lien avec l'étape en cours, puis rappelle ce qu'il faut faire pour
+avancer. Ne propose jamais de modification du vélo pendant la séance : la seule modification est celle du débrief,
+indiquée dans « modification » ; tu l'expliques sans en proposer d'autre."""
+
+
+def system_prompt(vocal: bool, with_images: bool, seance: str = "") -> str:
+    parts = [SYSTEM] + ([VOCAL] if vocal else []) + ([IMAGES] if with_images else [])
+    if seance:
+        parts += [GUIDE, "SÉANCE GUIDÉE (JSON) :\n" + seance]
+    return "\n\n".join(parts)
 
 
 # ----------------------------------------------------------------- images clés

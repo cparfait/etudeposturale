@@ -177,13 +177,18 @@ export async function handsFree(opts: { onPhrase: (b: Blob) => void; onLevel?: (
 }
 
 /** Commandes vocales comprises sans IA. */
-export type Command = "repeter" | "stop" | "effacer" | "suivant" | "fait" | null;
+export type Command = "repeter" | "stop" | "effacer" | "suivant" | "fait" | "partir" | "pause" | "reprendre" | "precedent" | null;
 export function command(text: string): Command {
-  const t = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z' ]/g, " ").replace(/\s+/g, " ").trim();
+  const t = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z' ]/g, " ").replace(/\s+/g, " ").trim()
+    .replace(/^(ok|okay|bon|alors|euh|vas y) /, "");
   if (/^(repete|repetes|tu peux repeter|redis|encore une fois)\b/.test(t)) return "repeter";
-  if (/^(stop|tais toi|silence|chut|arrete)\b/.test(t)) return "stop";
+  if (/^(stop|tais toi|silence|chut)\b/.test(t)) return "stop";
   if (/^(efface|nouvelle conversation|on recommence)\b/.test(t)) return "effacer";
-  if (/^(suivant|etape suivante|on continue|continue)$/.test(t)) return "suivant";
-  if (/^(c'est fait|c est fait|fait|termine|ok c'est bon)$/.test(t)) return "fait";
+  if (/^(suivant|etape suivante|on continue|continue|on passe a la suite)$/.test(t)) return "suivant";
+  if (/^(precedent|etape precedente|retour|reviens en arriere)$/.test(t)) return "precedent";
+  if (/^(c'est parti|c est parti|cest parti|go|top|on y va|demarre|je suis pret|je suis prete)$/.test(t)) return "partir";
+  if (/^(pause|attends|attend|arrete le chrono|une seconde)$/.test(t)) return "pause";
+  if (/^(reprends|reprend|on reprend|c'est reparti|c est reparti)$/.test(t)) return "reprendre";
+  if (/^(c'est fait|c est fait|cest fait|fait|termine|c'est bon|c est bon|ok|d'accord|d accord|voila)$/.test(t)) return "fait";
   return null;
 }

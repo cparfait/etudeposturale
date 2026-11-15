@@ -18,10 +18,12 @@ import Sensors from "./pages/Sensors";
 import Markers from "./pages/Markers";
 import Coach from "./pages/Coach";
 import AISettings from "./pages/AISettings";
+import Guided from "./pages/Guided";
 import { ToastProvider } from "./toast";
 import "./style.css";
 import "./pages.css";
 import "./coach.css";
+import "./guided.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -43,6 +45,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/pastilles" element={<Markers />} />
             <Route path="/coach" element={<Coach />} />
             <Route path="/reglages-ia" element={<AISettings />} />
+            <Route path="/seance-guidee" element={<Guided />} />
           </Route>
         </Routes>
       </BrowserRouter>

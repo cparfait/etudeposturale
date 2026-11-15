@@ -18,6 +18,7 @@ Tout est traité sur le PC (RTX 4090) : aucune vidéo n'est envoyée en ligne.
 | Analyse | Verdict hauteur de selle + correction en mm, squelette superposé à la vidéo, courbe du genou, toutes les mesures sourcées |
 | Recommandations | Hypothèses ordonnées comme chez un fitter (santé → charge → asymétrie → cales → selle → recul → manivelle) |
 | Rapport | Synthèse imprimable / PDF, comparaison G/D et avant/après |
+| Séance guidée | Le coach pilote la séance à la voix : pastilles, téléphone, home trainer en ERG, échauffement, prises chronométrées, import, débrief et une seule modification |
 | Coach IA | Questions à l'écrit ou à la voix (appui pour parler ou mains libres), réponses lues à voix haute, images clés de l'analyse en option |
 | Réglages IA et voix | Fournisseur (Ollama, LM Studio, OpenAI, Anthropic, Google, Mistral…), clés chiffrées par Windows, voix Piper / Whisper |
 | Contrôle des pastilles | Sur une photo ou une image de la vidéo : pastilles trouvées, pipette, réglage des couleurs utilisé par les analyses |
@@ -116,11 +117,28 @@ ollama pull gemma4:12b
   `.onnx` + `.onnx.json` dans `data/voice/`), Whisper `large-v3-turbo` sur la carte (≈ 1,6 Go téléchargés au premier usage dans `models/`),
   ou OpenAI. Commandes comprises sans IA : « répète », « stop », « efface ».
 
+## Séance guidée
+
+Menu « Séance guidée » (ou bouton sur la page Séances). Le plan est construit à partir de tes données :
+**première séance** (deux profils), **vérification** après un réglage (mêmes prises, même puissance, comparaison avant / après)
+ou **suivi** ; vue de face ou de dos ajoutée si une douleur le justifie.
+
+- « Adapter la séance » demande au coach IA d'ajuster le plan (prises, puissance, échauffement, conseils par étape) dans des
+  limites fixées par l'application ; sans IA, le plan reste valable.
+- Pendant la séance, active « Mains libres » : « c'est fait », « suivant », « précédent », « c'est parti », « pause », « reprends »,
+  « répète », « stop » ; toute autre phrase est une question au coach, qui connaît l'étape en cours. Barre d'espace = action principale.
+- Le home trainer (ERG) et les pédales se connectent en Bluetooth : puissance douce puis cible pendant l'échauffement,
+  rappel de cadence pendant les prises.
+- Débrief : résultats, comparaison avec la séance précédente, puis **une seule modification** choisie par le moteur
+  (santé d'abord, hauteur de selle seulement si les deux côtés concordent) et expliquée par le coach. « J'ai fait le réglage »
+  enregistre la nouvelle configuration : la séance suivante devient une vérification.
+- La séance se reprend où tu l'as laissée (par exemple pour importer les vidéos plus tard).
+
 ## Tests
 
 ```bash
 cd backend && .venv/Scripts/python -m pytest
 ```
 
-45 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
-calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles, coach IA (fournisseurs, clés, flux) et voix Piper.
+54 tests : noyau cinématique sur cycliste simulé, chaîne vidéo complète sur vidéo synthétique avec pastilles (angles retrouvés à ~1°),
+calibration ChArUco sur la vraie mire, vues de face et de dos, import .FIT, moteur de recommandations, API, réglage des couleurs de pastilles, coach IA (fournisseurs, clés, flux), voix Piper et séance guidée (plan, adaptation par l'IA, débrief, modification unique).

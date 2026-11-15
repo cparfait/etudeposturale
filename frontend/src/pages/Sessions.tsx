@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Plus, Trash2, Video } from "lucide-react";
+import { ArrowRight, Plus, Trash2, Video, Wand2 } from "lucide-react";
 import { http, type Any } from "../api";
 import { useToast } from "../toast";
 import { Fields, type FieldSpec } from "../fields";
@@ -50,6 +50,7 @@ export default function Sessions() {
         <div className="row" style={{ gap: 8 }}>
           <Link to="/pastilles" className="btn btn-ghost">Contrôle des pastilles</Link>
           <Link to="/cadrage" className="btn btn-ghost">Cadrage en direct</Link>
+          <Link to="/seance-guidee" className="btn btn-primary"><Wand2 size={16} /> Séance guidée</Link>
         </div>
       </header>
 

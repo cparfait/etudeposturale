@@ -103,6 +103,7 @@ class ChatIn(BaseModel):
     messages: list[Msg]
     vocal: bool = False
     images: bool = False
+    seance: Optional[str] = None  # séance guidée en cours : étape, plan ou débrief (texte)
 
 
 def _sse(obj: dict) -> str:
@@ -123,7 +124,7 @@ def chat(data: ChatIn, db: DB = Depends(get_session)) -> StreamingResponse:
     if imgs:
         legend = "\n".join(f"Image {k + 1} : {i['legende']}" for k, i in enumerate(imgs))
         msgs[-1] = {**msgs[-1], "content": msgs[-1]["content"] + "\n\n" + legend, "images": [(i["mime"], i["data"]) for i in imgs]}
-    system = context.system_prompt(data.vocal, bool(imgs))
+    system = context.system_prompt(data.vocal, bool(imgs), (data.seance or "")[:8000])
 
     def gen():
         try:
