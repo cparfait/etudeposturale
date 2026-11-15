@@ -13,7 +13,7 @@ const https = existsSync(cert) && existsSync(key) ? { cert: readFileSync(cert), 
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 5180,  // port propre à l'appli (5173 est le port par défaut de Vite, souvent pris par un autre projet)
     strictPort: true,  // pas de bascule silencieuse sur 5174 : l'adresse ouverte et le QR code restent justes
     host: true,  // accessible depuis le téléphone (même Wi-Fi) : QR code de la séance
     https,

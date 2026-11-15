@@ -85,7 +85,7 @@ Interface :
 npm --prefix frontend run dev
 ```
 
-Ouvrir http://localhost:5173. Données dans `data/` (base SQLite, vidéos, résultats) — ignoré par git.
+Ouvrir http://localhost:5180. Données dans `data/` (base SQLite, vidéos, résultats) — ignoré par git.
 
 ### Utiliser le téléphone (cadrage en direct, Bluetooth)
 
@@ -99,7 +99,7 @@ mkcert -install
 cd frontend && mkdir -p certs && mkcert -cert-file certs/cert.pem -key-file certs/key.pem localhost 192.168.1.10
 ```
 
-(remplacer `192.168.1.10` par l'adresse IP du PC), installer l'autorité `rootCA.pem` (dossier donné par `mkcert -CAROOT`) sur le téléphone, relancer l'interface, puis ouvrir `https://192.168.1.10:5173/cadrage` sur le téléphone.
+(remplacer `192.168.1.10` par l'adresse IP du PC), installer l'autorité `rootCA.pem` (dossier donné par `mkcert -CAROOT`) sur le téléphone, relancer l'interface, puis ouvrir `https://192.168.1.10:5180/cadrage` sur le téléphone.
 
 ## Coach IA et voix
 

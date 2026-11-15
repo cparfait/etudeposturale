@@ -34,7 +34,7 @@ Accueil ─► Mon profil & douleurs ─► Mon vélo (cotes) ─► Auto-tests 
 | 1 | **Nouvelle séance** | Confirme (ou modifie) la configuration en cours, coche les douleurs du moment (arrière, avant G…) et précise s'il s'agit d'une capture « reposé » ou « en fin d'effort » | Crée une *séance* rattachée à la configuration |
 | 2 | **Préparation** | Suit la check‑list illustrée : pastilles, mire, éclairage, vélo de niveau, marques au sol | Affiche où coller chaque pastille (schéma) |
 | 3 | **Calibration du téléphone** (une seule fois par téléphone et par mode vidéo) | Filme la mire ChArUco 20–30 s en la bougeant devant l'objectif | Calcule la distorsion de l'objectif, la mémorise |
-| 4 | **Cadrage en direct** | Ouvre `https://<pc>:5173/cadrage` sur le Pixel 10 Pro, pose le téléphone sur le trépied | MediaPipe en direct : corps entier visible ? caméra à la bonne hauteur ? perpendiculaire (mire) ? lumière suffisante ? → feu vert |
+| 4 | **Cadrage en direct** | Ouvre `https://<pc>:5180/cadrage` sur le Pixel 10 Pro, pose le téléphone sur le trépied | MediaPipe en direct : corps entier visible ? caméra à la bonne hauteur ? perpendiculaire (mire) ? lumière suffisante ? → feu vert |
 | 5 | **Enregistrement** | Échauffement 10 min, puis passe dans l'appli Appareil photo, lance l'enregistrement, **clap**, pédale 60 s à la puissance demandée, change de côté (vélo retourné ou caméra déplacée), recommence | Affiche le minuteur du protocole et la puissance cible |
 | 6 | **Import** | Branche le téléphone en USB (ou dépose les fichiers) | Copie les vidéos dans `data/`, lit les métadonnées (fps réel, résolution, date) |
 | 7 | **Analyse** | Attend 1 à 3 min | Correction de distorsion → pastilles + modèle de pose → cycles → angles → statistiques → qualité |
