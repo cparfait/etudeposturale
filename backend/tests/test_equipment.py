@@ -44,7 +44,8 @@ def test_plan_adapts_to_equipment(client):
     assert steps["prise_profil_D"]["puissance_w"] is None and steps["echauffement"]["puissance_w"] is None
     assert "watts" not in steps["accueil"]["dire"] and "barre d'espace" in steps["accueil"]["dire"]
     assert all("Dis «" not in s["dire"] for s in p["etapes"])
-    assert p["equipement"] == {"pastilles_vertes": False, "trainer": False, "capteur_puissance": False, "micro": False, "mire_seule": True}
+    assert p["equipement"] == {"pastilles_vertes": False, "trainer": False, "capteur_puissance": False, "micro": False, "mire_seule": True,
+                              "deux_telephones": False}
     assert any("Sans pastilles « corps »" in r for r in p["raisons"])
 
 
@@ -95,3 +96,17 @@ def test_new_pain_zones_and_meniscus_rule(client):
     h = next(x for x in client.get("/api/recommendations").json()["hypotheses"] if x["id"] == "menisque")
     assert h["categorie"] == "sante" and h["priorite"] == "moyenne" and "flexion" in h["action"]
     assert "face" in client.get("/api/guide/plan").json()["vues"]  # douleur au genou : vue de face ajoutée
+
+
+def test_two_phones_film_both_profiles_together(client):
+    one = [s["id"] for s in client.get("/api/guide/plan").json()["etapes"]]
+    assert "prise_profil_D" in one and "prise_profil_G" in one
+    client.put("/api/equipment", json={"items": {"deux_telephones": True}})
+    client.post("/api/pains", json={"zone": "genou_avant", "cote": "G", "intensite": 3})   # ajoute la vue de face
+    p = client.get("/api/guide/plan").json()
+    steps = {s["id"]: s for s in p["etapes"]}
+    assert "prise_profils" in steps and "prise_profil_D" not in steps and "prise_profil_G" not in steps
+    assert "deux téléphones" in steps["prise_profils"]["dire"] and "clap" in steps["prise_profils"]["dire"]
+    assert steps["camera"]["titre"] == "Installer les deux téléphones"
+    assert steps["prise_face"]["dire"].startswith("Prends un des deux téléphones")
+    assert p["vues"] == ["profil_D", "profil_G", "face"]          # l'import attend bien les deux profils

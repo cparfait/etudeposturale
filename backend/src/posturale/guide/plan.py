@@ -162,6 +162,8 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
     col = sticker_names()  # « vertes » / « bleues », « orange » / « roses »…
     green, trainer = equipment.has(eq, "pastilles_vertes"), equipment.has(eq, "trainer_connecte")
     meter, micro = equipment.has(eq, "capteur_puissance"), equipment.has(eq, "micro")
+    two_phones = eq["items"].get("deux_telephones") is True  # seulement si la personne l'a dit
+    together = two_phones and "profil_D" in views and "profil_G" in views
     chart_only = eq["items"].get("pastilles_orange") is False and bool(eq["items"].get("mire"))
     effort = f"à {power} watts" if trainer else "à résistance constante"
     if not green:
@@ -228,15 +230,26 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
     steps.append(_step("controle_pastilles", "info", "Étalonnage des pastilles", cal, lien="/pastilles"))
 
     # ---- caméra
-    cam_items = [
-        {"t": "Vélo de niveau", "d": "Niveau à bulle ; ruban adhésif au sol sous la roue arrière et les pieds du trépied."},
-        {"t": "Trépied à 2,5–3 m, à hauteur de selle", "d": "Bien perpendiculaire au vélo pour le profil."},
-        {"t": "Objectif 1x, 1080p, 60 ou 120 images/s", "d": "Jamais l'ultra grand-angle 0,5x. Stabilisation et HDR coupés."},
-        {"t": "Mise au point et exposition verrouillées", "d": "Appui long sur le cycliste dans l'appli Appareil photo."},
-        {"t": "Cadrage vérifié", "d": "Page « Cadrage en direct » ouverte sur le téléphone : attends le feu vert."},
-    ]
-    steps.append(_step("camera", "checklist", "Installer le téléphone",
-                       "On installe le téléphone. Même chose : dis « c'est fait » après chaque point.", items=cam_items, lien="/cadrage"))
+    if together:
+        cam_items = [
+            {"t": "Vélo de niveau", "d": "Niveau à bulle ; ruban adhésif au sol sous la roue arrière et sous les pieds des deux trépieds."},
+            {"t": "Un trépied de chaque côté, à 2,5–3 m", "d": "À la même distance et à hauteur de selle, chacun bien perpendiculaire au vélo, en face du pédalier."},
+            {"t": "Les deux téléphones : objectif 1x, 1080p, 60 images/s", "d": "Même réglage sur les deux. Jamais l'ultra grand-angle 0,5x. Stabilisation et HDR coupés."},
+            {"t": "Mise au point et exposition verrouillées", "d": "Sur chaque téléphone : appui long sur le cycliste dans l'appli Appareil photo."},
+            {"t": "Cadrage vérifié des deux côtés", "d": "Page « Cadrage en direct » sur chaque téléphone : feu vert des deux côtés."},
+        ]
+        steps.append(_step("camera", "checklist", "Installer les deux téléphones",
+                           "On installe les deux téléphones, un de chaque côté. Dis « c'est fait » après chaque point.", items=cam_items, lien="/cadrage"))
+    else:
+        cam_items = [
+            {"t": "Vélo de niveau", "d": "Niveau à bulle ; ruban adhésif au sol sous la roue arrière et les pieds du trépied."},
+            {"t": "Trépied à 2,5–3 m, à hauteur de selle", "d": "Bien perpendiculaire au vélo pour le profil."},
+            {"t": "Objectif 1x, 1080p, 60 ou 120 images/s", "d": "Jamais l'ultra grand-angle 0,5x. Stabilisation et HDR coupés."},
+            {"t": "Mise au point et exposition verrouillées", "d": "Appui long sur le cycliste dans l'appli Appareil photo."},
+            {"t": "Cadrage vérifié", "d": "Page « Cadrage en direct » ouverte sur le téléphone : attends le feu vert."},
+        ]
+        steps.append(_step("camera", "checklist", "Installer le téléphone",
+                           "On installe le téléphone. Même chose : dis « c'est fait » après chaque point.", items=cam_items, lien="/cadrage"))
 
     # ---- home trainer + échauffement
     devices = (["trainer"] if trainer else []) + (["puissance"] if meter else [])
@@ -261,10 +274,22 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
     # ---- prises
     for i, v in enumerate(views):
         info = VIEWS[v]
+        if together and v == "profil_G":
+            continue  # déjà filmé avec le profil droit
+        if together and v == "profil_D":
+            dire = ("Prise : les deux profils en même temps. Lance l'enregistrement sur les deux téléphones, puis fais un clap "
+                    "bien visible des deux côtés : il sert à caler les deux vidéos. Pédale régulièrement, mains sur les cocottes. "
+                    "Dis « c'est parti » quand tu es en place : je compte une minute.")
+            steps.append(_step("prise_profils", "prise", "Profils droit et gauche (2 téléphones)", dire, vue="profil", cote="",
+                               cle="profil_D+profil_G", duree_s=60, puissance_w=power if trainer else None))
+            continue
         before = ""
         if i > 0:
             prev = views[i - 1]
-            if prev.startswith("profil") and v.startswith("profil"):
+            if together and v in ("face", "dos"):
+                before = "Prends un des deux téléphones. " + ("Place-le devant le vélo, dans l'axe, à hauteur de guidon. " if v == "face"
+                                                              else "Place-le derrière le vélo, dans l'axe, à hauteur de selle. ")
+            elif prev.startswith("profil") and v.startswith("profil"):
                 before = "Descends du vélo et déplace le trépied de l'autre côté, sans bouger le vélo ; vérifie les pastilles de ce côté. "
             elif v == "face":
                 before = "Place le trépied devant le vélo, dans l'axe, à hauteur de guidon. "
@@ -276,7 +301,8 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
                            duree_s=60, puissance_w=power if trainer else None))
 
     steps.append(_step("import", "import", "Importer les vidéos",
-                       "C'est filmé. Tu peux arrêter de pédaler. Transfère les vidéos du téléphone vers le PC, puis dépose-les ici : "
+                       "C'est filmé. Tu peux arrêter de pédaler. Transfère les vidéos " + ("des deux téléphones" if together else "du téléphone")
+                       + " vers le PC, puis dépose-les ici : "
                        "l'analyse démarre toute seule. Je te préviens quand c'est fini."))
     steps.append(_step("debrief", "debrief", "Débrief et une seule modification",
                        "Les analyses sont terminées. Voici le débrief."))
@@ -293,7 +319,8 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
         "echauffement_min": warmup, "changements": f["changements"],
         "derniere_seance_id": f["derniere_seance"].id if f["derniere_seance"] else None,
         "etapes": steps, "ia": None,
-        "equipement": {"pastilles_vertes": green, "trainer": trainer, "capteur_puissance": meter, "micro": micro, "mire_seule": chart_only},
+        "equipement": {"pastilles_vertes": green, "trainer": trainer, "capteur_puissance": meter, "micro": micro, "mire_seule": chart_only,
+                       "deux_telephones": two_phones},
     }
 
 
