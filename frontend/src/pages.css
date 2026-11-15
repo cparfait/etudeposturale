@@ -272,6 +272,14 @@
 .pp-code b { letter-spacing: 0.12em; color: #0f150e; font-size: 0.92rem; }
 .pp-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .pp-lead { display: flex; gap: 8px; align-items: center; margin: 0; font-weight: 600; font-size: 0.92rem; }
+/* QR code « ouvrir cette page sur le téléphone » */
+.oop { display: flex; gap: 16px; align-items: center; margin-top: 16px; }
+.oop-qr { flex: none; padding: 8px; border-radius: 14px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; min-width: 136px; min-height: 136px; }
+.oop-qr img { width: 120px; height: 120px; display: block; }
+.oop h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+.oop p { margin: 0 0 6px; font-size: 0.86rem; }
+.oop-url { font-family: ui-monospace, monospace; font-size: 0.76rem !important; color: var(--text-3); word-break: break-all; }
+@media (max-width: 760px) { .oop { display: none; } }  /* déjà sur le téléphone */
 .pp-url { margin: 0; font-family: ui-monospace, monospace; font-size: 0.76rem; color: var(--text-3); word-break: break-all; }
 .pp-warn { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 0.8rem; color: var(--warn); line-height: 1.45; }
 .pp-warn svg { flex: none; margin-top: 2px; }

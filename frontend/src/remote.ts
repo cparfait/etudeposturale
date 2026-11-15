@@ -12,14 +12,17 @@ export const ETAT_LABEL: Record<string, string> = {
   connecte: "Relié", pret: "Prêt", enregistre: "Enregistre…", envoi: "Envoi…", envoye: "Vidéo envoyée", erreur: "Erreur",
 };
 
-/** Adresse à mettre dans le QR code : même protocole et même port que l'interface, mais l'IP du PC sur le réseau. */
-export async function phoneUrl(code: string): Promise<{ url: string; ips: string[]; autorite: boolean }> {
+/** Adresse d'une page vue du téléphone : même protocole et même port que l'interface, mais l'IP du PC sur le réseau. */
+export async function lanUrl(path: string): Promise<{ url: string; ips: string[]; autorite: boolean }> {
   const r = await http.get("/remote/address").catch(() => ({ adresses: [], autorite: false }));
   const ips: string[] = r.adresses ?? [];
   const host = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ? ips[0] ?? location.hostname : location.hostname;
   const port = location.port ? `:${location.port}` : "";
-  return { url: `${location.protocol}//${host}${port}/tel?c=${code}`, ips, autorite: !!r.autorite };
+  return { url: `${location.protocol}//${host}${port}${path}`, ips, autorite: !!r.autorite };
 }
+
+/** Adresse à mettre dans le QR code d'une séance. */
+export const phoneUrl = (code: string) => lanUrl(`/tel?c=${code}`);
 
 /** Appairage de la séance et suivi des téléphones (interrogé toutes les 1,5 s). */
 export function useRemote(sid: number | null | undefined) {

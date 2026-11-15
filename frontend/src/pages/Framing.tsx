@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Camera, CheckCircle2, CircleDashed, Maximize2, Minimize2, ShieldAlert, SwitchCamera } from "lucide-react";
 import type { NormalizedLandmark, PoseLandmarker } from "@mediapipe/tasks-vision";
 import FramingGoal from "../components/FramingGoal";
+import OpenOnPhone from "../components/OpenOnPhone";
 
 // Modèle : d'abord une copie locale (public/mediapipe/), sinon le fichier officiel de Google (téléchargé une fois par le navigateur).
 const MODEL_LOCAL = "/mediapipe/pose_landmarker_full.task";
@@ -235,7 +236,7 @@ export default function Framing() {
       {!window.isSecureContext && (
         <div className="alert warn" style={{ marginBottom: 16 }}>
           <ShieldAlert size={18} />
-          <span>Le navigateur n'autorise la caméra qu'en HTTPS (ou sur ce PC via localhost). Pour le téléphone : génère un certificat local avec mkcert (voir README), puis ouvre l'adresse https:// du PC.</span>
+          <span>Le navigateur n'autorise la caméra qu'en HTTPS (ou sur ce PC via localhost). Pour le téléphone : lance scripts\lancer.bat après l'installation (HTTPS automatique), puis scanne le QR code ci-dessous.</span>
         </div>
       )}
 
@@ -267,6 +268,7 @@ export default function Framing() {
           <p className="subtle" style={{ marginTop: 8, fontSize: "0.84rem" }}>{status}. Les pointillés : la hanche doit se trouver entre les deux lignes.</p>
           <FramingGoal />
         </div>
+        <div>
         <section className="card">
           <h2>Contrôles</h2>
           <ul className="checks" style={{ marginTop: 12 }}>
@@ -281,6 +283,10 @@ export default function Framing() {
             Le calcul se fait dans le navigateur (MediaPipe) : l'image ne quitte pas l'appareil. Le modèle (≈ 9 Mo) est téléchargé une fois depuis Google si aucune copie locale n'existe dans <code>public/mediapipe/</code>.
           </p>
         </section>
+          <OpenOnPhone path="/cadrage">
+            <p className="subtle" style={{ fontSize: "0.8rem" }}>Pour filmer depuis le téléphone avec départ lancé par le PC, utilise plutôt le QR code d'une séance (Séances de capture ou Séance guidée).</p>
+          </OpenOnPhone>
+        </div>
       </div>
     </div>
   );
