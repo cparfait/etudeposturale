@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Activity, Camera, Check, ClipboardCheck, FileUp, Gauge, Play, Upload, Video } from "lucide-react";
+import { Activity, Camera, Check, CircleDot, ClipboardCheck, FileUp, Gauge, Play, Smartphone, Square, Upload, Video } from "lucide-react";
 import { http, type Any } from "../api";
 import { useToast } from "../toast";
 import { fmtDate } from "./Sessions";
 import { has, useEquipment } from "../equipment";
+import { useRemote } from "../remote";
+import PhonePairing from "../components/PhonePairing";
 
 const CHECKS = [
   { t: "Pastilles vertes de 20 mm sur le corps (côté caméra)", d: "Grand trochanter, épicondyle du genou, malléole, talon et 5e métatarse (sur la chaussure), acromion, coude, poignet. Repérer cycliste assis, manivelle en bas." },
@@ -50,6 +52,10 @@ export default function SessionDetail() {
   const [engines, setEngines] = useState<Record<string, string>>({});
   const toast = useToast();
   const eq = useEquipment();
+  const remote = useRemote(id ? Number(id) : null);
+  const recording = remote.online.some((d) => d.etat === "enregistre");
+  const sentIds = (remote.pairing?.appareils ?? []).map((d) => d.capture_id).filter(Boolean).join(",");
+  useEffect(() => { if (sentIds) load(); }, [sentIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(() => http.get(`/sessions/${id}`).then(setS).catch((e) => toast(e.message, "error")), [id, toast]);
   useEffect(() => {
@@ -203,6 +209,20 @@ export default function SessionDetail() {
         )}
         </div>
         <div className="stack sd-side">
+          <section className="card">
+            <div className="card-head">
+              <span className="icon-tile"><Smartphone size={19} /></span>
+              <div><h2>Depuis le téléphone</h2><p>Scanne le QR code : le téléphone filme sur commande et envoie la vidéo tout seul.</p></div>
+            </div>
+            <PhonePairing pairing={remote.pairing} onRole={remote.setRole} compact />
+            {remote.online.some((d) => d.secure) && (
+              <div className="row" style={{ marginTop: 12 }}>
+                {recording
+                  ? <button className="btn btn-ghost btn-sm" onClick={() => remote.command("stop", [])}><Square size={14} /> Arrêter l'enregistrement</button>
+                  : <button className="btn btn-primary btn-sm" onClick={() => remote.command("start", [], 60)}><CircleDot size={14} /> Filmer 1 minute</button>}
+              </div>
+            )}
+          </section>
           {has(eq, "mire") && <section className="card">
             <div className="card-head">
               <span className="icon-tile bike"><Camera size={19} /></span>

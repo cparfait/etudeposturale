@@ -10,6 +10,8 @@ import { bluetoothAvailable, connectPower, connectTrainer, type PowerSample, typ
 import { command, handsFree, isSpeaking, micAvailable, onSpeaking, pushToTalk, speak, stopSpeaking, transcribe, type TtsEngine } from "../voice";
 import { streamChat, type ChatMsg } from "../ai";
 import { useEquipment } from "../equipment";
+import { useRemote, ETAT_LABEL, type Device } from "../remote";
+import PhonePairing from "../components/PhonePairing";
 
 type StepType = "info" | "checklist" | "ble" | "timer" | "prise" | "import" | "debrief" | "fin";
 interface Step {
@@ -112,6 +114,13 @@ export default function Guided() {
   }, [toast]);
 
   const step: Step | null = run ? run.plan.etapes[run.idx] : null;
+
+  // Téléphones reliés par QR code : départ et arrêt de l'enregistrement depuis le PC, vidéos reçues toutes seules
+  const remote = useRemote(run?.sid);
+  const remoteRef = useRef(remote);
+  remoteRef.current = remote;
+  const keysOf = (st: Step) => (st.cle ?? "").split("+").filter(Boolean);
+  const phonesFor = (st: Step): Device[] => remoteRef.current.online.filter((d) => d.secure && keysOf(st).includes(d.role));
   const provider = cfg?.fournisseurs?.find((p: Any) => p.id === cfg.fournisseur);
 
   // ------------------------------------------------------------------ navigation
@@ -120,6 +129,12 @@ export default function Guided() {
   const announce = useCallback(async (r: Run) => {
     const st = r.plan.etapes[r.idx];
     let text = st.dire + (st.conseil_ia ? ` ${st.conseil_ia}` : "");
+    const phones = st.type === "prise" ? phonesFor(st) : [];
+    if (phones.length) {
+      const before = st.dire.split("Prise :")[0];
+      text = `${before}Prise : ${st.titre.toLowerCase()}. ${phones.length > 1 ? "Les téléphones sont prêts" : "Le téléphone est prêt"} : `
+        + "rien à toucher. Mets-toi en place, pédale régulièrement, puis dis « c'est parti » : l'enregistrement démarre tout seul et dure une minute.";
+    }
     if (st.type === "checklist" && st.items) {
       const k = r.ticks[st.id] ?? 0;
       if (k < st.items.length) text += ` ${k === 0 ? "Premier point" : "Point suivant"} : ${st.items[k].t}. ${st.items[k].d}`;
@@ -216,7 +231,13 @@ export default function Guided() {
       say(timer.current.acc > 0 ? "On reprend." : `C'est parti pour ${words(st.duree_s ?? 600)}${trainer.current ? `, à ${easy} watts pour commencer` : ""}.`);
     } else {
       trainer.current?.setPower(st.puissance_w ?? target).catch(() => {});
-      say(timer.current.acc > 0 ? "On reprend." : "C'est parti, une minute. Pédale régulièrement.");
+      const phones = phonesFor(st);
+      if (phones.length && timer.current.acc === 0) {
+        remoteRef.current.command("start", keysOf(st), st.duree_s ?? 60).catch(() => {});
+        say(`C'est parti : enregistrement lancé sur ${phones.length > 1 ? "les téléphones" : "le téléphone"}, une minute. Pédale régulièrement.`);
+      } else {
+        say(timer.current.acc > 0 ? "On reprend." : "C'est parti, une minute. Pédale régulièrement.");
+      }
     }
     setNow(performance.now());
   }, [say, setRun, target]);
@@ -261,9 +282,11 @@ export default function Guided() {
         timer.current.acc = total;
         const r = runRef.current!;
         setRun({ ...r, done: { ...r.done, [step.id]: true } });
+        const remoteTake = step.type === "prise" && phonesFor(step).length > 0;
+        if (remoteTake) remoteRef.current.command("stop", keysOf(step)).catch(() => {});
         const msg = step.type === "timer"
           ? "Échauffement terminé. On passe aux prises."
-          : "C'est bon : arrête l'enregistrement sur le téléphone.";
+          : remoteTake ? "C'est bon. Les vidéos partent toutes seules vers le PC." : "C'est bon : arrête l'enregistrement sur le téléphone.";
         speak(msg, ttsRef.current, rate).finally(() => setTimeout(() => { if (runRef.current?.idx === r.idx) next(); }, 1200));
       }
     }, 250);
@@ -313,6 +336,17 @@ export default function Guided() {
     const id = setInterval(loadSess, 2000);
     return () => clearInterval(id);
   }, [step, loadSess]);
+
+  // Vidéos envoyées par les téléphones : rattachées à la prise correspondante
+  useEffect(() => {
+    const r = runRef.current;
+    if (!r || !remote.pairing) return;
+    const add: Record<string, number> = {};
+    for (const d of remote.pairing.appareils) {
+      if (d.capture_id && r.plan.vues.includes(d.role) && r.uploads[d.role] !== d.capture_id) add[d.role] = d.capture_id;
+    }
+    if (Object.keys(add).length) { setRun((x) => ({ ...x, uploads: { ...x.uploads, ...add } })); loadSess(); }
+  }, [remote.pairing, setRun, loadSess]);
 
   const capOf = (key: string) => sess?.captures?.find((c: Any) => c.id === run?.uploads[key]);
   const importDone = !!run && Object.keys(run.uploads).length > 0 && !analysing
@@ -671,6 +705,20 @@ export default function Guided() {
               </ol>
             )}
 
+            {st.id === "camera" && (
+              <div className="gd-phones">
+                <h3>Relier les téléphones <span className="chip">facultatif</span></h3>
+                <p className="subtle">L'enregistrement démarrera depuis le PC (« c'est parti ») et les vidéos arriveront toutes seules : pas de préparation filmée, pas de clap.</p>
+                <PhonePairing pairing={remote.pairing} onRole={remote.setRole} compact />
+              </div>
+            )}
+            {(st.type === "prise" || st.type === "import") && remote.online.length > 0 && (
+              <ul className="gd-phone-chips" aria-label="Téléphones reliés">
+                {remote.online.map((d) => (
+                  <li key={d.id} className={d.etat}><span className="pp-dot" /> {d.role_label} · {ETAT_LABEL[d.etat] ?? d.etat}{!d.secure && " (envoi seul)"}</li>
+                ))}
+              </ul>
+            )}
             {st.lien && <Link to={st.lien} target="_blank" className="btn btn-ghost btn-sm gd-link"><ExternalLink size={14} /> Ouvrir « {st.lien === "/cadrage" ? "Cadrage en direct" : "Étalonnage des pastilles"} »</Link>}
 
             {st.type === "ble" && (

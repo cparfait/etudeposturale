@@ -1,0 +1,183 @@
+"""Téléphones reliés à une séance par QR code : rôle (vue filmée), départ / arrêt de l'enregistrement depuis le PC.
+
+Tout passe par de simples requêtes du téléphone toutes les secondes (pas de WebSocket) ; l'état vit en mémoire
+du serveur local : une appairage dure le temps de la séance. Les vidéos arrivent par l'envoi habituel
+(/api/sessions/{id}/captures) puis l'analyse démarre.
+"""
+from __future__ import annotations
+
+import secrets
+import socket
+import threading
+import time
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlmodel import Session as DB
+
+from posturale.storage import get_session
+from posturale.storage.models import Session as Seance
+
+router = APIRouter(prefix="/api/remote")
+
+ROLES = ("profil_D", "profil_G", "face", "dos")
+ROLE_LABEL = {"profil_D": "Profil droit", "profil_G": "Profil gauche", "face": "Vue de face", "dos": "Vue de dos"}
+ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # sans 0/O ni 1/I
+_lock = threading.Lock()
+_pairs: dict[str, dict[str, Any]] = {}
+STALE_S = 6.0
+
+
+def _now() -> float:
+    return time.time()
+
+
+def _get(code: str) -> dict:
+    p = _pairs.get(code.upper())
+    if not p:
+        raise HTTPException(404, "Code inconnu ou expiré : rescanne le QR code affiché sur le PC.")
+    return p
+
+
+def _device_view(d: dict) -> dict:
+    age = _now() - d["vu"]
+    return {k: d[k] for k in ("id", "nom", "role", "etat", "capture_id", "message", "secure", "fps")} | {
+        "role_label": ROLE_LABEL.get(d["role"], "—"), "connecte": age < STALE_S, "vu_il_y_a_s": round(age, 1)}
+
+
+def _view(code: str, p: dict) -> dict:
+    for did in [k for k, d in p["appareils"].items() if _now() - d["vu"] > 120]:
+        del p["appareils"][did]  # téléphone parti depuis plus de 2 min
+    return {"code": code, "session_id": p["sid"], "commande": p["commande"],
+            "appareils": [_device_view(d) for d in p["appareils"].values()],
+            "roles": [{"id": r, "label": ROLE_LABEL[r]} for r in ROLES]}
+
+
+def lan_addresses() -> list[str]:
+    """Adresses du PC sur le réseau local (pour le QR code), la plus probable en premier."""
+    out: list[str] = []
+    try:  # aucune donnée n'est envoyée : sert seulement à connaître l'interface de sortie
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("192.168.0.1", 9))
+        out.append(s.getsockname()[0])
+        s.close()
+    except OSError:
+        pass
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if ip not in out:
+                out.append(ip)
+    except OSError:
+        pass
+    private = [ip for ip in out if ip.startswith(("192.168.", "10.")) or (ip.startswith("172.") and 16 <= int(ip.split(".")[1]) <= 31)]
+    return private or [ip for ip in out if not ip.startswith("127.")]
+
+
+@router.get("/address")
+def address() -> dict:
+    return {"adresses": lan_addresses()}
+
+
+class PairIn(BaseModel):
+    session_id: int
+
+
+@router.post("", status_code=201)
+def pair(data: PairIn, db: DB = Depends(get_session)) -> dict:
+    """Code d'appairage de la séance (le même tant que le serveur tourne)."""
+    if not db.get(Seance, data.session_id):
+        raise HTTPException(404, "Séance introuvable")
+    with _lock:
+        for code, p in _pairs.items():
+            if p["sid"] == data.session_id:
+                return _view(code, p)
+        code = "".join(secrets.choice(ALPHABET) for _ in range(6))
+        _pairs[code] = {"sid": data.session_id, "appareils": {}, "commande": None, "cree": _now()}
+        return _view(code, _pairs[code])
+
+
+@router.get("/{code}")
+def status(code: str) -> dict:
+    with _lock:
+        return _view(code.upper(), _get(code))
+
+
+class JoinIn(BaseModel):
+    nom: str = "Téléphone"
+    secure: bool = False
+
+
+@router.post("/{code}/join")
+def join(code: str, data: JoinIn) -> dict:
+    with _lock:
+        p = _get(code)
+        taken = {d["role"] for d in p["appareils"].values() if _now() - d["vu"] < STALE_S}
+        role = next((r for r in ROLES if r not in taken), "profil_D")  # 1er téléphone : profil droit, 2e : gauche…
+        did = secrets.token_hex(4)
+        p["appareils"][did] = {"id": did, "nom": data.nom[:40] or "Téléphone", "role": role, "etat": "connecte",
+                               "capture_id": None, "message": "", "secure": data.secure, "fps": None, "vu": _now()}
+        return {"appareil": did, "role": role, "role_label": ROLE_LABEL[role], **_view(code.upper(), p)}
+
+
+class PollIn(BaseModel):
+    appareil: str
+    etat: str = "pret"                 # connecte | pret | enregistre | envoi | envoye | erreur
+    capture_id: Optional[int] = None
+    message: str = ""
+    fps: Optional[float] = None
+
+
+@router.post("/{code}/poll")
+def poll(code: str, data: PollIn) -> dict:
+    """Le téléphone donne son état et reçoit la commande en cours (départ, arrêt)."""
+    with _lock:
+        p = _get(code)
+        d = p["appareils"].get(data.appareil)
+        if not d:
+            raise HTTPException(404, "Téléphone inconnu : rescanne le QR code.")
+        d.update(vu=_now(), etat=data.etat, message=data.message[:200], fps=data.fps)
+        if data.capture_id:
+            d["capture_id"] = data.capture_id
+        cmd = p["commande"]
+        concerned = cmd is not None and (not cmd["cles"] or d["role"] in cmd["cles"])
+        return {"role": d["role"], "role_label": ROLE_LABEL[d["role"]], "session_id": p["sid"],
+                "commande": cmd if concerned else None}
+
+
+class RoleIn(BaseModel):
+    role: str
+
+
+@router.put("/{code}/appareils/{did}")
+def set_role(code: str, did: str, data: RoleIn) -> dict:
+    if data.role not in ROLES:
+        raise HTTPException(400, "Vue inconnue")
+    with _lock:
+        p = _get(code)
+        if did not in p["appareils"]:
+            raise HTTPException(404, "Téléphone inconnu")
+        p["appareils"][did]["role"] = data.role
+        return _view(code.upper(), p)
+
+
+class CommandIn(BaseModel):
+    action: str                         # start | stop
+    cles: list[str] = []               # vues concernées (vide : tous les téléphones)
+    duree_s: float = 60
+
+
+@router.post("/{code}/command")
+def command(code: str, data: CommandIn) -> dict:
+    if data.action not in ("start", "stop"):
+        raise HTTPException(400, "Action inconnue")
+    with _lock:
+        p = _get(code)
+        p["commande"] = {"id": secrets.token_hex(4), "action": data.action, "cles": [c for c in data.cles if c in ROLES],
+                         "duree_s": max(5.0, min(180.0, data.duree_s)), "a": _now()}
+        if data.action == "start":
+            for d in p["appareils"].values():
+                if not p["commande"]["cles"] or d["role"] in p["commande"]["cles"]:
+                    d["capture_id"] = None   # nouvelle prise : l'ancienne vidéo n'est plus celle attendue
+        return _view(code.upper(), p)

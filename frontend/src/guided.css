@@ -166,3 +166,11 @@
   .gd-cmds { gap: 4px; font-size: 0.84rem; }
   .gd-small { font-size: 0.76rem; }
 }
+/* Téléphones reliés */
+.gd-phones { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 14px; border: 1px dashed var(--line-strong); background: var(--surface-2); }
+.gd-phones h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+.gd-phones p { margin: 0; font-size: 0.86rem; }
+.gd-phone-chips { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; flex-wrap: wrap; }
+.gd-phone-chips li { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-size: 0.84rem; font-weight: 600; }
+.gd-phone-chips li.enregistre { background: #dc2626; color: #fff; border-color: transparent; }
+.gd-phone-chips li.envoye { background: var(--ok-soft); color: var(--ok); border-color: transparent; }

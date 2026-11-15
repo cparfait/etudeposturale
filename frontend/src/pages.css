@@ -262,3 +262,56 @@
 .mk-steps li.done b { background: var(--ok); color: #fff; }
 @media (max-width: 900px) { .mk-steps { grid-template-columns: minmax(0, 1fr); } }
 @media (min-width: 1200px) { .mk-steps { margin-bottom: 10px; } .mk-steps li { padding: 7px 10px; font-size: 0.82rem; } }
+
+/* ------------------------------------------------------------------ Téléphones reliés (QR code) */
+.pp { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start; }
+.pp-qr { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; border-radius: 16px; background: #fff; border: 1px solid var(--line); }
+.pp-qr img { width: 168px; height: 168px; display: block; }
+.pp.compact .pp-qr img { width: 128px; height: 128px; }
+.pp-code { font-size: 0.78rem; color: #4b5545; }
+.pp-code b { letter-spacing: 0.12em; color: #0f150e; font-size: 0.92rem; }
+.pp-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pp-lead { display: flex; gap: 8px; align-items: center; margin: 0; font-weight: 600; font-size: 0.92rem; }
+.pp-url { margin: 0; font-family: ui-monospace, monospace; font-size: 0.76rem; color: var(--text-3); word-break: break-all; }
+.pp-warn { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 0.8rem; color: var(--warn); line-height: 1.45; }
+.pp-warn svg { flex: none; margin-top: 2px; }
+.pp-none { margin: 0; font-size: 0.86rem; }
+.pp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pp-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); flex-wrap: wrap; }
+.pp-list li.off { opacity: 0.6; }
+.pp-list .ok { color: var(--ok); }
+.pp-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); flex: none; }
+.pp-dot.enregistre { background: var(--danger); animation: pulse 1s infinite; }
+.pp-dot.envoi { background: var(--warn); }
+.pp-dot.erreur { background: var(--danger); }
+.pp-name { font-weight: 650; font-size: 0.88rem; }
+.pp-role { width: auto; min-width: 150px; padding-top: 6px; padding-bottom: 6px; font-size: 0.84rem; }
+.pp-state { font-size: 0.8rem; color: var(--text-3); margin-left: auto; }
+@media (max-width: 640px) { .pp { grid-template-columns: minmax(0, 1fr); } .pp-qr { justify-self: center; } }
+
+/* Page du téléphone */
+.tel { min-height: 100vh; min-height: 100dvh; background: var(--bg); display: flex; flex-direction: column; gap: 12px; padding: 12px; max-width: 900px; margin: 0 auto; }
+.tel-top { display: flex; align-items: center; gap: 10px; }
+.tel-top .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tel-top small { color: var(--text-3); font-size: 0.78rem; }
+.tel-role { width: auto; font-weight: 650; }
+.tel-view { position: relative; border-radius: 16px; overflow: hidden; background: #000; aspect-ratio: 16 / 9; }
+.tel-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.tel-line { position: absolute; left: 0; right: 0; border-top: 1.5px dashed rgb(255 255 255 / 0.4); pointer-events: none; }
+.tel-badge { position: absolute; left: 10px; top: 10px; padding: 5px 10px; border-radius: 999px; background: rgb(0 0 0 / 0.6); color: #fff; font-size: 0.82rem; font-weight: 700; }
+.tel-rec { position: absolute; right: 10px; top: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #dc2626; color: #fff; font-weight: 800; animation: pulse 1.2s infinite; }
+.tel-fs { position: absolute; right: 10px; bottom: 10px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgb(0 0 0 / 0.55); color: #fff; display: grid; place-items: center; }
+.tel-nocam { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--warn-soft); color: var(--warn); font-size: 0.9rem; }
+.tel-nocam svg { flex: none; margin-top: 2px; }
+.tel-status { display: flex; gap: 10px; align-items: center; padding: 14px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); font-weight: 600; font-size: 0.95rem; }
+.tel-status.enregistre { background: #dc2626; color: #fff; border-color: transparent; }
+.tel-status.envoye { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.tel-status.erreur { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+.tel-bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.tel-bar span { display: block; height: 100%; background: var(--brand); transition: width 0.2s; }
+.tel-msg.bad { color: var(--danger); margin: 0; font-size: 0.88rem; }
+.tel-upload { justify-content: center; cursor: pointer; }
+.sd-side .pp { grid-template-columns: minmax(0, 1fr); }
+.sd-side .pp-qr { flex-direction: row; justify-self: start; gap: 12px; }
+.sd-side .pp-qr img { width: 112px; height: 112px; }
+.pp-err { flex-basis: 100%; font-size: 0.78rem; color: var(--danger); }

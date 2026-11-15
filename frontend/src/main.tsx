@@ -21,6 +21,7 @@ import AISettings from "./pages/AISettings";
 import Guided from "./pages/Guided";
 import Onboarding from "./pages/Onboarding";
 import Equipment from "./pages/Equipment";
+import Phone from "./pages/Phone";
 import { ToastProvider } from "./toast";
 import "./style.css";
 import "./pages.css";
@@ -34,6 +35,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/bienvenue" element={<Onboarding />} />
+          <Route path="/tel" element={<Phone />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/profil" element={<Profile />} />

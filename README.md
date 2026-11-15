@@ -126,6 +126,18 @@ mire, cardio, coach IA). L'outil s'adapte à tes réponses : séance guidée san
 sans micro (barre d'espace), cases .FIT et calibration masquées… Le guide et « Mon équipement » restent dans le menu.
 Les voix off sont générées une fois avec Cartesia (`scripts/generer_audio_onboarding.py`, clé dans `CARTESIA_API_KEY`).
 
+## Téléphones reliés (QR code)
+
+Dans la séance guidée (étape « Installer le téléphone ») ou sur le détail d'une séance, un **QR code** relie chaque téléphone
+à la séance (même Wi-Fi que le PC, aucun compte). Le téléphone reçoit sa vue (profil droit, gauche, face, dos ; modifiable).
+
+- **Enregistrement lancé depuis le PC** : à « c'est parti », les téléphones filment exactement la durée de la prise, puis
+  **envoient la vidéo tout seuls** et l'analyse démarre. La préparation n'est pas filmée, plus besoin de clap.
+- Le navigateur du téléphone n'ouvre la caméra qu'en **HTTPS** : il faut les certificats mkcert (section ci-dessous).
+  Sans HTTPS, le téléphone se relie quand même et peut envoyer une vidéo filmée avec l'appli Appareil photo.
+- L'interface est servie sur le réseau local (`host: true`) : au premier lancement, Windows peut demander d'autoriser Node.js
+  sur les réseaux privés.
+
 ## Séance guidée
 
 Menu « Séance guidée » (ou bouton sur la page Séances). Le plan est construit à partir de tes données :

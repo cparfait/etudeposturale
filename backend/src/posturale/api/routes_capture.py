@@ -36,6 +36,22 @@ def _save_upload(f: UploadFile, folder: str, allowed: set[str]) -> Path:
     return dest
 
 
+def _remux(path: Path) -> Path:
+    """Les vidéos WebM enregistrées par le navigateur n'ont souvent ni durée ni index : copie sans réencodage en .mkv."""
+    import subprocess
+
+    exe = shutil.which("ffmpeg")
+    if not exe:
+        return path
+    out = path.with_suffix(".mkv")
+    r = subprocess.run([exe, "-y", "-loglevel", "error", "-i", str(path), "-c", "copy", str(out)], capture_output=True, timeout=300)
+    if r.returncode == 0 and out.exists() and out.stat().st_size > 0:
+        path.unlink(missing_ok=True)
+        return out
+    out.unlink(missing_ok=True)
+    return path
+
+
 @router.get("/engines")
 def engines() -> dict:
     return available_engines()
@@ -112,6 +128,8 @@ def upload_capture(sid: int, file: UploadFile = File(...), vue: str = Form("prof
     if vue not in ("profil", "face", "dos"):
         raise HTTPException(400, "Vue inconnue (profil, face, dos)")
     dest = _save_upload(file, "videos", VIDEO_EXT)
+    if dest.suffix == ".webm":
+        dest = _remux(dest)  # enregistrement du navigateur : durée et index réécrits pour l'analyse
     try:
         meta = probe(dest).as_dict()
     except ValueError as exc:
