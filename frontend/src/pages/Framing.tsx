@@ -11,7 +11,26 @@ interface Check { id: string; label: string; ok: boolean | null; hint: string }
 
 const BONES = [[11, 12], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28], [27, 31], [28, 32], [11, 13], [13, 15], [12, 14], [14, 16]];
 
-function evaluate(lm: NormalizedLandmark[] | undefined, luminance: number, fps: number | undefined, landscape: boolean): Check[] {
+/** Images par tour de pédale à 90 tr/min : ce qui compte pour mesurer l'extension du genou. */
+const perTurn = (fps: number) => Math.round((fps * 60) / 90);
+
+function fpsCheck(fps: number | undefined, width: number, height: number): Check {
+  const res = width && height ? ` en ${width}×${height}` : "";
+  if (fps == null) return { id: "fps", label: "Images par seconde : mesure en cours…", ok: null, hint: "" };
+  const f = Math.round(fps);
+  if (f >= 50) return { id: "fps", label: `${f} images/s${res} : parfait pour la mesure`, ok: true, hint: "" };
+  if (f >= 24) return {
+    id: "fps", label: `${f} images/s${res} mesurées`, ok: false,
+    hint: `Assez pour cadrer. Pour la mesure : ${perTurn(f)} images par tour de pédale (40 à 60 images/s), donc un genou moins précis `
+      + "et plus de flou. Filme la mesure en 60 images/s si tu peux (téléphone) ; avec cette caméra, éclaire bien : beaucoup de webcams ralentissent dans la pénombre.",
+  };
+  return {
+    id: "fps", label: `Seulement ${f} images/s${res}`, ok: false,
+    hint: "Trop peu pour mesurer : ajoute de la lumière (les webcams baissent la cadence quand il fait sombre), ferme les autres applis qui utilisent la caméra, ou passe sur un téléphone.",
+  };
+}
+
+function evaluate(lm: NormalizedLandmark[] | undefined, luminance: number, fps: number | undefined, landscape: boolean, vw = 0, vh = 0): Check[] {
   const key = [11, 12, 23, 24, 25, 26, 27, 28];
   const vis = lm ? key.every((i) => (lm[i].visibility ?? 0) > 0.5 && lm[i].x > 0.02 && lm[i].x < 0.98 && lm[i].y > 0.02 && lm[i].y < 0.98) : null;
   let height: number | null = null, hip: number | null = null;
@@ -26,7 +45,9 @@ function evaluate(lm: NormalizedLandmark[] | undefined, luminance: number, fps: 
     { id: "taille", label: "Cycliste ni trop petit ni coupé", ok: height == null ? null : height > 0.5 && height < 0.92, hint: height != null && height <= 0.5 ? "Rapproche le trépied (≈ 2,5 m)." : "Recule le trépied (≈ 3 m)." },
     { id: "hauteur", label: "Caméra à hauteur de selle", ok: hip == null ? null : hip > 0.3 && hip < 0.6, hint: hip != null && hip <= 0.3 ? "Baisse le téléphone." : "Monte le téléphone." },
     { id: "lumiere", label: "Éclairage suffisant", ok: luminance > 0.33, hint: "Ajoute de la lumière continue (projecteurs LED), évite le contre-jour." },
-    { id: "fps", label: "60 images/s ou plus", ok: fps == null ? null : fps >= 50, hint: "Le navigateur ne donne pas 60 images/s : c'est normal pour le cadrage, mais filme la mesure avec l'appli Appareil photo en 60 ou 120 images/s." },
+    fpsCheck(fps, vw, vh),
+    { id: "resolution", label: "Image d'au moins 1280 × 720", ok: vw ? vw >= 1280 || vh >= 1280 : null,
+      hint: "Résolution trop basse : les pastilles deviennent trop petites. Choisis une caméra ou un mode en 720p ou 1080p." },
   ];
 }
 
@@ -99,7 +120,24 @@ export default function Framing() {
       const v = video.current!;
       v.srcObject = stream;
       await v.play();
-      const fps = stream.getVideoTracks()[0].getSettings().frameRate;
+      // Cadence réelle : images effectivement reçues (et non la valeur annoncée par la caméra), sur une fenêtre glissante de 2 s
+      let fps: number | undefined;
+      const stamps: number[] = [];
+      type RVFC = (cb: (now: number) => void) => number;
+      const rvfc = (v as unknown as { requestVideoFrameCallback?: RVFC }).requestVideoFrameCallback?.bind(v);
+      let alive = true;
+      if (rvfc) {
+        const onFrame = (now: number) => {
+          if (!alive) return;
+          stamps.push(now);
+          while (stamps.length && now - stamps[0] > 2000) stamps.shift();
+          if (stamps.length > 10 && now - stamps[0] > 1000) fps = ((stamps.length - 1) * 1000) / (now - stamps[0]);
+          rvfc(onFrame);
+        };
+        rvfc(onFrame);
+      } else {
+        fps = stream.getVideoTracks()[0].getSettings().frameRate;  // repli : valeur annoncée
+      }
       setRunning(true);
       setStatus("Cadrage en cours");
       const small = document.createElement("canvas");
@@ -117,7 +155,7 @@ export default function Framing() {
         let sum = 0;
         for (let i = 0; i < px.length; i += 4) sum += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
         const lum = sum / (px.length / 4) / 255;
-        setChecks(evaluate(lm, lum, fps, v.videoWidth >= v.videoHeight));
+        setChecks(evaluate(lm, lum, fps, v.videoWidth >= v.videoHeight, v.videoWidth, v.videoHeight));
         const c = canvas.current!;
         c.width = v.videoWidth; c.height = v.videoHeight;
         const ctx = c.getContext("2d")!;
@@ -138,6 +176,7 @@ export default function Framing() {
       raf = requestAnimationFrame(loop);
       stopRef.current = () => {
         cancelAnimationFrame(raf);
+        alive = false;
         stream.getTracks().forEach((t) => t.stop());
         landmarker.close();
         setRunning(false);
@@ -164,7 +203,7 @@ export default function Framing() {
   };
   const camLabel = (c: MediaDeviceInfo, i: number) => c.label || `Caméra ${i + 1}`;
 
-  const essential = checks.filter((c) => c.id !== "fps");
+  const essential = checks.filter((c) => c.id !== "fps");  // la cadence n'empêche pas de cadrer : elle prévient sur la qualité
   const allOk = running && essential.every((c) => c.ok);
 
   return (
