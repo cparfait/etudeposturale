@@ -174,3 +174,8 @@
 .gd-phone-chips li { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-size: 0.84rem; font-weight: 600; }
 .gd-phone-chips li.enregistre { background: #dc2626; color: #fff; border-color: transparent; }
 .gd-phone-chips li.envoye { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+
+/* Débrief : le réglage en cours vérifié sur les sorties Garmin */
+.gd-road { margin: 12px 0; padding: 12px 14px; border-radius: 14px; background: var(--brand-soft); border: 1px solid var(--line); }
+.gd-road strong { display: flex; align-items: center; gap: 6px; font-size: 0.92rem; }
+.gd-road p { margin: 6px 0 4px; font-size: 0.88rem; line-height: 1.5; }

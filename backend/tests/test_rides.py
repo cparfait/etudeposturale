@@ -80,5 +80,13 @@ def test_import_dedup_and_compare(client):
     assert e["equilibre_gauche_pct"] > 2 and e["asymetrie"] < 0           # plus proche de 50/50
     assert e["w_par_bpm"] > 0                                              # plus de watts pour le même cardio
     assert -2.0 < cmp["avant"]["derive_equilibre"] < -0.5                # la jambe gauche faiblit au fil de la sortie
+    # coach et débrief : résumé des sorties et vérification du dernier réglage sur la route
+    s = R.ai_summary(db)
+    assert s["par_reglage"][-1]["libelle"] == "Selle -5 mm" and s["plus_longue_min"] is not None or s["sorties_90_jours"] == 0
+    v = s["verification_dernier_reglage"]
+    assert "plus symétrique" in v["texte"] and "49/51" in v["texte"] and v["suffisant"] is False and "tendance" in v["texte"]
+    assert R.road_check(cmp, c2["id"])["apres"]["sorties"] == 2 and R.road_check(cmp, c1["id"]) is None
+    from posturale.ai.context import build
+    assert build(db)["sorties_route"]["verification_dernier_reglage"]["apres"]["libelle"] == "Selle -5 mm"
     client.delete(f"/api/rides/{rides[0]['id']}")
     assert len(client.get("/api/rides").json()) == 3

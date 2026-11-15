@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AlertTriangle, ArrowLeft, ArrowRight, Bluetooth, Check, CheckCircle2, ChevronRight, Cloud, Ear, ExternalLink, FileUp, Gauge, Loader2, Lock, Mic,
-  Pause, Play, RotateCcw, Settings2, Sparkles, Square, Stethoscope, Timer, Volume2, VolumeX, Wand2, Wrench, Zap,
+  Pause, Play, RotateCcw, Route, Settings2, Sparkles, Square, Stethoscope, Timer, Volume2, VolumeX, Wand2, Wrench, Zap,
 } from "lucide-react";
 import { http, type Any } from "../api";
 import { useToast } from "../toast";
@@ -392,6 +392,7 @@ export default function Guided() {
       return;
     }
     const q = "Fais-moi le débrief de cette séance guidée : ce qui a été mesuré, la comparaison avec la séance précédente s'il y en a une, "
+      + "ce que montrent les sorties sur la route depuis le dernier réglage (« sur_la_route ») s'il y en a, "
       + "puis explique la modification retenue (« modification ») et comment la vérifier. N'en propose pas d'autre.";
     let text = "";
     try {
@@ -852,6 +853,14 @@ export default function Guided() {
                             ))}
                           </tbody>
                         </table>
+                      </div>
+                    )}
+
+                    {debrief.sur_la_route && (
+                      <div className="gd-road">
+                        <strong><Route size={15} /> Sur la route depuis le dernier réglage</strong>
+                        <p>{debrief.sur_la_route.texte}</p>
+                        <Link className="link gd-small" to="/sorties">Voir mes sorties <ChevronRight size={12} /></Link>
                       </div>
                     )}
 

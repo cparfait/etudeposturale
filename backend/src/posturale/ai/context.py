@@ -27,7 +27,11 @@ Règles :
 4. Douleur forte (≥ 7/10), douleur au repos ou la nuit, gonflement, engourdissement, blessure : recommande de consulter
    un professionnel de santé avant tout réglage. Tu n'es ni médecin ni kinésithérapeute.
 5. Les plages de référence sont indicatives : le confort et l'absence de douleur priment.
-6. Réponses claires et concrètes, sans jargon inutile."""
+6. Réponses claires et concrètes, sans jargon inutile.
+7. « sorties_route » : sorties Garmin importées, rangées par réglage du vélo. Elles servent à vérifier qu'un réglage tient
+   dans la durée (équilibre gauche/droite, dérive en fin de sortie longue, watts par battement) et à relier une douleur à
+   la durée des sorties. Les conditions changent d'une sortie à l'autre : présente un écart comme une tendance, surtout
+   avec moins de 3 sorties d'un côté (« suffisant » à false), jamais comme une preuve."""
 
 VOCAL = """Mode vocal : ta réponse est lue à voix haute pendant que la personne pédale. 2 à 4 phrases courtes, sans markdown,
 sans liste, sans symbole ; nombres simples (« quatre millimètres »)."""
@@ -73,6 +77,15 @@ def _profile_summary(res: dict, metrics: dict) -> dict:
     return out
 
 
+def _rides_summary(db: DB) -> dict | None:
+    from posturale.fit.rides import ai_summary
+
+    try:
+        return ai_summary(db)
+    except Exception:   # une sortie mal lue ne doit pas priver le coach du reste
+        return None
+
+
 def build(db: DB) -> dict[str, Any]:
     """Données envoyées au coach (dict lisible, sans vidéo)."""
     from posturale.api.routes_health import _context  # évite un import circulaire au chargement
@@ -92,6 +105,7 @@ def build(db: DB) -> dict[str, Any]:
         "auto_tests": [_clean(t, ("id", "created_at")) for t in ctx.tests],
         "ressentis_recents": [_clean(f, ("id",)) for f in ctx.ressentis[-3:]],
         "fichier_fit": {k: (ctx.fit or {}).get(k) for k in ("duree_min", "global", "par_heure")} if ctx.fit else None,
+        "sorties_route": _rides_summary(db),
         "equipement": equipment.summary_for_ai(),
         "hypotheses_du_moteur": [{k: h.get(k) for k in ("titre", "categorie", "priorite", "hypothese", "action", "constats", "fiabilite")} for h in evaluate(ctx)],
     }

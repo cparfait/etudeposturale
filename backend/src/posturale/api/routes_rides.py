@@ -10,7 +10,7 @@ from sqlmodel import Session as DB, select
 
 from posturale.fit import rides as R
 from posturale.storage import get_session
-from posturale.storage.models import BikeConfig, FitFile
+from posturale.storage.models import FitFile
 
 router = APIRouter(prefix="/api/rides")
 
@@ -19,11 +19,6 @@ def _rides(db: DB) -> list[FitFile]:
     return list(db.exec(select(FitFile).where(FitFile.session_id == None)))  # noqa: E711 (sorties hors séance)
 
 
-def _view(f: FitFile, configs: list[BikeConfig]) -> dict:
-    s = f.summary or {}
-    c = R.config_for(R._ts(s["debut"]), configs) if s.get("debut") else None
-    return {"id": f.id, "fichier": f.filename, "config_id": c.id if c else None, "config": (c.libelle if c else None),
-            **{k: s.get(k) for k in ("debut", "duree_min", "mouvement_min", "distance_km", "sport", "sous_sport", "global", "par_heure")}}
 
 
 @router.post("/import")
@@ -70,15 +65,13 @@ async def import_rides(file: UploadFile = File(...), db: DB = Depends(get_sessio
 
 @router.get("")
 def list_rides(db: DB = Depends(get_session)) -> list[dict]:
-    configs = list(db.exec(select(BikeConfig)))
-    out = [_view(f, configs) for f in _rides(db)]
-    return sorted(out, key=lambda r: r.get("debut") or "", reverse=True)
+    return R.load(db)[0]
 
 
 @router.get("/compare")
 def compare(db: DB = Depends(get_session)) -> dict:
-    configs = list(db.exec(select(BikeConfig)))
-    return R.compare([_view(f, configs) for f in _rides(db)], configs)
+    rides, configs = R.load(db)
+    return R.compare(rides, configs)
 
 
 @router.delete("/{rid}", status_code=204)

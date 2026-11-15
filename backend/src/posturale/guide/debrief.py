@@ -138,4 +138,16 @@ def build(db: DB, sid: int) -> dict[str, Any]:
         "a_garder_en_tete": [{"titre": h["titre"], "texte": h["action"]} for h in hyps
                              if h.get("categorie") in ("charge", "asymetrie") and h.get("priorite") == "haute"][:2],
         "configuration": {k: v for k, v in (cfg.model_dump() if cfg else {}).items() if k in APPLICABLE or k in ("id", "libelle")},
+        "sur_la_route": _road(db, cfg.id if cfg else None),
     }
+
+
+def _road(db: DB, config_id: int | None) -> dict | None:
+    """Sorties Garmin depuis le dernier réglage, contre celles d'avant (None sans sorties importées)."""
+    from posturale.fit import rides as R
+
+    try:
+        rides, configs = R.load(db)
+        return R.road_check(R.compare(rides, configs), config_id) if rides else None
+    except Exception:
+        return None
