@@ -1,0 +1,29 @@
+<template>
+  <style>
+    @font-face { font-family: "Space Grotesk"; src: url("assets/fonts/SpaceGrotesk.woff2") format("woff2"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3f5f2; font-family: "Inter", sans-serif; color: #121a12; }
+    #root .media { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #root .card { position: absolute; left: 120px; bottom: 110px; padding: 34px 48px 38px 44px; border-radius: 28px; background: #ffffff;
+      box-shadow: 0 18px 50px rgba(18, 26, 18, 0.18); display: flex; gap: 30px; align-items: stretch; }
+    #root .card .bar { width: 12px; border-radius: 6px; background: #b8f34a; }
+    #root .card .k { font-size: 32px; font-weight: 600; color: #4c5a48; letter-spacing: 0.01em; }
+    #root .card .t { font-family: "Space Grotesk", sans-serif; font-size: 96px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.02; margin-top: 6px; }
+    #root .card .s { font-size: 36px; font-weight: 500; color: #3a4637; margin-top: 12px; }
+    #root .ring { position: absolute; border: 7px solid #b8f34a; border-radius: 22px; box-shadow: 0 0 0 4px rgba(18, 26, 18, 0.85); }
+    #root .pr { position: absolute; width: 52px; height: 52px; border-radius: 50%; border: 6px solid; box-shadow: 0 0 0 3px #ffffff; }
+    #root .tag { position: absolute; padding: 14px 24px; border-radius: 16px; background: #121a12; color: #f3f5f2; font-size: 34px; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="c4" data-width="1920" data-height="1080">
+    <video id="c4-v1" class="clip media" src="assets/ecran/cadrage.mp4" data-start="0" data-duration="8.90" data-media-start="1.0" muted playsinline></video>
+    <div id="c4-card" class="clip card-host" data-start="0.2" data-duration="3.6"><div class="card" id="c4-card-in"><div class="bar" id="c4-card-bar"></div><div><div class="k">Étape 4 sur 6</div><div class="t">Le cadrage</div></div></div></div>
+    <audio id="c4-vo-c4a" class="clip" src="assets/voix/c4a.wav" data-start="0.2" data-duration="3.67" data-volume="1"></audio>
+    <audio id="c4-vo-c4b" class="clip" src="assets/voix/c4b.wav" data-start="4.1" data-duration="4.46" data-volume="1"></audio>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#c4-card-in", {x: -70, opacity: 0}, {x: 0, opacity: 1, duration: 0.3, ease: "power3.out"}, 0.2);
+    tl.fromTo("#c4-card-bar", {scaleY: 0, transformOrigin: "50% 100%"}, {scaleY: 1, duration: 0.3, ease: "power3.out"}, 0.30000000000000004);
+    tl.to("#c4-card-in", {x: -40, opacity: 0, duration: 0.2, ease: "power2.in"}, 3.58);
+    window.__timelines["c4"] = tl;
+  </script>
+</template>

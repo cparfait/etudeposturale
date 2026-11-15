@@ -1,0 +1,35 @@
+<template>
+  <style>
+    @font-face { font-family: "Space Grotesk"; src: url("assets/fonts/SpaceGrotesk.woff2") format("woff2"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3f5f2; font-family: "Inter", sans-serif; color: #121a12; }
+    #root .media { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #root .card { position: absolute; left: 120px; bottom: 110px; padding: 34px 48px 38px 44px; border-radius: 28px; background: #ffffff;
+      box-shadow: 0 18px 50px rgba(18, 26, 18, 0.18); display: flex; gap: 30px; align-items: stretch; }
+    #root .card .bar { width: 12px; border-radius: 6px; background: #b8f34a; }
+    #root .card .k { font-size: 32px; font-weight: 600; color: #4c5a48; letter-spacing: 0.01em; }
+    #root .card .t { font-family: "Space Grotesk", sans-serif; font-size: 96px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.02; margin-top: 6px; }
+    #root .card .s { font-size: 36px; font-weight: 500; color: #3a4637; margin-top: 12px; }
+    #root .ring { position: absolute; border: 7px solid #b8f34a; border-radius: 22px; box-shadow: 0 0 0 4px rgba(18, 26, 18, 0.85); }
+    #root .pr { position: absolute; width: 52px; height: 52px; border-radius: 50%; border: 6px solid; box-shadow: 0 0 0 3px #ffffff; }
+    #root .tag { position: absolute; padding: 14px 24px; border-radius: 16px; background: #121a12; color: #f3f5f2; font-size: 34px; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="c6" data-width="1920" data-height="1080">
+    <video id="c6-v1" class="clip media" src="assets/ecran/resultats.mp4" data-start="0" data-duration="10.40" muted playsinline></video>
+    <video id="c6-v2" class="clip media" src="assets/ltx_s/selle.mp4" data-start="10.4" data-duration="5.00" muted playsinline></video>
+    <div id="c6-card" class="clip card-host" data-start="0.2" data-duration="4.0"><div class="card" id="c6-card-in"><div class="bar" id="c6-card-bar"></div><div><div class="k">Étape 6 sur 6</div><div class="t">Les résultats</div></div></div></div>
+    <div id="c6f-card" class="clip card-host" data-start="10.7" data-duration="4.7"><div class="card" id="c6f-card-in"><div class="bar" id="c6f-card-bar"></div><div><div class="k">À retenir</div><div class="t">Un réglage à la fois,<br>puis on vérifie.</div></div></div></div>
+    <audio id="c6-vo-c6a" class="clip" src="assets/voix/c6a.wav" data-start="0.2" data-duration="5.39" data-volume="1"></audio>
+    <audio id="c6-vo-c6b" class="clip" src="assets/voix/c6b.wav" data-start="5.5" data-duration="4.83" data-volume="1"></audio>
+    <audio id="c6-vo-c6c" class="clip" src="assets/voix/c6c.wav" data-start="10.9" data-duration="3.39" data-volume="1"></audio>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#c6-card-in", {x: -70, opacity: 0}, {x: 0, opacity: 1, duration: 0.3, ease: "power3.out"}, 0.2);
+    tl.fromTo("#c6-card-bar", {scaleY: 0, transformOrigin: "50% 100%"}, {scaleY: 1, duration: 0.3, ease: "power3.out"}, 0.30000000000000004);
+    tl.to("#c6-card-in", {x: -40, opacity: 0, duration: 0.2, ease: "power2.in"}, 3.98);
+    tl.fromTo("#c6-v1", {scale: 1, transformOrigin: "735px 395px"}, {scale: 1.7, duration: 1.4, ease: "power2.inOut"}, 4.6);
+    tl.fromTo("#c6f-card-in", {x: -70, opacity: 0}, {x: 0, opacity: 1, duration: 0.3, ease: "power3.out"}, 10.7);
+    tl.fromTo("#c6f-card-bar", {scaleY: 0, transformOrigin: "50% 100%"}, {scaleY: 1, duration: 0.3, ease: "power3.out"}, 10.799999999999999);
+    window.__timelines["c6"] = tl;
+  </script>
+</template>

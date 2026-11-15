@@ -1,0 +1,45 @@
+<template>
+  <style>
+    @font-face { font-family: "Space Grotesk"; src: url("assets/fonts/SpaceGrotesk.woff2") format("woff2"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3f5f2; font-family: "Inter", sans-serif; color: #121a12; }
+    #root .media { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #root .card { position: absolute; left: 120px; bottom: 110px; padding: 34px 48px 38px 44px; border-radius: 28px; background: #ffffff;
+      box-shadow: 0 18px 50px rgba(18, 26, 18, 0.18); display: flex; gap: 30px; align-items: stretch; }
+    #root .card .bar { width: 12px; border-radius: 6px; background: #b8f34a; }
+    #root .card .k { font-size: 32px; font-weight: 600; color: #4c5a48; letter-spacing: 0.01em; }
+    #root .card .t { font-family: "Space Grotesk", sans-serif; font-size: 96px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.02; margin-top: 6px; }
+    #root .card .s { font-size: 36px; font-weight: 500; color: #3a4637; margin-top: 12px; }
+    #root .ring { position: absolute; border: 7px solid #b8f34a; border-radius: 22px; box-shadow: 0 0 0 4px rgba(18, 26, 18, 0.85); }
+    #root .pr { position: absolute; width: 52px; height: 52px; border-radius: 50%; border: 6px solid; box-shadow: 0 0 0 3px #ffffff; }
+    #root .tag { position: absolute; padding: 14px 24px; border-radius: 16px; background: #121a12; color: #f3f5f2; font-size: 34px; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="c2" data-width="1920" data-height="1080">
+    <video id="c2-v1" class="clip media" src="assets/ltx_s/pastille.mp4" data-start="0" data-duration="5.00" muted playsinline></video>
+    <div id="c2-photo" class="clip" data-start="5.0" data-duration="7.0" data-layout-allow-overflow data-layout-allow-overlap><img id="c2-photo-img" src="assets/etalonnage.jpg" alt="" style="position:absolute;left:-22px;top:0;height:1080px;transform-origin:50% 45%"><div class="pr" id="c2-pr0" style="left:1066px;top:256px;border-color:#5f87e6"></div><div class="pr" id="c2-pr1" style="left:868px;top:431px;border-color:#5f87e6"></div><div class="pr" id="c2-pr2" style="left:1072px;top:546px;border-color:#5f87e6"></div><div class="pr" id="c2-pr3" style="left:946px;top:710px;border-color:#5f87e6"></div><div class="pr" id="c2-pr4" style="left:1117px;top:413px;border-color:#5f87e6"></div><div class="pr" id="c2-pr5" style="left:1210px;top:525px;border-color:#5f87e6"></div><div class="pr" id="c2-pr6" style="left:914px;top:750px;border-color:#5f87e6"></div><div class="pr" id="c2-pr7" style="left:992px;top:769px;border-color:#5f87e6"></div><div class="pr" id="c2-pr8" style="left:977px;top:805px;border-color:#e65fc2"></div><div class="pr" id="c2-pr9" style="left:934px;top:881px;border-color:#e65fc2"></div><div id="c2-legend" style="position:absolute;left:96px;top:96px;padding:30px 40px;border-radius:28px;background:#fff;box-shadow:0 18px 50px rgba(18,26,18,.18);display:flex;flex-direction:column;gap:22px"><div id="c2-lb" style="display:flex;gap:20px;align-items:center"><span style="width:44px;height:44px;border-radius:10px;background:#5f87e6"></span><div><div style="font-family:Space Grotesk,sans-serif;font-size:52px;font-weight:650;letter-spacing:-.02em">Le corps</div><div style="font-size:30px;font-weight:500;color:#3a4637">épaule, hanche, genou, cheville…</div></div></div><div id="c2-lp" style="display:flex;gap:20px;align-items:center"><span style="width:44px;height:44px;border-radius:10px;background:#e65fc2"></span><div><div style="font-family:Space Grotesk,sans-serif;font-size:52px;font-weight:650;letter-spacing:-.02em">Le vélo</div><div style="font-size:30px;font-weight:500;color:#3a4637">une autre couleur, bien différente</div></div></div></div></div>
+    <video id="c2-v2" class="clip media" src="assets/ecran/pastilles.mp4" data-start="12.0" data-duration="6.40" data-media-start="0.6" muted playsinline></video>
+    <div id="c2-card" class="clip card-host" data-start="0.2" data-duration="4.6"><div class="card" id="c2-card-in"><div class="bar" id="c2-card-bar"></div><div><div class="k">Étape 2 sur 6</div><div class="t">Les pastilles</div></div></div></div>
+    <audio id="c2-vo-c2a" class="clip" src="assets/voix/c2a.wav" data-start="0.2" data-duration="4.92" data-volume="1"></audio>
+    <audio id="c2-vo-c2b" class="clip" src="assets/voix/c2b.wav" data-start="5.1" data-duration="6.87" data-volume="1"></audio>
+    <audio id="c2-vo-c2c" class="clip" src="assets/voix/c2c.wav" data-start="12.4" data-duration="3.30" data-volume="1"></audio>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#c2-card-in", {x: -70, opacity: 0}, {x: 0, opacity: 1, duration: 0.3, ease: "power3.out"}, 0.2);
+    tl.fromTo("#c2-card-bar", {scaleY: 0, transformOrigin: "50% 100%"}, {scaleY: 1, duration: 0.3, ease: "power3.out"}, 0.30000000000000004);
+    tl.to("#c2-card-in", {x: -40, opacity: 0, duration: 0.2, ease: "power2.in"}, 4.58);
+    tl.fromTo("#c2-pr0", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 5.50);
+    tl.fromTo("#c2-pr1", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 5.82);
+    tl.fromTo("#c2-pr2", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 6.14);
+    tl.fromTo("#c2-pr3", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 6.46);
+    tl.fromTo("#c2-pr4", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 6.78);
+    tl.fromTo("#c2-pr5", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 7.10);
+    tl.fromTo("#c2-pr6", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 7.42);
+    tl.fromTo("#c2-pr7", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 7.74);
+    tl.fromTo("#c2-pr8", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 8.90);
+    tl.fromTo("#c2-pr9", {scale: 2.2, opacity: 0}, {scale: 1, opacity: 1, duration: 0.35, ease: "power3.out"}, 9.25);
+    tl.fromTo("#c2-legend", {opacity: 0, x: -40}, {opacity: 1, x: 0, duration: 0.3, ease: "power3.out"}, 5.1);
+    tl.fromTo("#c2-lp", {opacity: 0.3}, {opacity: 0.3, duration: 0.01}, 5.0);
+    tl.to("#c2-lp", {opacity: 1, duration: 0.3, ease: "power2.out"}, 8.7);
+    window.__timelines["c2"] = tl;
+  </script>
+</template>
