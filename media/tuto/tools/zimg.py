@@ -26,6 +26,15 @@ STILLS = {
               "shoe clipped into the pedal. White helmet, black short-sleeve jersey, black bib shorts. The rider and bike are small in "
               "the frame and centred: they fill only the middle sixty percent of the image height, with a large empty light grey wall "
               "above the helmet and a strip of light floor below the wheels. Camera at saddle height.",
+    "intro": "Wide photograph of a bright modern living room with large windows. In the middle distance, an adult male cyclist "
+             "in a black jersey, black bib shorts and a white helmet rides a plain matte black road bicycle whose rear wheel is clamped "
+             "in a black indoor smart trainer, seen exactly from the side, the bicycle facing right with one handlebar at the front. "
+             "In the left foreground, a black smartphone in landscape orientation sits in a clamp on top of a small black tripod at "
+             "saddle height; we see the back of the phone, its screen faces the cyclist and is not visible. Soft daylight.",
+    "telephone": "Medium shot photograph in a living room: a hand clips a black smartphone in landscape orientation into the clamp "
+                 "on top of a black tripod. Behind it, at a few metres, a plain matte black road bicycle stands on a black indoor smart "
+                 "trainer, seen exactly from the side: two normal round wheels with thin spokes, one drop handlebar at the front, "
+                 "saddle at the back, chain and crankset in the middle. We see the back of the phone; its screen faces the bicycle.",
     "pastille": "Close-up photograph of the outer side of a cyclist's bare knee, sitting on a road bike indoors. A single small "
                 "bright blue square sticker, about two centimetres wide, is stuck on the skin over the knee joint, and a fingertip "
                 "is pressing it flat. Black cycling shorts above the knee. Shallow depth of field.",

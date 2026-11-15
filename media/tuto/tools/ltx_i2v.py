@@ -28,6 +28,11 @@ MOTION = {
     "profil_c": ("profil_1.png", 121, 922, "The cyclist is pedaling fast on the indoor trainer: the cranks spin round and round, "
                  "his knees pump up and down rhythmically, feet clipped in the pedals following the circular motion. Static camera, "
                  "everything else still."),
+    "intro": ("intro_1.png", 121, 931, "The cyclist pedals smoothly at a steady cadence on the indoor trainer, legs turning the "
+              "cranks in full circles, upper body steady. The smartphone on the tripod in the foreground stays perfectly still. "
+              "Static camera, soft daylight."),
+    "telephone": ("telephone_1.png", 97, 932, "The hand gently tightens the clamp around the smartphone on the tripod, then lets go "
+                  "and moves out of frame. The bicycle behind stays perfectly still. Static camera."),
     "pastille": ("pastille_3.png", 97, 802, "The fingertip presses the small blue square sticker flat onto the knee, then slowly "
                  "lifts away, leaving the square sticker on the skin. Subtle natural movement. Static camera."),
     "materiel": ("materiel_3.png", 97, 803, "Very slow, smooth camera push-in towards the objects on the table. Nothing moves."),

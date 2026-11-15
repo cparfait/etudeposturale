@@ -6,8 +6,8 @@ from pathlib import Path
 
 TUTO = Path(__file__).resolve().parent.parent
 SRC, DST = TUTO / "assets" / "ltx", TUTO / "assets" / "ltx_s"
-NEED = {"intro": 6.0, "materiel": 3.0, "pastille": 5.0, "telephone": 4.8, "profil": 5.2, "selle": 5.0}  # secondes à couvrir
-TRIM = {"pastille": (0.0, 2.6), "selle": (0.0, 2.4)}  # (début, durée) gardés : la suite du plan dérive
+NEED = {"intro": 6.0, "materiel": 3.0, "pastille": 5.0, "telephone": 2.6, "profil": 5.2, "selle": 5.0}  # secondes à couvrir
+TRIM = {"pastille": (0.0, 2.6), "selle": (0.0, 2.4), "telephone": (0.0, 1.6)}  # (début, durée) gardés : la suite du plan dérive
 
 
 def dur(p: Path) -> float:
