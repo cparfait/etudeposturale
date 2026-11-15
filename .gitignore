@@ -52,3 +52,4 @@ media/*/renders/
 media/*/work/
 media/*/.thumbnails/
 !frontend/public/tuto/*.mp4
+!frontend/public/tuto/*.jpg
