@@ -14,6 +14,7 @@ import Health from "./pages/Health";
 import Recommendations from "./pages/Recommendations";
 import Report from "./pages/Report";
 import Framing from "./pages/Framing";
+import Rides from "./pages/Rides";
 import Sensors from "./pages/Sensors";
 import Markers from "./pages/Markers";
 import Coach from "./pages/Coach";
@@ -47,6 +48,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/conseils" element={<Recommendations />} />
             <Route path="/rapport" element={<Report />} />
             <Route path="/cadrage" element={<Framing />} />
+            <Route path="/sorties" element={<Rides />} />
             <Route path="/capteurs" element={<Sensors />} />
             <Route path="/pastilles" element={<Markers />} />
             <Route path="/coach" element={<Coach />} />

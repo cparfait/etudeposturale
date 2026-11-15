@@ -354,3 +354,35 @@
 .tuto-close:hover { background: var(--line); }
 .ob-tuto { display: flex; justify-content: center; margin-top: 4px; }
 @media (max-width: 640px) { .tuto-modal { padding: 8px; } .tuto-box { padding: 10px; border-radius: 16px; } }
+
+/* Mes sorties : import .FIT / Garmin Connect, avant / après réglage, liste */
+.rides-layout { display: grid; gap: 16px; align-items: start; }
+@media (min-width: 1200px) { .rides-layout { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr); } }
+.rd-drop { padding: 22px 16px; }
+.rd-folder { margin-top: 8px; }
+.rd-result { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 0.9rem; font-weight: 600; color: var(--brand-text); }
+.rd-err { margin: 6px 0 0; font-size: 0.82rem; color: var(--danger, #c0392b); }
+.rd-howto { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.rd-howto h3 { margin: 0; font-size: 0.95rem; }
+.rd-howto ol { margin: 2px 0 0; padding-left: 20px; font-size: 0.88rem; line-height: 1.55; }
+.rd-howto p { margin: 0; font-size: 0.84rem; line-height: 1.5; }
+.rd-howto svg { vertical-align: -2px; }
+.rd-periods { margin: 4px 0 10px; font-size: 0.86rem; line-height: 1.5; }
+.rd-cmp { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.rd-cmp th, .rd-cmp td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.rd-cmp thead th { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 700; }
+.rd-cmp tbody th { font-weight: 600; }
+.rd-cmp tbody th small { display: block; font-weight: 400; font-size: 0.74rem; color: var(--text-3); }
+.rd-cmp td { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rd-delta { font-weight: 700; white-space: normal !important; }
+.rd-delta.good { color: var(--brand-text); }
+.rd-delta.bad { color: var(--warn); }
+.rd-note { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; font-size: 0.8rem; color: var(--text-3); }
+.rd-note svg { flex: none; margin-top: 2px; }
+.rd-list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.rd-table-wrap { overflow-x: auto; margin-top: 8px; }
+.rd-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.rd-table th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.rd-table td { padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rd-table tr:hover td { background: var(--surface-2, rgba(0,0,0,.02)); }
+.rd-cfg { display: inline-block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; padding: 2px 9px; border-radius: 999px; background: var(--brand-soft); color: var(--brand-text); font-size: 0.76rem; font-weight: 700; }

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sliders, Sparkles, Sun, User, Video, Wand2, Package, GraduationCap } from "lucide-react";
+import { Bike, Bluetooth, Crosshair, FileText, HeartPulse, Home, Lightbulb, Monitor, Moon, Pipette, ShieldCheck, Sliders, Sparkles, Sun, User, Video, Wand2, Package, GraduationCap, Route } from "lucide-react";
 import { useTheme, type ThemeChoice } from "./theme";
 import { loadEquipment, useEquipment } from "./equipment";
 
@@ -35,6 +35,7 @@ const MAIN = [
   { to: "/seance", label: "Séances de capture", short: "Séances", icon: Video, tab: true },
   { to: "/seance-guidee", label: "Séance guidée", short: "Guidée", icon: Wand2 },
   { to: "/sante", label: "Santé et ressentis", short: "Santé", icon: HeartPulse, tab: true },
+  { to: "/sorties", label: "Mes sorties", short: "Sorties", icon: Route },
   { to: "/conseils", label: "Recommandations", short: "Conseils", icon: Lightbulb, tab: true },
   { to: "/coach", label: "Coach IA", short: "Coach", icon: Sparkles, tab: true },
 ];

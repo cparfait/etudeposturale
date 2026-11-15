@@ -32,12 +32,27 @@ def decode_balance(raw: Any) -> float | None:
 
 
 def read_records(path: str | Path) -> list[dict]:
+    return read_file(path)[0]
+
+
+def read_file(path: str | Path) -> tuple[list[dict], dict]:
+    """Enregistrements seconde par seconde + infos de l'activité (sport, distance, temps en mouvement)."""
     import fitdecode
 
     out = []
+    info: dict[str, Any] = {}
     with fitdecode.FitReader(str(path)) as fit:
         for frame in fit:
-            if not isinstance(frame, fitdecode.records.FitDataMessage) or frame.name != "record":
+            if not isinstance(frame, fitdecode.records.FitDataMessage):
+                continue
+            if frame.name in ("session", "sport"):
+                for f in frame.fields:
+                    if f.name in ("sport", "sub_sport") and f.value is not None:
+                        info.setdefault(f.name, str(f.value))
+                    elif f.name in ("total_distance", "total_timer_time") and isinstance(f.value, (int, float)):
+                        info[f.name] = info.get(f.name, 0) + float(f.value)
+                continue
+            if frame.name != "record":
                 continue
             rec: dict[str, Any] = {}
             for f in frame.fields:
@@ -48,7 +63,7 @@ def read_records(path: str | Path) -> list[dict]:
                 if isinstance(ts, datetime) and ts.tzinfo is None:
                     rec["timestamp"] = ts.replace(tzinfo=timezone.utc)
                 out.append(rec)
-    return out
+    return out, info
 
 
 def _avg(values: Iterable) -> float | None:
@@ -108,13 +123,18 @@ def by_hour(recs: list[dict]) -> list[dict]:
 
 
 def summarize_file(path: str | Path, capture_windows: dict[int, tuple[datetime, datetime]] | None = None) -> dict:
-    recs = read_records(path)
+    recs, info = read_file(path)
     if not recs:
         raise ValueError("Aucun enregistrement « record » dans ce fichier .FIT.")
+    duree = round((recs[-1]["timestamp"] - recs[0]["timestamp"]).total_seconds() / 60, 1)
     out = {
         "debut": recs[0]["timestamp"].isoformat(),
         "fin": recs[-1]["timestamp"].isoformat(),
-        "duree_min": round((recs[-1]["timestamp"] - recs[0]["timestamp"]).total_seconds() / 60, 1),
+        "duree_min": duree,
+        "sport": info.get("sport"),
+        "sous_sport": info.get("sub_sport"),
+        "distance_km": round(info["total_distance"] / 1000, 1) if info.get("total_distance") else None,
+        "mouvement_min": round(info["total_timer_time"] / 60, 1) if info.get("total_timer_time") else duree,
         "global": summarize(recs),
         "par_heure": by_hour(recs),
         "prises": {},
