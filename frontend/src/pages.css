@@ -215,3 +215,23 @@
   .an-left .mtable th, .an-left .mtable td { padding: 6px 6px; }
   .an-left .mtable th:nth-child(4), .an-left .mtable td:nth-child(4) { display: none; }  /* fiabilité au survol de la ligne */
 }
+/* Cadrage en plein écran : l'image remplit l'écran, les contrôles sont par-dessus */
+.live-fs-btn { position: absolute; left: 14px; top: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.25); background: rgb(0 0 0 / 0.55); color: #fff; font: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer; backdrop-filter: blur(6px); }
+.live-fs-btn:focus-visible { box-shadow: var(--focus); outline: none; }
+.live.is-fs { position: fixed; inset: 0; z-index: 300; border-radius: 0; aspect-ratio: auto; width: 100vw; height: 100vh; height: 100dvh; }
+.live:fullscreen { border-radius: 0; aspect-ratio: auto; }
+.live.is-fs .big-light { font-size: 1.15rem; padding: 12px 20px; top: 18px; right: 18px; }
+.live-todo { position: absolute; left: 16px; bottom: 16px; max-width: min(560px, calc(100% - 32px)); list-style: none; margin: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
+  border-radius: 16px; background: rgb(8 12 8 / 0.72); color: #fff; backdrop-filter: blur(8px); font-size: 1rem; }
+.live-todo li { display: flex; gap: 10px; align-items: flex-start; }
+.live-todo li svg { flex: none; margin-top: 2px; color: rgb(255 255 255 / 0.6); }
+.live-todo li.ok svg { color: #4ade80; }
+.live-todo li.ok strong { color: rgb(255 255 255 / 0.65); font-weight: 600; }
+.live-todo li.ko svg { color: #fbbf24; }
+.live-todo em { display: block; font-style: normal; font-size: 0.9rem; color: #fde68a; margin-top: 2px; }
+@media (max-width: 640px) { .live-todo { font-size: 0.9rem; padding: 10px 12px; left: 10px; bottom: 10px; } }
+.live.is-fs .live-todo { font-size: clamp(1rem, 2.1vw, 1.7rem); gap: 0.5em; padding: 0.8em 1em; max-width: min(46em, calc(100% - 32px)); }
+.live.is-fs .live-todo em { font-size: 0.85em; }
+.live.is-fs .live-todo svg { width: 1.1em; height: 1.1em; }
+.live.is-fs .big-light { font-size: clamp(1rem, 2.2vw, 1.8rem); padding: 0.55em 1em; }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, CircleDashed, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, CircleDashed, Maximize2, Minimize2, ShieldAlert } from "lucide-react";
 import type { NormalizedLandmark, PoseLandmarker } from "@mediapipe/tasks-vision";
 
 // Modèle : d'abord une copie locale (public/mediapipe/), sinon le fichier officiel de Google (téléchargé une fois par le navigateur).
@@ -36,8 +36,31 @@ export default function Framing() {
   const [checks, setChecks] = useState<Check[]>(() => evaluate(undefined, 0, undefined, true));
   const [running, setRunning] = useState(false);
   const stopRef = useRef<() => void>(() => {});
+  const liveRef = useRef<HTMLDivElement>(null);
+  const [fs, setFs] = useState(false);          // plein écran (API du navigateur ou repli CSS sur iPhone)
+  const wake = useRef<{ release: () => Promise<void> } | null>(null);
 
   useEffect(() => () => stopRef.current(), []);
+  useEffect(() => {
+    const onChange = () => { if (!document.fullscreenElement) setFs(false); };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  async function toggleFullscreen() {
+    if (fs) {
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
+      setFs(false);
+      return;
+    }
+    const el = liveRef.current;
+    try { if (el?.requestFullscreen) await el.requestFullscreen(); } catch { /* repli CSS ci-dessous */ }
+    setFs(true);
+    // Sur téléphone : rester en paysage et garder l'écran allumé pendant l'étalonnage (si le navigateur le permet)
+    try { await (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.("landscape"); } catch { /* non pris en charge */ }
+    try { wake.current = await (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request("screen") ?? null; } catch { /* non pris en charge */ }
+  }
+  useEffect(() => { if (!fs) { wake.current?.release().catch(() => {}); wake.current = null; } }, [fs]);
 
   async function start() {
     try {
@@ -116,7 +139,12 @@ export default function Framing() {
           <h1>Cadrage en direct</h1>
           <p>Ouvre cette page sur le téléphone posé sur son trépied : quand tout est vert, passe dans l'appli Appareil photo pour filmer la mesure.</p>
         </div>
-        {running ? <button className="btn btn-ghost" onClick={() => stopRef.current()}>Arrêter</button>
+        {running ? (
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn btn-primary" onClick={toggleFullscreen}><Maximize2 size={16} /> Plein écran</button>
+            <button className="btn btn-ghost" onClick={() => stopRef.current()}>Arrêter</button>
+          </div>
+        )
           : <button className="btn btn-primary" onClick={start}><Camera size={17} /> Démarrer la caméra</button>}
       </header>
 
@@ -129,10 +157,25 @@ export default function Framing() {
 
       <div className="bike-layout">
         <div>
-          <div className="live">
+          <div className={`live${fs ? " is-fs" : ""}`} ref={liveRef}>
             <video ref={video} playsInline muted />
             <canvas ref={canvas} aria-hidden="true" />
             {running && <span className={`big-light ${allOk ? "go" : "wait"}`}>{allOk ? "Feu vert : tu peux filmer" : "Ajuste le cadrage"}</span>}
+            {running && (
+              <button type="button" className="live-fs-btn" onClick={toggleFullscreen} aria-label={fs ? "Quitter le plein écran" : "Plein écran"}>
+                {fs ? <Minimize2 size={18} /> : <Maximize2 size={18} />}{fs && " Quitter"}
+              </button>
+            )}
+            {running && fs && essential.some((c) => !c.ok) && (
+              <ul className="live-todo" aria-live="polite">
+                {essential.filter((c) => !c.ok).map((c) => (
+                  <li key={c.id} className={c.ok ? "ok" : c.ok === false ? "ko" : ""}>
+                    {c.ok ? <CheckCircle2 size={18} /> : c.ok === false ? <AlertTriangle size={18} /> : <CircleDashed size={18} />}
+                    <span><strong>{c.label}</strong>{c.ok === false && <em>{c.hint}</em>}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <p className="subtle" style={{ marginTop: 8, fontSize: "0.84rem" }}>{status}. Les pointillés : la hanche doit se trouver entre les deux lignes.</p>
         </div>
