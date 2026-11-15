@@ -32,7 +32,25 @@ function fpsCheck(fps: number | undefined, width: number, height: number): Check
   };
 }
 
-function evaluate(lm: NormalizedLandmark[] | undefined, luminance: number, fps: number | undefined, landscape: boolean, vw = 0, vh = 0): Check[] {
+/**
+ * Le squelette ressemble-t-il à une personne sur un vélo ? MediaPipe « voit » parfois un corps dans une fourche ou
+ * une roue : on exige épaule au-dessus de la hanche, cheville sous la hanche, et des proportions cuisse / jambe / buste
+ * plausibles (côté le plus visible, distances corrigées du format de l'image).
+ */
+function plausibleRider(lm: NormalizedLandmark[], aspect: number): boolean {
+  const near = (a: number, b: number) => ((lm[a].visibility ?? 0) >= (lm[b].visibility ?? 0) ? lm[a] : lm[b]);
+  const [S, H, K, A] = [near(11, 12), near(23, 24), near(25, 26), near(27, 28)];
+  if ([S, H, K, A].some((p) => (p.visibility ?? 0) < 0.5)) return false;
+  const dist = (p: NormalizedLandmark, q: NormalizedLandmark) => Math.hypot((p.x - q.x) * aspect, p.y - q.y);
+  const thigh = dist(H, K), shank = dist(K, A), torso = dist(S, H);
+  if (thigh < 0.03) return false;
+  return S.y < H.y - 0.04 && A.y > H.y + 0.08 && K.y > H.y - 0.1
+    && shank / thigh > 0.55 && shank / thigh < 1.9 && torso / thigh > 0.6 && torso / thigh < 2.6;
+}
+
+function evaluate(raw: NormalizedLandmark[] | undefined, luminance: number, fps: number | undefined, landscape: boolean, vw = 0, vh = 0): Check[] {
+  const rider = raw ? plausibleRider(raw, vw && vh ? vw / vh : 16 / 9) : null;
+  const lm = rider ? raw : undefined;      // une forme non plausible ne compte pas comme un cycliste
   // De profil, le côté opposé est caché par le corps : pour chaque paire (épaules, hanches, genoux, chevilles),
   // le point le plus visible suffit, à condition qu'il soit dans l'image avec une marge.
   const pairs = [[11, 12], [23, 24], [25, 26], [27, 28]];
@@ -49,6 +67,8 @@ function evaluate(lm: NormalizedLandmark[] | undefined, luminance: number, fps: 
   }
   return [
     { id: "paysage", label: "Téléphone en paysage", ok: landscape, hint: "Tourne le téléphone à l'horizontale." },
+    { id: "cycliste", label: rider === false ? "Pas de cycliste reconnu" : "Cycliste sur le vélo", ok: raw ? rider : null,
+      hint: "Monte sur le vélo, de profil. Si tu y es déjà : la forme vue n'a pas des proportions humaines (reflet, fourche, personne coupée) ; recule la caméra pour voir des épaules aux pieds." },
     { id: "corps", label: "Corps entier visible", ok: vis, hint: "Épaules, hanches, genoux et chevilles doivent être dans l'image, avec une marge." },
     { id: "taille", label: "Cycliste ni trop petit ni coupé", ok: height == null ? null : height > 0.5 && height < 0.92, hint: height != null && height <= 0.5 ? "Rapproche le trépied (≈ 2,5 m)." : "Recule le trépied (≈ 3 m)." },
     { id: "hauteur", label: "Caméra à hauteur de selle", ok: hip == null ? null : hip > 0.3 && hip < 0.6, hint: hip != null && hip <= 0.3 ? "Baisse le téléphone." : "Monte le téléphone." },
