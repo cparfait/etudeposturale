@@ -671,7 +671,7 @@ export default function Guided() {
               </ol>
             )}
 
-            {st.lien && <Link to={st.lien} target="_blank" className="btn btn-ghost btn-sm gd-link"><ExternalLink size={14} /> Ouvrir « {st.lien === "/cadrage" ? "Cadrage en direct" : "Contrôle des pastilles"} »</Link>}
+            {st.lien && <Link to={st.lien} target="_blank" className="btn btn-ghost btn-sm gd-link"><ExternalLink size={14} /> Ouvrir « {st.lien === "/cadrage" ? "Cadrage en direct" : "Étalonnage des pastilles"} »</Link>}
 
             {st.type === "ble" && (
               <div className="gd-ble">

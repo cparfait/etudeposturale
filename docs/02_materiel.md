@@ -7,7 +7,7 @@
 | Matériel | Rôle | Prix |
 |---|---|---|
 | Trépied (montant à ~1 m au moins, rotule) + pince smartphone | Pixel 10 Pro fixe, perpendiculaire, à hauteur de selle | 20–40 € |
-| Pastilles rondes adhésives fluo 15–20 mm (vert + orange) ou kinésio colorée découpée | Marquer trochanter, genou, malléole, talon, 5e métatarse, épaule, coude, poignet | 5–10 € |
+| **Le mieux : bande de kinésiologie** découpée en carrés de 2 cm (tient sur la peau qui transpire), une couleur pour le corps et une pour le vélo : **bleu + rose** (les plus faciles à trouver) ou vert + orange, à choisir dans l'app. Sinon gommettes mates de 19–20 mm. Pas de longues bandes : l'app repère des points (ronds ou carrés). À 2,5–3 m en 1080p, une pastille de 20 mm fait ≈ 9 px de large (seuil de détection ≈ 4 px) ; au-delà de 25 mm, le centre s'éloigne du repère osseux | Marquer trochanter, genou, malléole, talon, 5e métatarse, épaule, coude, poignet | 5–10 € |
 | **Mire ChArUco** imprimée (fichiers dans [`calibration/`](../calibration/)) + contrecollage sur Forex/Dibond/carton plume | Échelle en mm, distorsion de l'objectif, perpendicularité | 15–30 € |
 | 2 projecteurs LED continus **sans scintillement**, IRC > 90 | Image nette à 60–120 fps | 30–60 € |
 | Goniomètre à grands bras (30 cm) | Vérifier les angles mesurés | 10–15 € |

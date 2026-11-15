@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ImagePlus, Pipette, RotateCcw, Save, Video } from "lucide-react";
+import { AlertTriangle, Check, ImagePlus, Pipette, RotateCcw, Save, Video } from "lucide-react";
 import { http, type Any } from "../api";
+import StickerColors from "../components/StickerColors";
+import { loadEquipment } from "../equipment";
 import { useToast } from "../toast";
 
 type HSV = [number, number, number];
@@ -10,8 +12,6 @@ type Colors = Record<Key, Range>;
 interface Frame { token: string; largeur: number; hauteur: number; image: string }
 interface Result { pastilles: [number, number][]; masque: string; couverture_pct: number }
 
-const LABEL: Record<Key, string> = { vert: "Pastilles du corps (vert)", orange: "Repères du vélo (orange)" };
-const TINT: Record<Key, string> = { vert: "#a3e635", orange: "#f97316" };
 const VIEWS = [
   { id: "profil", label: "Profil", vert: 8, orange: 2, aide: "8 vertes (trochanter, genou, malléole, talon, 5e métatarse, épaule, coude, poignet) et 2 orange (axe de pédale, pédalier)." },
   { id: "face", label: "Face", vert: 4, orange: 0, aide: "4 vertes : centre des deux rotules et des deux 2es orteils." },
@@ -83,9 +83,17 @@ export default function Markers() {
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
   const canvas = useRef<HTMLCanvasElement | null>(null);
+  const [names, setNames] = useState({ corps: "vertes", corps1: "verte", velo: "orange", velo1: "orange", teinte_corps: "#a3e635", teinte_velo: "#f97316" });
+  const upper = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+  const TINT: Record<Key, string> = { vert: names.teinte_corps, orange: names.teinte_velo };
+  const LABEL: Record<Key, string> = { vert: `Pastilles du corps (${names.corps})`, orange: `Repères du vélo (${names.velo})` };
+  const SHORT: Record<Key, string> = { vert: upper(names.corps1), orange: upper(names.velo1) };
+  const aide = (txt: string) => txt.replace(/vertes/g, names.corps).replace(/ orange/g, ` ${names.velo}`);
+  const [info, setInfo] = useState<Any | null>(null);
+  const applyColors = (c: Any) => { setSaved(c.actuel); setDefaults(c.defaut); setColors(c.actuel); setNames(c.noms); setInfo(c); };
 
   useEffect(() => {
-    http.get("/markers/colors").then((c) => { setSaved(c.actuel); setDefaults(c.defaut); setColors(c.actuel); });
+    http.get("/markers/colors").then(applyColors);
     http.get("/sessions").then((ss: Any[]) => setCaptures(ss.flatMap((s) => s.captures.map((c: Any) => ({ ...c, seance: s })))));
   }, []);
 
@@ -139,7 +147,7 @@ export default function Markers() {
     setPicked({ hsv, rgb: `rgb(${r} ${g} ${b})` });
     if (pick) {
       setColors({ ...colors, [pick]: rangeAround(hsv) });
-      toast(`Plage ${pick === "vert" ? "du vert" : "de l'orange"} recentrée sur la couleur relevée`);
+      toast(`Plage des pastilles ${pick === "vert" ? names.corps : names.velo} recentrée sur la couleur relevée`);
       setPick(null);
     }
   }
@@ -156,13 +164,15 @@ export default function Markers() {
   async function save() {
     try {
       const c = await http.put("/markers/colors", colors);
-      setSaved(c.actuel); setColors(c.actuel);
-      toast("Couleurs enregistrées : elles serviront aux prochaines analyses");
+      applyColors(c);
+      setInfo(c);
+      await loadEquipment(true).catch(() => {});
+      toast(`Couleurs étalonnées : pastilles ${c.noms.corps} pour le corps, ${c.noms.velo} pour le vélo`);
     } catch (e) { toast((e as Error).message, "error"); }
   }
   async function reset() {
     const c = await http.del("/markers/colors").then(() => http.get("/markers/colors"));
-    setSaved(c.actuel); setColors(c.actuel);
+    applyColors(c); setInfo(c);
     toast("Valeurs par défaut rétablies");
   }
 
@@ -186,11 +196,19 @@ export default function Markers() {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Avant la première analyse</div>
-          <h1>Contrôle des pastilles</h1>
-          <p>Les couleurs changent avec l'éclairage. Sur une image de ta vraie vidéo, vérifie que chaque pastille est trouvée — et rien d'autre — puis enregistre : les prochaines analyses utiliseront ces réglages.</p>
+          <div className="eyebrow">Avant la première séance</div>
+          <h1>Étalonnage des pastilles</h1>
+          <p>Couleurs libres, si celles du corps et du vélo sont bien différentes : l'application les apprend ici. À refaire si tu changes de pastilles ou d'éclairage.</p>
         </div>
       </header>
+      <ol className="mk-steps">
+        <li className={frame ? "done" : "current"}><b>1</b> Une photo de toi sur le vélo, pastilles posées (ou une image d'une vidéo)</li>
+        <li className={frame ? "current" : ""}><b>2</b> « Pipette » : clique sur une pastille du corps, puis sur une du vélo</li>
+        <li className={dirty ? "current" : ""}><b>3</b> Vérifie le compte de pastilles, puis « Enregistrer »</li>
+      </ol>
+      {info?.trop_proches && (
+        <div className="alert warn" style={{ marginBottom: 12 }}><AlertTriangle size={16} /><span>Les deux couleurs sont trop proches (écart de teinte {info.ecart_teinte}) : l'application risque de les confondre. Choisis des pastilles plus différentes.</span></div>
+      )}
 
       <div className="mk-layout">
         <section className="stack">
@@ -231,13 +249,13 @@ export default function Markers() {
                     )))}
                   </svg>
                 )}
-                {pick && <div className="mk-hint"><Pipette size={14} /> Clique au centre d'une pastille {pick === "vert" ? "verte" : "orange"}</div>}
+                {pick && <div className="mk-hint"><Pipette size={14} /> Clique au centre d'une pastille {pick === "vert" ? names.corps1 : names.velo1}</div>}
               </div>
 
               <div className="row mk-toolbar">
                 {(["vert", "orange"] as Key[]).map((k) => (
                   <button key={k} className={`chip ${k === "vert" ? "brand" : "bike"} mk-toggle`} aria-pressed={show[k]} onClick={() => setShow({ ...show, [k]: !show[k] })}>
-                    <span className="mk-sw" style={{ background: TINT[k] }} /> {k === "vert" ? "Vert" : "Orange"} · {result?.[k].pastilles.length ?? "…"}
+                    <span className="mk-sw" style={{ background: TINT[k] }} /> {SHORT[k]} · {result?.[k].pastilles.length ?? "…"}
                   </button>
                 ))}
                 {picked && (
@@ -260,7 +278,7 @@ export default function Markers() {
                   {verdict.map(({ k, n, want, tone, msg }) => (
                     <div key={k} className={`alert ${tone === "ok" ? "ok" : tone === "warn" ? "warn" : "danger"}`}>
                       {tone === "ok" ? <Check size={17} /> : <span className="mk-sw" style={{ background: TINT[k], marginTop: 3 }} />}
-                      <span><strong>{k === "vert" ? "Vert" : "Orange"} : {n} / {want}</strong> — {msg}</span>
+                      <span><strong>{SHORT[k]} : {n} / {want}</strong> — {msg}</span>
                     </div>
                   ))}
                 </div>
@@ -275,7 +293,8 @@ export default function Markers() {
             <div className="segmented">
               {VIEWS.map((x) => <button key={x.id} aria-pressed={view === x.id} onClick={() => setView(x.id)}>{x.label}</button>)}
             </div>
-            <p className="subtle" style={{ fontSize: "0.84rem", marginBottom: 0 }}>{v.aide}</p>
+            <p className="subtle" style={{ fontSize: "0.84rem", marginBottom: 0 }}>{aide(v.aide)}</p>
+            <div style={{ marginTop: 12 }}><StickerColors compact onChange={applyColors} /></div>
           </div>
 
           {(["vert", "orange"] as Key[]).map((k) => (

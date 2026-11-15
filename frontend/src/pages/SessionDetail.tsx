@@ -7,8 +7,8 @@ import { fmtDate } from "./Sessions";
 import { has, useEquipment } from "../equipment";
 
 const CHECKS = [
-  { t: "Pastilles vertes sur le corps (côté caméra)", d: "Grand trochanter, épicondyle du genou, malléole, talon et 5e métatarse (sur la chaussure), acromion, coude, poignet. Repérer cycliste assis, manivelle en bas." },
-  { t: "Pastilles orange sur le vélo", d: "Une sur l'axe de pédalier (centre du plateau), une sur le bout de l'axe de pédale côté caméra. Elles donnent l'angle de manivelle ET l'échelle en mm." },
+  { t: "Pastilles vertes de 20 mm sur le corps (côté caméra)", d: "Grand trochanter, épicondyle du genou, malléole, talon et 5e métatarse (sur la chaussure), acromion, coude, poignet. Repérer cycliste assis, manivelle en bas." },
+  { t: "Pastilles orange de 20 mm sur le vélo", d: "Une sur l'axe de pédalier (centre du plateau), une sur le bout de l'axe de pédale côté caméra. Elles donnent l'angle de manivelle ET l'échelle en mm." },
   { t: "Vélo de niveau, marques au sol", d: "Niveau à bulle sur la base ; ruban adhésif sous la roue arrière et les pieds du trépied pour refaire exactement la même prise." },
   { t: "Téléphone : objectif 1x, 1080p, 60 ou 120 fps", d: "Stabilisation et HDR coupés, mise au point et exposition verrouillées (appui long). Jamais l'ultra grand-angle 0,5x." },
   { t: "Trépied à 2,5–3 m, à hauteur de selle, bien de face", d: "Utilise la page « Cadrage en direct » pour le feu vert. Mire ChArUco (optionnelle) posée contre le cadre, dans le plan du vélo." },
@@ -115,7 +115,8 @@ export default function SessionDetail() {
 
   if (!s) return <div className="page"><p className="subtle">Chargement…</p></div>;
   // Adapté à l'équipement : sans pastilles vertes, sans home trainer connecté
-  const checks = CHECKS.map((c, i) => ({ ...c, i, d: c.t.startsWith("Échauffement") && !has(eq, "trainer_connecte")
+  const col = eq?.pastilles ?? { corps: "vertes", velo: "orange" };
+  const checks = CHECKS.map((c, i) => ({ ...c, i, t: c.t.replace("vertes", col.corps).replace("orange", col.velo), d: c.t.startsWith("Échauffement") && !has(eq, "trainer_connecte")
     ? "Résistance fixe sur le home trainer (la même à chaque séance), cadence 85–95 tr/min, mains sur les cocottes." : c.d }))
     .filter((c) => !(c.i === 0 && !has(eq, "pastilles_vertes")));
   const nextCheck = checks.find((c) => !done[c.i])?.i;  // seule la prochaine étape montre son explication

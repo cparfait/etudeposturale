@@ -45,7 +45,7 @@ def test_plan_adapts_to_equipment(client):
     assert "watts" not in steps["accueil"]["dire"] and "barre d'espace" in steps["accueil"]["dire"]
     assert all("Dis «" not in s["dire"] for s in p["etapes"])
     assert p["equipement"] == {"pastilles_vertes": False, "trainer": False, "capteur_puissance": False, "micro": False, "mire_seule": True}
-    assert any("pastilles vertes" in r for r in p["raisons"])
+    assert any("Sans pastilles « corps »" in r for r in p["raisons"])
 
 
 def test_power_meter_without_trainer(client):
@@ -62,7 +62,7 @@ def test_equipment_in_ai_context(client):
     client.put("/api/equipment", json={"items": {"pastilles_orange": False, "micro": True}})
     with Session(get_engine()) as db:
         data = context.build(db)
-    assert data["equipement"]["obligatoires_manquants"] == ["Pastilles orange (2 par côté filmé)"]
+    assert data["equipement"]["obligatoires_manquants"] == ["Pastilles « vélo » de 20 mm (2 par côté filmé)"]
 
 
 def test_cartesia_key_and_tts(client, monkeypatch, tmp_path):

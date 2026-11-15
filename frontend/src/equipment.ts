@@ -10,6 +10,7 @@ export interface Equipment {
   catalogue: Item[];
   manquants: string[];
   adaptations: { id: string; nom: string; texte: string }[];
+  pastilles: { preset: string; corps: string; corps1: string; velo: string; velo1: string; teinte_corps: string; teinte_velo: string };
   repondu: number;
   total: number;
   pret: boolean;

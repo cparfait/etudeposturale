@@ -13,7 +13,7 @@ export default function Equipment() {
         <div>
           <div className="eyebrow">Avant de filmer</div>
           <h1>Mon équipement</h1>
-          <p>Indique ce que tu as : l'outil adapte la séance guidée et les écrans. Seul le matériel marqué « obligatoire » est indispensable pour mesurer.</p>
+          <p>Indique ce que tu as : l'outil s'adapte. Seul le matériel « obligatoire » est indispensable. Pastilles : deux couleurs vives au choix, apprises dans <Link className="link" to="/pastilles">l'étalonnage</Link>.</p>
         </div>
         <Link to="/bienvenue" className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}><GraduationCap size={15} /> Guide de démarrage</Link>
       </header>

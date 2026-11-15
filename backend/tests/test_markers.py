@@ -56,3 +56,31 @@ def test_tuning_flow(client):
     bad = {**cols["actuel"], "vert": {"lo": [30, 200, 90], "hi": [80, 100, 255]}}
     assert client.put("/api/markers/colors", json=bad).status_code == 400
     assert client.post("/api/markers/test", json={"token": "abc", **cols["actuel"]}).status_code == 404
+
+
+def test_blue_pink_preset_and_squares(tmp_path, monkeypatch):
+    """Bande de kiné bleue et rose, en petits carrés : détectées avec le jeu « bleu + rose »."""
+    import cv2
+    import numpy as np
+
+    from posturale.pose import markers
+
+    monkeypatch.setenv("POSTURALE_DATA", str(tmp_path))
+    assert markers.current_preset() == "vert_orange" and markers.sticker_names()["velo"] == "« vélo »"  # pas encore étalonné
+    markers.apply_preset("bleu_rose")
+    assert markers.current_preset() == "bleu_rose" and markers.sticker_names()["corps"] == "bleues"
+    img = np.full((360, 640, 3), (90, 110, 130), np.uint8)              # fond neutre
+    cv2.rectangle(img, (100, 100), (114, 114), (220, 90, 30), -1)        # carré bleu (BGR)
+    cv2.rectangle(img, (300, 200), (314, 214), (180, 60, 235), -1)      # carré rose
+    cv2.circle(img, (500, 120), 7, (40, 200, 60), -1)                    # rond vert : ne doit plus compter
+    r = markers.current_ranges()
+    blue, pink = markers.detect_blobs(img, r["vert"]), markers.detect_blobs(img, r["orange"])
+    assert len(blue) == 1 and abs(blue[0][0] - 107) < 2 and abs(blue[0][1] - 107) < 2
+    assert len(pink) == 1 and abs(pink[0][0] - 307) < 2
+    markers.save_ranges(markers.current_ranges())                        # étalonnage : couleurs « perso »
+    assert markers.current_preset() == "perso" and markers.sticker_names()["corps"] == "bleues"  # noms tirés des teintes
+    markers.reset_ranges()
+    assert markers.current_preset() == "vert_orange"
+    yellow = markers.ColorRange((22, 100, 100), (32, 255, 255))
+    assert markers.color_name(yellow) == ("jaunes", "jaune")
+    assert markers.hue_gap(markers.GREEN, markers.ORANGE) > 20

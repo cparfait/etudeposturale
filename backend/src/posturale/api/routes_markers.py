@@ -12,7 +12,9 @@ from pydantic import BaseModel
 from sqlmodel import Session as DB
 
 from posturale.config import data_dir
-from posturale.pose.markers import DEFAULTS, ColorRange, current_ranges, color_mask, detect_blobs, reset_ranges, save_ranges
+from posturale.pose.markers import (
+    PRESETS, ColorRange, apply_preset, is_calibrated, color_mask, current_preset, current_ranges, detect_blobs, reset_ranges, save_ranges, sticker_names,
+)
 from posturale.storage import get_session
 from posturale.storage.models import Capture
 
@@ -72,7 +74,29 @@ def _store(frame: np.ndarray) -> dict:
 
 @router.get("/colors")
 def get_colors() -> dict:
-    return {"actuel": _view(current_ranges()), "defaut": _view(DEFAULTS)}
+    from posturale.pose.markers import hue_gap
+
+    pid = current_preset()
+    cur = current_ranges()
+    base = PRESETS.get(pid, PRESETS["vert_orange"])["plages"]
+    gap = hue_gap(cur["vert"], cur["orange"])
+    return {"actuel": _view(cur), "defaut": _view(base), "preset": pid, "etalonne": is_calibrated(), "noms": sticker_names(),
+            "ecart_teinte": round(gap), "trop_proches": gap < 20,
+            "presets": [{"id": k, "nom": v["nom"], "noms": sticker_names(v["plages"])} for k, v in PRESETS.items()]}
+
+
+class PresetIn(BaseModel):
+    id: str
+
+
+@router.put("/preset")
+def put_preset(data: PresetIn) -> dict:
+    """Choisit le jeu de couleurs (vert + orange, bleu + rose) : plages de détection et noms dans les textes."""
+    try:
+        apply_preset(data.id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return get_colors()
 
 
 @router.put("/colors")

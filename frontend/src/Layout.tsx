@@ -42,7 +42,7 @@ const TOOLS = [
   { to: "/bienvenue", label: "Guide de démarrage", icon: GraduationCap },
   { to: "/equipement", label: "Mon équipement", icon: Package },
   { to: "/cadrage", label: "Cadrage en direct", icon: Crosshair },
-  { to: "/pastilles", label: "Contrôle des pastilles", icon: Pipette },
+  { to: "/pastilles", label: "Pastilles : étalonnage", icon: Pipette },
   { to: "/capteurs", label: "Capteurs et ERG", icon: Bluetooth },
   { to: "/rapport", label: "Rapport", icon: FileText },
   { to: "/reglages-ia", label: "Réglages IA et voix", icon: Sliders },

@@ -157,12 +157,15 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
     both = len(profiles) == 2
     change_txt = ", ".join(_fmt_change(c) for c in f["changements"])
     eq = equipment.load()
+    from posturale.pose.markers import sticker_names
+
+    col = sticker_names()  # « vertes » / « bleues », « orange » / « roses »…
     green, trainer = equipment.has(eq, "pastilles_vertes"), equipment.has(eq, "trainer_connecte")
     meter, micro = equipment.has(eq, "capteur_puissance"), equipment.has(eq, "micro")
     chart_only = eq["items"].get("pastilles_orange") is False and bool(eq["items"].get("mire"))
     effort = f"à {power} watts" if trainer else "à résistance constante"
     if not green:
-        reasons.append("Sans pastilles vertes : l'IA de pose repère les articulations seule (précision un peu réduite).")
+        reasons.append(f"Sans pastilles {col['corps']} : l'IA de pose repère les articulations seule (précision un peu réduite).")
     if not trainer:
         reasons.append("Home trainer non connecté : tu règles toi-même une résistance fixe, la même à chaque séance.")
 
@@ -189,34 +192,40 @@ def build(db: DB, override: dict | None = None) -> dict[str, Any]:
     if profiles:
         side_txt = "des deux côtés" if both else ("côté droit" if profiles[0] == "profil_D" else "côté gauche")
         body_items = [{"t": t, "d": d} for t, d in BODY]
-        dire = (f"Pastilles vertes sur le corps, {side_txt}. Je te les annonce une par une : dis « c'est fait » après chacune. "
+        dire = (f"Pastilles {col['corps']} de 20 millimètres sur le corps, {side_txt}. Je te les annonce une par une : dis « c'est fait » après chacune. "
                 "Assieds-toi sur le vélo, manivelle en bas, pour repérer la hanche et le genou.")
         if kind == "verification":
-            dire = f"Vérifie que les pastilles vertes sont toujours au même endroit, {side_txt}. Remets celles qui ont bougé."
+            dire = f"Vérifie que les pastilles {col['corps']} sont toujours au même endroit, {side_txt}. Remets celles qui ont bougé."
         if green:
             steps.append(_step("pastilles_corps", "checklist", "Pastilles sur le corps", dire, items=body_items))
-        bike_items = [{"t": "Axe de pédalier", "d": "Pastille orange au centre du plateau (ou du boîtier côté gauche)."},
-                      {"t": "Axe de pédale", "d": "Pastille orange au bout de l'axe de pédale, côté caméra" + (" (les deux pédales)." if both else ".")}]
+        bike_items = [{"t": "Axe de pédalier", "d": f"Pastille {col['velo1']} au centre du plateau (ou du boîtier côté gauche)."},
+                      {"t": "Axe de pédale", "d": f"Pastille {col['velo1']} au bout de l'axe de pédale, côté caméra" + (" (les deux pédales)." if both else ".")}]
         if chart_only:
             steps.append(_step("mire", "checklist", "Mire contre le cadre",
-                               "Sans pastilles orange, c'est la mire qui donne l'échelle : pose-la à plat contre le cadre, dans le plan du vélo.",
+                               f"Sans pastilles {col['velo']}, c'est la mire qui donne l'échelle : pose-la à plat contre le cadre, dans le plan du vélo.",
                                items=[{"t": "Mire contre le cadre", "d": "Bien à plat, côté caméra, entièrement visible sur l'image."}]))
         else:
             steps.append(_step("pastilles_velo", "checklist", "Pastilles sur le vélo",
-                               "Deux pastilles orange sur le vélo : elles donnent l'angle de manivelle et l'échelle en millimètres.",
+                               f"Deux pastilles {col['velo']} de 20 millimètres sur le vélo : elles donnent l'angle de manivelle et l'échelle en millimètres.",
                                items=bike_items))
     extra = []
     if "face" in views:
-        extra.append({"t": "Rotules", "d": "Une pastille verte au centre de chaque rotule (vue de face)."})
+        extra.append({"t": "Rotules", "d": f"Une pastille {col['corps1']} au centre de chaque rotule (vue de face)."})
     if "dos" in views:
-        extra.append({"t": "Bas du dos", "d": "Une pastille verte sur chacune des deux fossettes au-dessus des fesses (vue de dos)."})
+        extra.append({"t": "Bas du dos", "d": f"Une pastille {col['corps1']} sur chacune des deux fossettes au-dessus des fesses (vue de dos)."})
     if extra and green:
         steps.append(_step("pastilles_face_dos", "checklist", "Pastilles face et dos",
                            "Pastilles supplémentaires pour " + (" et ".join(VIEWS[v]["titre"].lower() for v in views if v in ("face", "dos"))) + ".",
                            items=extra))
-    steps.append(_step("controle_pastilles", "info", "Contrôle des pastilles",
-                       "Si tu veux, vérifie que l'application voit bien toutes les pastilles avec une photo test : page « Contrôle des pastilles ». "
-                       "Sinon, dis « suivant ».", lien="/pastilles"))
+    from posturale.pose.markers import is_calibrated
+
+    if is_calibrated():
+        cal = ("Si tu as changé de pastilles ou d'éclairage, refais l'étalonnage : une photo, puis un clic sur une pastille du corps "
+               "et une du vélo, page « Étalonnage des pastilles ». Sinon, dis « suivant ».")
+    else:
+        cal = ("Première fois : fais reconnaître tes couleurs à l'application. Prends une photo avec les pastilles posées, puis clique "
+               "sur une pastille du corps et sur une du vélo, page « Étalonnage des pastilles ». Ça prend une minute.")
+    steps.append(_step("controle_pastilles", "info", "Étalonnage des pastilles", cal, lien="/pastilles"))
 
     # ---- caméra
     cam_items = [

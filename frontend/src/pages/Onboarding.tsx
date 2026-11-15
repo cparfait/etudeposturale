@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, Bike, Camera, Check, CheckCircle2, Gauge, HeartPulse, Lock, Package, Pause, RefreshCw,
+  AlertTriangle, ArrowLeft, Palette, ArrowRight, Bike, Camera, Check, CheckCircle2, Gauge, HeartPulse, Lock, Package, Pause, RefreshCw,
   User, Video, Volume2, VolumeX, Wand2, Wrench,
 } from "lucide-react";
 import { LogoMark } from "../Layout";
@@ -182,7 +182,10 @@ function Needed({ eq }: { eq: Equipment }) {
   const total = eq.catalogue.filter((c) => c.niveau !== "optionnel").length;
   return (
     <div className="stack" style={{ gap: 14 }}>
-      <p className="ob-lead">Pour chaque élément, réponds <strong>J'ai</strong> ou <strong>Je n'ai pas</strong> : l'outil te dit ce que ça change. <span className="subtle">({answered} / {total})</span></p>
+      <div className="ob-lead-row">
+        <p className="ob-lead">Pour chaque élément, réponds <strong>J'ai</strong> ou <strong>Je n'ai pas</strong> : l'outil te dit ce que ça change. <span className="subtle">({answered} / {total})</span></p>
+      </div>
+      <p className="ob-colors-note"><Palette size={15} /> Couleurs libres : deux couleurs vives bien différentes (corps / vélo). L'app les apprend sur une photo (étalonnage, 1 min).</p>
       <EquipmentList eq={eq} levels={["obligatoire", "recommande"]} />
     </div>
   );

@@ -48,7 +48,7 @@ export default function Sessions() {
           <p>Une séance = une configuration du vélo, une ou plusieurs vidéos (profil droit et gauche, face, dos) et, si tu veux, le fichier .FIT de ton compteur.</p>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <Link to="/pastilles" className="btn btn-ghost">Contrôle des pastilles</Link>
+          <Link to="/pastilles" className="btn btn-ghost">Étalonnage des pastilles</Link>
           <Link to="/cadrage" className="btn btn-ghost">Cadrage en direct</Link>
           <Link to="/seance-guidee" className="btn btn-primary"><Wand2 size={16} /> Séance guidée</Link>
         </div>

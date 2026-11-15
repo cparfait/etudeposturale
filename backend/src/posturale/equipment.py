@@ -21,16 +21,17 @@ CATALOG: list[dict[str, str]] = [
     {"id": "support", "niveau": "obligatoire", "icone": "tripod", "nom": "Un trépied ou un support stable",
      "pourquoi": "Le téléphone doit rester immobile, à hauteur de selle, à 2,5–3 m du vélo.",
      "sans": "Indispensable. Un trépied de téléphone coûte environ 15–20 € ; en dépannage, une chaise et des livres bien calés."},
-    {"id": "pastilles_orange", "niveau": "obligatoire", "icone": "circle", "nom": "Pastilles orange (2 par côté filmé)",
+    {"id": "pastilles_orange", "niveau": "obligatoire", "icone": "circle", "nom": "Pastilles {velo} de 20 mm (2 par côté filmé)",
      "pourquoi": "Sur l'axe du pédalier et au bout de l'axe de pédale : l'échelle en millimètres et la position de la manivelle. "
-                 "Deux côtés filmés : 4 (ou déplace-les).",
-     "sans": "Indispensable pour calculer les millimètres. Des gommettes rondes de papeterie (1,5 à 2 cm) suffisent. Alternative : une mire ChArUco imprimée."},
+                 "Deux côtés filmés : 4.",
+     "sans": "Indispensable pour les millimètres. Le mieux : de la bande de kiné en carrés de 2 cm ; sinon des gommettes mates de 19–20 mm. "
+             "Alternative : une mire ChArUco imprimée."},
     {"id": "metre", "niveau": "obligatoire", "icone": "ruler", "nom": "Un mètre ruban",
      "pourquoi": "Pour relever ta hauteur de selle actuelle : la correction proposée part de cette valeur.",
      "sans": "Indispensable pour appliquer la correction en millimètres. Un mètre de bricolage fait l'affaire."},
     # ---- recommandé
-    {"id": "pastilles_vertes", "niveau": "recommande", "icone": "circle", "nom": "Pastilles vertes sur le corps (8 par côté)",
-     "pourquoi": "Épaule, coude, poignet, hanche, genou, cheville, talon, pied : des repères au degré près. "
+    {"id": "pastilles_vertes", "niveau": "recommande", "icone": "circle", "nom": "Pastilles {corps} de 20 mm sur le corps (8 par côté)",
+     "pourquoi": "Épaule, coude, poignet, hanche, genou, cheville, talon, pied. "
                  "Deux côtés : 16, + 2 rotules (face) et 2 bas du dos (dos).",
      "sans": "L'outil s'adapte : l'IA de pose repère les articulations seule. Compte quelques degrés de précision en moins."},
     {"id": "eclairage", "niveau": "recommande", "icone": "sun", "nom": "Un bon éclairage",
@@ -60,6 +61,14 @@ CATALOG: list[dict[str, str]] = [
      "sans": "L'outil s'adapte : le plan de séance et la modification proposée viennent toujours de l'application ; seules les explications libres disparaissent."},
 ]
 BY_ID = {c["id"]: c for c in CATALOG}
+
+
+def catalog() -> list[dict[str, str]]:
+    """Catalogue avec les noms des couleurs de pastilles choisies (« orange », « roses »…)."""
+    from posturale.pose.markers import sticker_names
+
+    n = sticker_names()
+    return [{k: (v.format_map(n) if isinstance(v, str) else v) for k, v in c.items()} for c in CATALOG]
 
 
 def _path():
@@ -107,13 +116,16 @@ def missing_required(state: dict) -> list[str]:
 def view(state: dict | None = None) -> dict[str, Any]:
     s = state or load()
     missing = missing_required(s)
-    adaptations = [{"id": c["id"], "nom": c["nom"], "texte": c["sans"]} for c in CATALOG
+    cat = catalog()
+    adaptations = [{"id": c["id"], "nom": c["nom"], "texte": c["sans"]} for c in cat
                    if c["niveau"] != "obligatoire" and s["items"].get(c["id"]) is False and c["id"] != "cardio"]
     if s["items"].get("pastilles_orange") is False and s["items"].get("mire"):
-        adaptations.insert(0, {"id": "pastilles_orange", "nom": "Pastilles orange",
-                               "texte": "Pas de pastilles orange : la mire ChArUco posée contre le cadre donne l'échelle."})
+        adaptations.insert(0, {"id": "pastilles_orange", "nom": "Pastilles du vélo",
+                               "texte": "Pas de pastilles sur le vélo : la mire ChArUco posée contre le cadre donne l'échelle."})
     answered = sum(v is not None for v in s["items"].values())
-    return {**s, "catalogue": CATALOG, "manquants": missing, "adaptations": adaptations,
+    from posturale.pose.markers import current_preset, sticker_names
+
+    return {**s, "catalogue": cat, "pastilles": {"preset": current_preset(), **sticker_names()}, "manquants": missing, "adaptations": adaptations,
             "repondu": answered, "total": len(CATALOG), "pret": not missing}
 
 
@@ -121,6 +133,7 @@ def summary_for_ai(state: dict | None = None) -> dict[str, Any] | None:
     s = state or load()
     if not any(v is not None for v in s["items"].values()):
         return None
-    return {"present": [BY_ID[k]["nom"] for k, v in s["items"].items() if v],
-            "absent": [BY_ID[k]["nom"] for k, v in s["items"].items() if v is False],
-            "obligatoires_manquants": [BY_ID[k]["nom"] for k in missing_required(s)]}
+    names = {c["id"]: c["nom"] for c in catalog()}
+    return {"present": [names[k] for k, v in s["items"].items() if v],
+            "absent": [names[k] for k, v in s["items"].items() if v is False],
+            "obligatoires_manquants": [names[k] for k in missing_required(s)]}
