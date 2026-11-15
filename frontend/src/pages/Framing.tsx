@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, CircleDashed, Maximize2, Minimize2, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, CircleDashed, Maximize2, Minimize2, ShieldAlert, SwitchCamera } from "lucide-react";
 import type { NormalizedLandmark, PoseLandmarker } from "@mediapipe/tasks-vision";
+import FramingGoal from "../components/FramingGoal";
 
 // Modèle : d'abord une copie locale (public/mediapipe/), sinon le fichier officiel de Google (téléchargé une fois par le navigateur).
 const MODEL_LOCAL = "/mediapipe/pose_landmarker_full.task";
@@ -39,8 +40,16 @@ export default function Framing() {
   const liveRef = useRef<HTMLDivElement>(null);
   const [fs, setFs] = useState(false);          // plein écran (API du navigateur ou repli CSS sur iPhone)
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
+  const CAM_KEY = "posturale.camera";
+  const [cams, setCams] = useState<MediaDeviceInfo[]>([]);
+  const [camId, setCamId] = useState<string>(() => { try { return localStorage.getItem(CAM_KEY) ?? ""; } catch { return ""; } });
+  const gen = useRef(0);                         // chaque démarrage a son numéro : un démarrage dépassé s'arrête tout seul
 
-  useEffect(() => () => stopRef.current(), []);
+  // La caméra démarre dès l'ouverture de la page
+  useEffect(() => {
+    if ("mediaDevices" in navigator) start(camId || undefined);
+    return () => { gen.current++; stopRef.current(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const onChange = () => { if (!document.fullscreenElement) setFs(false); };
     document.addEventListener("fullscreenchange", onChange);
@@ -62,7 +71,8 @@ export default function Framing() {
   }
   useEffect(() => { if (!fs) { wake.current?.release().catch(() => {}); wake.current = null; } }, [fs]);
 
-  async function start() {
+  async function start(deviceId?: string) {
+    const my = ++gen.current;
     try {
       setStatus("Chargement du modèle de pose…");
       const { FilesetResolver, PoseLandmarker } = await import("@mediapipe/tasks-vision");
@@ -72,10 +82,20 @@ export default function Framing() {
         baseOptions: { modelAssetPath: local ? MODEL_LOCAL : MODEL_REMOTE, delegate: "GPU" },
         runningMode: "VIDEO", numPoses: 1,
       });
+      if (my !== gen.current) { landmarker.close(); return; }
       setStatus("Ouverture de la caméra…");
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } }, audio: false,
-      });
+      const size = { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } };
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId }, ...size } : { facingMode: "environment", ...size }, audio: false });
+      } catch (err) {
+        if (!deviceId) throw err;                  // la caméra mémorisée n'existe plus : celle par défaut
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", ...size }, audio: false });
+      }
+      if (my !== gen.current) { stream.getTracks().forEach((t) => t.stop()); landmarker.close(); return; }
+      const used = stream.getVideoTracks()[0]?.getSettings().deviceId ?? "";
+      setCamId(used);
+      navigator.mediaDevices.enumerateDevices().then((d) => setCams(d.filter((x) => x.kind === "videoinput"))).catch(() => {});
       const v = video.current!;
       v.srcObject = stream;
       await v.play();
@@ -124,9 +144,25 @@ export default function Framing() {
         setStatus("Caméra arrêtée");
       };
     } catch (e) {
-      setStatus(`Impossible de démarrer : ${(e as Error).message}`);
+      const m = (e as Error).message;
+      setStatus(/denied|NotAllowed|permission/i.test(m)
+        ? "Accès à la caméra refusé : autorise-le dans la barre d'adresse du navigateur, puis « Démarrer la caméra »"
+        : /NotFound|Requested device/i.test(m) ? "Aucune caméra trouvée sur cet appareil" : `Impossible de démarrer : ${m}`);
     }
   }
+
+  function switchCam(id: string) {
+    try { localStorage.setItem(CAM_KEY, id); } catch { /* stockage indisponible */ }
+    setCamId(id);
+    stopRef.current();
+    start(id);
+  }
+  const nextCam = () => {
+    if (cams.length < 2) return;
+    const i = cams.findIndex((c) => c.deviceId === camId);
+    switchCam(cams[(i + 1) % cams.length].deviceId);
+  };
+  const camLabel = (c: MediaDeviceInfo, i: number) => c.label || `Caméra ${i + 1}`;
 
   const essential = checks.filter((c) => c.id !== "fps");
   const allOk = running && essential.every((c) => c.ok);
@@ -139,13 +175,22 @@ export default function Framing() {
           <h1>Cadrage en direct</h1>
           <p>Ouvre cette page sur le téléphone posé sur son trépied : quand tout est vert, passe dans l'appli Appareil photo pour filmer la mesure.</p>
         </div>
-        {running ? (
-          <div className="row" style={{ gap: 8 }}>
-            <button className="btn btn-primary" onClick={toggleFullscreen}><Maximize2 size={16} /> Plein écran</button>
-            <button className="btn btn-ghost" onClick={() => stopRef.current()}>Arrêter</button>
-          </div>
-        )
-          : <button className="btn btn-primary" onClick={start}><Camera size={17} /> Démarrer la caméra</button>}
+        <div className="row" style={{ gap: 8 }}>
+          {cams.length > 1 && (
+            <label className="cam-pick">
+              <SwitchCamera size={16} />
+              <select className="select" value={camId} onChange={(e) => switchCam(e.target.value)} aria-label="Caméra utilisée">
+                {cams.map((c, i) => <option key={c.deviceId} value={c.deviceId}>{camLabel(c, i)}</option>)}
+              </select>
+            </label>
+          )}
+          {running ? (
+            <>
+              <button className="btn btn-primary" onClick={toggleFullscreen}><Maximize2 size={16} /> Plein écran</button>
+              <button className="btn btn-ghost" onClick={() => stopRef.current()}>Arrêter</button>
+            </>
+          ) : <button className="btn btn-primary" onClick={() => start(camId || undefined)}><Camera size={17} /> Démarrer la caméra</button>}
+        </div>
       </header>
 
       {!window.isSecureContext && (
@@ -166,6 +211,9 @@ export default function Framing() {
                 {fs ? <Minimize2 size={18} /> : <Maximize2 size={18} />}{fs && " Quitter"}
               </button>
             )}
+            {running && fs && cams.length > 1 && (
+              <button type="button" className="live-fs-btn cam" onClick={nextCam} aria-label="Caméra suivante"><SwitchCamera size={18} /> Changer de caméra</button>
+            )}
             {running && fs && essential.some((c) => !c.ok) && (
               <ul className="live-todo" aria-live="polite">
                 {essential.filter((c) => !c.ok).map((c) => (
@@ -178,6 +226,7 @@ export default function Framing() {
             )}
           </div>
           <p className="subtle" style={{ marginTop: 8, fontSize: "0.84rem" }}>{status}. Les pointillés : la hanche doit se trouver entre les deux lignes.</p>
+          <FramingGoal />
         </div>
         <section className="card">
           <h2>Contrôles</h2>
