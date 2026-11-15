@@ -17,23 +17,49 @@ class TTSError(RuntimeError):
     pass
 
 
+def _app_roots() -> tuple[list[Path], list[Path]]:
+    """Dossiers AppData Local et Roaming : variables d'environnement ET dossier de l'utilisateur.
+
+    Selon la façon dont le serveur est lancé, LOCALAPPDATA / APPDATA peuvent manquer ou pointer ailleurs.
+    """
+    home = Path.home() / "AppData"
+    local = [Path(x) for x in (os.environ.get("LOCALAPPDATA"),) if x] + [home / "Local"]
+    roaming = [Path(x) for x in (os.environ.get("APPDATA"),) if x] + [home / "Roaming"]
+    return local, roaming
+
+
 def _candidates_dirs() -> list[Path]:
     """Dossiers où chercher Piper et ses voix : ceux du projet, puis ceux de LMU Stats Viewer s'il est installé."""
-    dirs = [data_dir() / "voice"]
-    local, roaming = os.environ.get("LOCALAPPDATA"), os.environ.get("APPDATA")
-    if local:
-        dirs.append(Path(local) / "LMU Stats Viewer" / "tts")
-    if roaming:
-        dirs += sorted(Path(roaming).glob("com.cparfait.lmustatsviewer*/tts"))
-    return [d for d in dirs if d.exists()]
+    local, roaming = _app_roots()
+    dirs = [data_dir() / "voice"] + [r / "LMU Stats Viewer" / "tts" for r in local]
+    for r in roaming:
+        try:
+            dirs += sorted(r.glob("com.cparfait.lmustatsviewer*/tts")) + sorted(r.glob("LMU_Stats_Viewer/tts"))
+        except OSError:
+            continue
+    out, seen = [], set()
+    for d in dirs:
+        try:
+            key = str(d.resolve()).lower()
+            if key not in seen and d.is_dir():
+                seen.add(key)
+                out.append(d)
+        except OSError:
+            continue
+    return out
 
 
 def detect_piper() -> dict:
     exe_name = "piper.exe" if sys.platform == "win32" else "piper"
     exes, voices = [], []
-    for d in _candidates_dirs():
-        exes += [str(p) for p in d.rglob(exe_name)]
-        for onnx in d.rglob("*.onnx"):
+    dirs = _candidates_dirs()
+    for d in dirs:
+        try:
+            exes += [str(p) for p in d.rglob(exe_name)]
+            onnx_files = list(d.rglob("*.onnx"))
+        except OSError:
+            continue
+        for onnx in onnx_files:
             meta = onnx.with_suffix(".onnx.json")
             if not meta.exists():
                 continue
@@ -50,7 +76,7 @@ def detect_piper() -> dict:
         if v["nom"] not in seen:
             seen.add(v["nom"])
             uniq.append(v)
-    return {"executables": list(dict.fromkeys(exes)), "voix": uniq}
+    return {"executables": list(dict.fromkeys(exes)), "voix": uniq, "dossiers": [str(d) for d in dirs]}
 
 
 def _cache(engine: str, key: str) -> Path:

@@ -209,6 +209,13 @@ export default function AISettings() {
               vs.piper.executables.length === 0 ? (
                 <div className="alert warn">Piper introuvable sur ce PC. Copie piper.exe et une voix française (.onnx + .onnx.json) dans <code>data/voice/</code>.</div>
               ) : (
+                vs.piper.voix.length === 0 ? (
+                  <div className="alert warn" style={{ flexDirection: "column", alignItems: "flex-start", gap: 8 }}>
+                    <span>Piper est installé mais aucune voix n'a été trouvée. Copie une voix française (fichiers <code>.onnx</code> et <code>.onnx.json</code>) dans <code>data/voice/</code>, puis cherche à nouveau.</span>
+                    {vs.piper.dossiers?.length > 0 && <small>Dossiers parcourus : {vs.piper.dossiers.join(" · ")}</small>}
+                    <button className="btn btn-ghost btn-sm" onClick={async () => setVs(await http.get("/voice/status"))}>Chercher à nouveau</button>
+                  </div>
+                ) : (
                 <>
                   <label className="field"><span className="field-label">Voix</span>
                     <select className="select" value={v.piper_voix || vs.piper.voix[0]?.chemin || ""} onChange={(e) => setVoice({ piper_voix: e.target.value, piper_exe: v.piper_exe || vs.piper.executables[0] })}>
@@ -217,6 +224,7 @@ export default function AISettings() {
                     <span className="field-help">Trouvée avec ton installation de LMU Stats Viewer · 100 % local</span>
                   </label>
                 </>
+                )
               )
             )}
             {v.tts === "openai" && (
