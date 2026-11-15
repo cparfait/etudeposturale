@@ -7,6 +7,7 @@ import {
 import { LogoMark } from "../Layout";
 import PedalingRider from "../components/PedalingRider";
 import EquipmentList from "../components/EquipmentList";
+import { TutoButton } from "../components/TutoVideo";
 import { saveEquipment, useEquipment, type Equipment } from "../equipment";
 import { api, http } from "../api";
 
@@ -173,6 +174,7 @@ function HowItWorks() {
         ))}
       </ol>
       <p className="ob-note"><RefreshCw size={15} /> On recommence jusqu'à ce que les mesures soient dans les plages et que tu n'aies plus de gêne.</p>
+      <div className="ob-tuto"><TutoButton label="Voir une séance complète en vidéo (1 min 20)" className="btn btn-primary" /></div>
     </div>
   );
 }

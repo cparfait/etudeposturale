@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TutoButton } from "../components/TutoVideo";
 import { Link } from "react-router-dom";
 import { AlertTriangle, ArrowRight, Bike, Check, Gauge, GraduationCap, HeartPulse, Info, Lock, Package, User, Video } from "lucide-react";
 import { useEquipment } from "../equipment";
@@ -66,6 +67,7 @@ export default function Home() {
             ) : (
               <Link to="/conseils" className="btn btn-primary">Voir mes recommandations <ArrowRight size={17} /></Link>
             )}
+            <TutoButton label="Voir le tuto (1 min 20)" />
             <Link to="/cadrage" className="btn btn-ghost"><Gauge size={16} /> Cadrage en direct</Link>
           </div>
           <div className="legend" aria-hidden="true">

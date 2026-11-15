@@ -336,3 +336,21 @@
 .pp-ca { font-size: 0.8rem; color: var(--text-2); }
 .pp-ca summary { cursor: pointer; font-weight: 600; color: var(--text-2); }
 .pp-ca p { margin: 6px 0 0; line-height: 1.45; }
+
+/* Tutoriel vidéo (lecteur + chapitres, ouvert dans une fenêtre) */
+.tuto { display: flex; flex-direction: column; gap: 12px; }
+.tuto video { width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; background: #0f150e; display: block; }
+.tuto-chapters { display: flex; flex-wrap: wrap; gap: 6px; }
+.tuto-chapters button { border: 1px solid var(--line); background: var(--surface, #fff); color: var(--text); border-radius: 999px;
+  padding: 6px 12px; font: inherit; font-size: 0.84rem; font-weight: 600; cursor: pointer; }
+.tuto-chapters button:hover { border-color: var(--text-3); }
+.tuto-chapters button.on { background: #b8f34a; border-color: #b8f34a; color: #0f150e; }
+.tuto-modal { position: fixed; inset: 0; z-index: 400; background: rgb(10 14 9 / 0.72); display: grid; place-items: center; padding: 24px; }
+.tuto-box { width: min(1180px, 100%); max-height: calc(100dvh - 48px); overflow: auto; background: var(--bg); border-radius: 22px; padding: 16px 18px 18px;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.35); }
+.tuto-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.tuto-head strong { font-family: var(--font-display); font-size: 1.1rem; }
+.tuto-close { border: 0; background: transparent; color: var(--text); width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+.tuto-close:hover { background: var(--line); }
+.ob-tuto { display: flex; justify-content: center; margin-top: 4px; }
+@media (max-width: 640px) { .tuto-modal { padding: 8px; } .tuto-box { padding: 10px; border-radius: 16px; } }

@@ -12,6 +12,7 @@ import { streamChat, type ChatMsg } from "../ai";
 import { useEquipment } from "../equipment";
 import { useRemote, ETAT_LABEL, type Device } from "../remote";
 import PhonePairing from "../components/PhonePairing";
+import { TutoButton } from "../components/TutoVideo";
 
 type StepType = "info" | "checklist" | "ble" | "timer" | "prise" | "import" | "debrief" | "fin";
 interface Step {
@@ -524,7 +525,10 @@ export default function Guided() {
             <h1>Séance guidée</h1>
             <p>Le coach te guide de la pose des pastilles au débrief : il annonce chaque étape, lance l'échauffement et les prises, surveille ta cadence et te propose une seule modification à la fin. Tu avances à la voix, mains sur le guidon.</p>
           </div>
-          <Link to="/reglages-ia" className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}><Settings2 size={14} /> Voix et IA</Link>
+          <div className="row" style={{ gap: 8, alignSelf: "flex-start" }}>
+            <TutoButton label="Tuto vidéo" className="btn btn-ghost btn-sm" />
+            <Link to="/reglages-ia" className="btn btn-ghost btn-sm"><Settings2 size={14} /> Voix et IA</Link>
+          </div>
         </header>
 
         {saved && (
