@@ -103,6 +103,7 @@ export default function Onboarding() {
       </div>
 
       <main className="ob-main">
+        <div className="ob-head">
         <h1>{step.titre}</h1>
 
         <div className="ob-voice">
@@ -116,6 +117,7 @@ export default function Onboarding() {
           <button className="ob-auto" aria-pressed={auto} onClick={() => setAutoPref(!auto)}>
             {auto ? <Volume2 size={14} /> : <VolumeX size={14} />} Lecture auto
           </button>
+        </div>
         </div>
 
         {step.id === "bienvenue" && <Welcome />}

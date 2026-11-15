@@ -1,7 +1,7 @@
 // Schéma du vélo avec les cotes : la cote du champ en cours de saisie s'allume et s'explique.
 import type { Values } from "../api";
 import {
-  BB, CRANK, FRAME_PATHS, FRONT, HEAD_TOP, REAR, SADDLE_NOSE, SADDLE_TOP, SEAT_TUBE_DEG, STEM_END, WHEEL_R,
+  BB, CHAINRING_R, FRAME_PATHS, FRONT, HEAD_TOP, REAR, SADDLE_NOSE, SADDLE_TOP, SEAT_TUBE_DEG, STEM_END, WHEEL_R,
   add, pedalAt, pt, type P,
 } from "./bikeGeometry";
 
@@ -92,7 +92,7 @@ export default function BikeDiagram({ active, values }: { active: DimKey | null;
         <path d={FRAME_PATHS.seatpost} strokeWidth={4} />
         <path d={FRAME_PATHS.bar} strokeWidth={4} />
         <path d={FRAME_PATHS.stem} strokeWidth={is("stem") ? 7 : 4} style={is("stem") ? { stroke: "var(--brand-text)" } : undefined} />
-        <circle cx={BB[0]} cy={BB[1]} r={CRANK + 6} strokeWidth={2} />
+        <circle cx={BB[0]} cy={BB[1]} r={CHAINRING_R} strokeWidth={2.5} />
         <line x1={BB[0]} y1={BB[1]} x2={pedal[0]} y2={pedal[1]} strokeWidth={is("crank") ? 7 : 4} style={is("crank") ? { stroke: "var(--brand-text)" } : undefined} />
       </g>
       <path d={FRAME_PATHS.saddle} style={{ fill: is("tilt") ? "var(--brand-text)" : "var(--text-2)" }} />
@@ -115,9 +115,9 @@ export default function BikeDiagram({ active, values }: { active: DimKey | null;
       <Dim id="reach" a={[BB[0], reachY]} b={[HEAD_TOP[0], reachY]} label={val("reach", "Reach")} active={is("reach")} />
 
       <g className={`dim${is("sta") ? " active" : ""}`}>
-        <path className="dim-line" fill="none" d={`M${pt(add(BB, [-46, 0]))} A46,46 0 0 1 ${pt(add(BB, [-46 * Math.cos(rad(SEAT_TUBE_DEG)), -46 * Math.sin(rad(SEAT_TUBE_DEG))]))}`} />
-        <line x1={BB[0]} y1={BB[1]} x2={BB[0] - 60} y2={BB[1]} />
-        <Label at={add(BB, [-74, -20])} text={val("sta", "Angle")} />
+        <path className="dim-line" fill="none" d={`M${pt(add(BB, [-40, 0]))} A40,40 0 0 1 ${pt(add(BB, [-40 * Math.cos(rad(SEAT_TUBE_DEG)), -40 * Math.sin(rad(SEAT_TUBE_DEG))]))}`} />
+        <line x1={BB[0]} y1={BB[1]} x2={BB[0] - 52} y2={BB[1]} style={guide} />
+        <Label at={add(BB, [-66, -44])} text={val("sta", "Angle")} />
       </g>
       {(is("crank") || is("stem") || is("tilt")) && (
         <g className="dim active">

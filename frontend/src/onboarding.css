@@ -128,11 +128,29 @@
   .ob-timeline li:not(:last-child)::before { left: auto; right: -14px; top: 36px; bottom: auto; width: 12px; height: 2px; }
   .ob-timeline strong { font-size: 1.12rem; }
   .ob-timeline p { font-size: 0.98rem; }
-  .ob .eq-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .ob .eq-list { display: block; columns: 3; column-gap: 12px; }
+  .ob .eq-list > li { break-inside: avoid; margin-bottom: 10px; }
   .ob .eq-item { grid-template-columns: auto minmax(0, 1fr); }
   .ob .eq-choice { grid-column: 2; }
   .ob-path-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
   .ob-path-side { position: sticky; top: 24px; }
+}
+
+/* PC : tout l'écran tient sans défilement (titre et voix sur une ligne, listes compactes) */
+.ob-head { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 1180px) {
+  .ob-top { padding: 12px 28px; }
+  .ob-main { margin-top: 18px; gap: 18px; padding-bottom: 92px; }
+  .ob-head { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
+  .ob-head h1 { font-size: 2.5rem; }
+  .ob-head .ob-voice { flex: 0 1 520px; }
+  .ob .eq-list { gap: 10px 12px; }
+  .ob .eq-item { padding: 12px 14px; gap: 12px; }
+  .ob .eq-icon { width: 34px; height: 34px; border-radius: 10px; }
+  .ob .eq-why { font-size: 0.84rem; margin-top: 2px; }
+  .ob .eq-without { margin-top: 8px; padding: 7px 10px; font-size: 0.82rem; }
+  .ob .eq-choice button { padding: 6px 11px; font-size: 0.8rem; }
+  .ob-foot { padding-top: 12px; padding-bottom: 12px; }
 }
 
 /* Rappel sur l'accueil */

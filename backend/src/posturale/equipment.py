@@ -22,16 +22,16 @@ CATALOG: list[dict[str, str]] = [
      "pourquoi": "Le téléphone doit rester immobile, à hauteur de selle, à 2,5–3 m du vélo.",
      "sans": "Indispensable. Un trépied de téléphone coûte environ 15–20 € ; en dépannage, une chaise et des livres bien calés."},
     {"id": "pastilles_orange", "niveau": "obligatoire", "icone": "circle", "nom": "Pastilles orange (2 par côté filmé)",
-     "pourquoi": "Une sur l'axe du pédalier, une au bout de l'axe de pédale : elles donnent l'échelle en millimètres et la position de la manivelle. "
-                 "Pour filmer les deux côtés : 4 pastilles (ou déplace-les entre les prises).",
+     "pourquoi": "Sur l'axe du pédalier et au bout de l'axe de pédale : l'échelle en millimètres et la position de la manivelle. "
+                 "Deux côtés filmés : 4 (ou déplace-les).",
      "sans": "Indispensable pour calculer les millimètres. Des gommettes rondes de papeterie (1,5 à 2 cm) suffisent. Alternative : une mire ChArUco imprimée."},
     {"id": "metre", "niveau": "obligatoire", "icone": "ruler", "nom": "Un mètre ruban",
      "pourquoi": "Pour relever ta hauteur de selle actuelle : la correction proposée part de cette valeur.",
      "sans": "Indispensable pour appliquer la correction en millimètres. Un mètre de bricolage fait l'affaire."},
     # ---- recommandé
     {"id": "pastilles_vertes", "niveau": "recommande", "icone": "circle", "nom": "Pastilles vertes sur le corps (8 par côté)",
-     "pourquoi": "Épaule, coude, poignet, hanche, genou, cheville, talon, pied : des repères nets, au degré près. "
-                 "16 pour les deux côtés, + 2 sur les rotules (vue de face) et 2 en bas du dos (vue de dos).",
+     "pourquoi": "Épaule, coude, poignet, hanche, genou, cheville, talon, pied : des repères au degré près. "
+                 "Deux côtés : 16, + 2 rotules (face) et 2 bas du dos (dos).",
      "sans": "L'outil s'adapte : l'IA de pose repère les articulations seule. Compte quelques degrés de précision en moins."},
     {"id": "eclairage", "niveau": "recommande", "icone": "sun", "nom": "Un bon éclairage",
      "pourquoi": "Une lumière continue et homogène donne une image nette et des pastilles bien visibles.",

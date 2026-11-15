@@ -20,6 +20,7 @@ export const REAR: P = [146, 258];   // base de roues ≈ 1 000 mm, bases ≈ 41
 export const FRONT: P = [424, 258];
 export const BB: P = [258, 276];
 export const CRANK = 47;             // manivelle de 172,5 mm
+export const CHAINRING_R = 28;       // plateau de 50 dents ≈ 200 mm de diamètre
 export const SADDLE_TOP: P = along(204);
 export const SEAT_CLUSTER: P = along(158);
 export const SADDLE_NOSE: P = add(SADDLE_TOP, [30, 1]);

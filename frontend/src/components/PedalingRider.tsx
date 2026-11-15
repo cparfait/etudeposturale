@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  BACK_CTRL, BB, CRANK, ELBOW, FRAME_PATHS, FRONT, HEAD, HEAD_R, HIP, HOODS, KNEE_RANGE, REAR, SCENE_VIEWBOX, SHOULDER, WHEEL_R,
+  BACK_CTRL, BB, CHAINRING_R, ELBOW, FRAME_PATHS, FRONT, HEAD, HEAD_R, HIP, HOODS, KNEE_RANGE, REAR, SCENE_VIEWBOX, SHOULDER, WHEEL_R,
   legAt, pt, sub, type P,
 } from "./bikeGeometry";
 
@@ -86,7 +86,7 @@ export default function PedalingRider({ onFlexion }: { onFlexion?: (f: number) =
         <path d={FRAME_PATHS.bar} strokeWidth="5" />
       </g>
       <path d={FRAME_PATHS.saddle} fill="#eef3ea" />
-      <circle cx={BB[0]} cy={BB[1]} r={CRANK + 6} fill="none" stroke="rgb(255 255 255 / 0.25)" strokeWidth="3" />
+      <circle cx={BB[0]} cy={BB[1]} r={CHAINRING_R} fill="none" stroke="rgb(255 255 255 / 0.25)" strokeWidth="3" />
 
       {/* Haut du corps */}
       <g stroke="#cfdcc4" strokeLinecap="round" fill="none">
